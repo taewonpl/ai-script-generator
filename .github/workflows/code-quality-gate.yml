@@ -1,0 +1,206 @@
+name: Code Quality Gate
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+env:
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.10'
+
+jobs:
+  quality-gate:
+    name: Code Quality Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch full history for better analysis
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      # Critical: Security first
+      - name: 🔒 Security Scan (Critical)
+        run: |
+          echo "🔍 Running critical security checks..."
+          chmod +x security-check.sh
+          ./security-check.sh
+          echo "✅ Security scan passed"
+
+      # Critical: Type safety across all services
+      - name: 🔧 Python Type Safety (Critical)
+        run: |
+          echo "🔍 Checking Python type safety across all services..."
+
+          for service_dir in shared/core services/*/; do
+            if [[ -f "$service_dir/pyproject.toml" ]]; then
+              service_name=$(basename "$service_dir")
+              echo "Checking $service_name..."
+
+              cd "$service_dir"
+              pip install -e ".[dev]" > /dev/null 2>&1
+
+              # Type check with MyPy (strict mode)
+              if ! python -m mypy src --strict --config-file pyproject.toml; then
+                echo "❌ $service_name: MyPy type check failed"
+                exit 1
+              fi
+
+              echo "✅ $service_name: Type safety verified"
+              cd - > /dev/null
+            fi
+          done
+          echo "✅ All Python services type-safe"
+
+      # Critical: Frontend type safety
+      - name: 🔧 Frontend Type Safety (Critical)
+        run: |
+          echo "🔍 Checking frontend TypeScript type safety..."
+          cd frontend
+          npm ci > /dev/null 2>&1
+
+          if ! npm run typecheck; then
+            echo "❌ Frontend TypeScript check failed"
+            exit 1
+          fi
+
+          echo "✅ Frontend type safety verified"
+
+      # Important: Code formatting consistency
+      - name: 📝 Code Formatting (Important)
+        run: |
+          echo "🔍 Checking code formatting consistency..."
+
+          # Check Python formatting with Ruff
+          for service_dir in shared/core services/*/; do
+            if [[ -f "$service_dir/pyproject.toml" ]]; then
+              service_name=$(basename "$service_dir")
+              cd "$service_dir"
+
+              if ! python -m ruff format --check src --config pyproject.toml; then
+                echo "❌ $service_name: Code formatting issues found"
+                echo "Run 'ruff format src' to fix formatting"
+                exit 1
+              fi
+
+              cd - > /dev/null
+            fi
+          done
+
+          # Check frontend formatting
+          cd frontend
+          if ! npm run lint; then
+            echo "❌ Frontend linting issues found"
+            echo "Run 'npm run lint:fix' to fix issues"
+            exit 1
+          fi
+
+          echo "✅ Code formatting consistent across all services"
+
+      # Important: Linting rules compliance
+      - name: 🧹 Linting Rules (Important)
+        run: |
+          echo "🔍 Checking linting rules compliance..."
+
+          # Python linting with Ruff
+          for service_dir in shared/core services/*/; do
+            if [[ -f "$service_dir/pyproject.toml" ]]; then
+              service_name=$(basename "$service_dir")
+              cd "$service_dir"
+
+              if ! python -m ruff check src --config pyproject.toml; then
+                echo "❌ $service_name: Linting violations found"
+                echo "Run 'ruff check --fix src' to fix issues"
+                exit 1
+              fi
+
+              cd - > /dev/null
+            fi
+          done
+
+          echo "✅ All linting rules satisfied"
+
+      # Optional: Test coverage (if tests exist)
+      - name: 🧪 Test Coverage (Optional)
+        continue-on-error: true
+        run: |
+          echo "🔍 Running tests and checking coverage..."
+
+          for service_dir in shared/core services/*/; do
+            if [[ -f "$service_dir/pyproject.toml" && -d "$service_dir/tests" ]]; then
+              service_name=$(basename "$service_dir")
+              echo "Testing $service_name..."
+
+              cd "$service_dir"
+              pip install -e ".[testing]" > /dev/null 2>&1
+
+              if python -m pytest tests/ --cov=src --cov-report=term-missing --cov-fail-under=80; then
+                echo "✅ $service_name: Tests passed with good coverage"
+              else
+                echo "⚠️ $service_name: Tests or coverage below threshold"
+              fi
+
+              cd - > /dev/null
+            fi
+          done
+
+      # Final quality gate decision
+      - name: 📊 Quality Gate Decision
+        run: |
+          echo "🎯 Code Quality Gate Summary:"
+          echo "✅ Security scan: PASSED"
+          echo "✅ Type safety (Python): PASSED"
+          echo "✅ Type safety (Frontend): PASSED"
+          echo "✅ Code formatting: PASSED"
+          echo "✅ Linting rules: PASSED"
+          echo ""
+          echo "🎉 QUALITY GATE PASSED - Ready for merge!"
+          echo ""
+          echo "📋 PR Review Checklist:"
+          echo "- [x] No hardcoded secrets or credentials"
+          echo "- [x] All TypeScript/Python types are strict"
+          echo "- [x] Code follows consistent formatting"
+          echo "- [x] No linting violations"
+          echo "- [ ] Manual code review completed"
+          echo "- [ ] Documentation updated if needed"
+
+  # Branch protection rules check
+  branch-protection-info:
+    name: Branch Protection Info
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: 📋 Branch Protection Guidelines
+        run: |
+          echo "🛡️ Branch Protection Rules for 'main' branch:"
+          echo ""
+          echo "Required status checks:"
+          echo "- quality-gate job must pass"
+          echo "- Require branches to be up to date before merging"
+          echo ""
+          echo "Additional rules:"
+          echo "- Require pull request reviews before merging (minimum 1)"
+          echo "- Dismiss stale PR reviews when new commits are pushed"
+          echo "- Require review from code owners"
+          echo "- Restrict pushes that create files matching sensitive patterns"
+          echo ""
+          echo "🚫 Blocked patterns:"
+          echo "- .env* (except .env.example)"
+          echo "- *.key, *.pem, *.p12"
+          echo "- secrets.json, credentials.json"
+          echo "- Any files containing API keys or passwords"

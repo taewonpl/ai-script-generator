@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# ESLint로 코드 자동 수정 후 TypeScript 타입 체크
+npx lint-staged

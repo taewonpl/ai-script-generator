@@ -1,0 +1,319 @@
+# Performance Monitoring Pipeline
+name: Performance Monitoring
+
+on:
+  schedule:
+    # Run performance monitoring daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      test_duration:
+        description: 'Test duration in minutes'
+        required: false
+        default: '10'
+      concurrent_users:
+        description: 'Number of concurrent users'
+        required: false
+        default: '20'
+
+env:
+  PYTHON_VERSION: '3.11'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/generation-service
+
+jobs:
+  # Daily performance monitoring
+  performance-monitoring:
+    name: Performance Monitoring
+    runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Start latest service image
+        run: |
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main
+          docker run -d --name generation-service-monitor \
+            --network host \
+            -e ENVIRONMENT=testing \
+            -e REDIS_HOST=localhost \
+            -e REDIS_PORT=6379 \
+            -e ENABLE_MONITORING=true \
+            -e ENABLE_PERFORMANCE_OPTIMIZATION=true \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main
+
+      - name: Wait for service startup
+        run: |
+          timeout 120 bash -c 'until curl -f http://localhost:8000/api/monitoring/health; do sleep 5; done'
+
+      - name: Run performance validation
+        id: performance
+        run: |
+          python -c "
+          import asyncio
+          import json
+          from tests.performance.performance_validator import run_performance_validation
+
+          async def main():
+              print('Running daily performance validation...')
+              results = await run_performance_validation()
+
+              # Save results to file
+              with open('performance-results.json', 'w') as f:
+                  json.dump(results, f, indent=2, default=str)
+
+              print(f'Overall status: {results[\"overall_status\"]}')
+
+              # Set output for GitHub Actions
+              with open('$GITHUB_OUTPUT', 'a') as f:
+                  f.write(f'status={results[\"overall_status\"]}\n')
+
+              summary = results.get('summary', {})
+              validation_summary = summary.get('validation_summary', {})
+
+              with open('$GITHUB_OUTPUT', 'a') as f:
+                  f.write(f'pass_rate={validation_summary.get(\"pass_rate\", 0):.2f}\n')
+                  f.write(f'targets_passed={validation_summary.get(\"passed_targets\", 0)}\n')
+                  f.write(f'total_targets={validation_summary.get(\"total_targets\", 0)}\n')
+
+          asyncio.run(main())
+          "
+
+      - name: Run extended load testing
+        id: load_test
+        run: |
+          python -c "
+          import asyncio
+          import json
+          from tests.performance.load_tester import LoadTester, LoadTestRequest
+
+          async def main():
+              print('Running extended load testing...')
+
+              # Configure test parameters
+              test_duration = ${{ github.event.inputs.test_duration || '10' }}
+              concurrent_users = ${{ github.event.inputs.concurrent_users || '20' }}
+
+              tester = LoadTester({
+                  'base_url': 'http://localhost:8000',
+                  'monitor_resources': True
+              })
+
+              # Define test requests
+              requests = [
+                  LoadTestRequest(method='GET', url='/api/monitoring/health'),
+                  LoadTestRequest(method='GET', url='/api/monitoring/metrics'),
+                  LoadTestRequest(method='GET', url='/api/cache/status'),
+                  LoadTestRequest(method='GET', url='/api/performance/status'),
+              ]
+
+              # Run extended load test
+              summary = await tester.run_load_test(
+                  test_name='daily_monitoring',
+                  requests=requests,
+                  concurrent_users=concurrent_users,
+                  duration_seconds=test_duration * 60
+              )
+
+              # Save results
+              results = {
+                  'test_name': 'daily_monitoring',
+                  'summary': summary.__dict__,
+                  'performance_rating': tester._rate_performance(summary)
+              }
+
+              with open('load-test-results.json', 'w') as f:
+                  json.dump(results, f, indent=2, default=str)
+
+              print(f'Load test completed:')
+              print(f'  Success rate: {summary.success_rate:.1%}')
+              print(f'  Avg response time: {summary.avg_response_time:.3f}s')
+              print(f'  Requests per second: {summary.requests_per_second:.1f}')
+
+              # Set outputs
+              with open('$GITHUB_OUTPUT', 'a') as f:
+                  f.write(f'success_rate={summary.success_rate:.3f}\n')
+                  f.write(f'avg_response_time={summary.avg_response_time:.3f}\n')
+                  f.write(f'requests_per_second={summary.requests_per_second:.1f}\n')
+                  f.write(f'rating={results[\"performance_rating\"]}\n')
+
+          asyncio.run(main())
+          "
+
+      - name: Generate performance report
+        run: |
+          cat > performance-report.md << EOF
+          # Daily Performance Monitoring Report
+
+          **Date:** $(date '+%Y-%m-%d %H:%M:%S UTC')
+          **Image:** ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main
+
+          ## Performance Validation Results
+
+          - **Overall Status:** ${{ steps.performance.outputs.status }}
+          - **Pass Rate:** ${{ steps.performance.outputs.pass_rate }}%
+          - **Targets Passed:** ${{ steps.performance.outputs.targets_passed }}/${{ steps.performance.outputs.total_targets }}
+
+          ## Load Testing Results
+
+          - **Success Rate:** $(echo "${{ steps.load_test.outputs.success_rate }} * 100" | bc)%
+          - **Average Response Time:** ${{ steps.load_test.outputs.avg_response_time }}s
+          - **Requests per Second:** ${{ steps.load_test.outputs.requests_per_second }}
+          - **Performance Rating:** ${{ steps.load_test.outputs.rating }}
+
+          ## Test Configuration
+
+          - **Test Duration:** ${{ github.event.inputs.test_duration || '10' }} minutes
+          - **Concurrent Users:** ${{ github.event.inputs.concurrent_users || '20' }}
+          - **Environment:** Testing with Redis backend
+
+          ## Recommendations
+
+          EOF
+
+          # Add recommendations based on results
+          if [ "${{ steps.performance.outputs.status }}" != "PASS" ]; then
+            echo "- ⚠️ Performance validation failed - investigate performance issues" >> performance-report.md
+          fi
+
+          if [ "${{ steps.load_test.outputs.rating }}" == "poor" ]; then
+            echo "- ⚠️ Load test performance poor - optimize service performance" >> performance-report.md
+          elif [ "${{ steps.load_test.outputs.rating }}" == "fair" ]; then
+            echo "- ⚠️ Load test performance fair - consider performance improvements" >> performance-report.md
+          else
+            echo "- ✅ Performance is within acceptable limits" >> performance-report.md
+          fi
+
+      - name: Upload performance artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-monitoring-${{ github.run_number }}
+          path: |
+            performance-results.json
+            load-test-results.json
+            performance-report.md
+
+      - name: Stop monitoring service
+        if: always()
+        run: docker stop generation-service-monitor && docker rm generation-service-monitor
+
+      - name: Create performance issue if degraded
+        if: steps.performance.outputs.status != 'PASS' || steps.load_test.outputs.rating == 'poor'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('performance-report.md', 'utf8');
+
+            // Check if there's already an open performance issue
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'performance-degradation',
+              state: 'open'
+            });
+
+            if (issues.length === 0) {
+              // Create new issue
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: 'Performance Degradation Detected',
+                body: `# Performance Degradation Alert\n\n${report}\n\n**Auto-generated by performance monitoring workflow**`,
+                labels: ['performance-degradation', 'bug', 'monitoring']
+              });
+            } else {
+              // Update existing issue
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues[0].number,
+                body: `# Updated Performance Report\n\n${report}\n\n**Auto-generated by performance monitoring workflow**`
+              });
+            }
+
+      - name: Comment on latest PR if performance degraded
+        if: steps.performance.outputs.status != 'PASS' && github.event_name == 'schedule'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            // Find the most recent merged PR
+            const { data: pulls } = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'closed',
+              sort: 'updated',
+              direction: 'desc',
+              per_page: 1
+            });
+
+            if (pulls.length > 0 && pulls[0].merged_at) {
+              const fs = require('fs');
+              const report = fs.readFileSync('performance-report.md', 'utf8');
+
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pulls[0].number,
+                body: `## ⚠️ Performance Degradation Detected\n\n${report}\n\nThis may be related to recent changes in this PR.`
+              });
+            }
+
+  # Performance trend analysis
+  performance-trends:
+    name: Performance Trend Analysis
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download historical performance data
+        uses: actions/download-artifact@v3
+        with:
+          name: performance-monitoring-${{ github.run_number }}
+        continue-on-error: true
+
+      - name: Analyze performance trends
+        run: |
+          echo "# Performance Trend Analysis" > trend-analysis.md
+          echo "" >> trend-analysis.md
+          echo "**Generated:** $(date '+%Y-%m-%d %H:%M:%S UTC')" >> trend-analysis.md
+          echo "" >> trend-analysis.md
+
+          # This would typically connect to a metrics database
+          # For now, provide a placeholder analysis
+          echo "## Trend Summary" >> trend-analysis.md
+          echo "- Performance monitoring is active" >> trend-analysis.md
+          echo "- Historical data collection in progress" >> trend-analysis.md
+          echo "- Automated alerting configured" >> trend-analysis.md
+          echo "" >> trend-analysis.md
+          echo "## Recommendations" >> trend-analysis.md
+          echo "- Continue daily monitoring" >> trend-analysis.md
+          echo "- Review performance metrics weekly" >> trend-analysis.md
+          echo "- Set up alerting thresholds based on baseline" >> trend-analysis.md
+
+      - name: Upload trend analysis
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-trends-${{ github.run_number }}
+          path: trend-analysis.md

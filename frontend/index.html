@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="AI 기반 스크립트 생성 플랫폼" />
+    <meta name="analytics-tracking-id" content="%VITE_ANALYTICS_TRACKING_ID%" />
+    <title>AI Script Generator</title>
+
+    <!-- Preload critical resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Web App Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Theme color for mobile browsers -->
+    <meta name="theme-color" content="#1976d2" />
+
+    <!-- Security headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <!-- Analytics -->
+    <script>
+      // Set global variables for analytics
+      window.__ANALYTICS_TRACKING_ID__ = '%VITE_ANALYTICS_TRACKING_ID%';
+      window.__APP_VERSION__ = '%VITE_APP_VERSION%';
+    </script>
+    <script src="/analytics.js"></script>
+
+    <!-- Main application -->
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

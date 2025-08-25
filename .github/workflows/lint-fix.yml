@@ -1,0 +1,173 @@
+name: Auto-fix Linting Issues
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [develop, feature/*, fix/*]
+  pull_request:
+    branches: [main, develop]
+    types: [opened, synchronize]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.10'
+
+jobs:
+  auto-fix:
+    name: Auto-fix Code Issues
+    runs-on: ubuntu-latest
+    if: github.event_name != 'push' || github.ref != 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Python dependencies
+        run: |
+          for service_dir in shared/core services/*/; do
+            if [[ -f "$service_dir/pyproject.toml" ]]; then
+              echo "Installing deps for $(basename $service_dir)"
+              cd "$service_dir"
+              pip install -e ".[dev]" > /dev/null 2>&1
+              cd - > /dev/null
+            fi
+          done
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci > /dev/null 2>&1
+
+      - name: 🔧 Fix Python formatting and linting
+        run: |
+          echo "🔧 Auto-fixing Python code issues..."
+
+          for service_dir in shared/core services/*/; do
+            if [[ -f "$service_dir/pyproject.toml" ]]; then
+              service_name=$(basename "$service_dir")
+              echo "Fixing $service_name..."
+
+              cd "$service_dir"
+
+              # Fix linting issues (auto-fixable ones)
+              python -m ruff check --fix src --config pyproject.toml || true
+
+              # Apply consistent formatting
+              python -m ruff format src --config pyproject.toml
+
+              echo "✅ $service_name fixed"
+              cd - > /dev/null
+            fi
+          done
+
+      - name: 🔧 Fix frontend linting and formatting
+        run: |
+          echo "🔧 Auto-fixing frontend code issues..."
+          cd frontend
+
+          # Fix ESLint issues (auto-fixable ones)
+          npm run lint:fix || true
+
+          echo "✅ Frontend fixed"
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No changes made by auto-fix"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Changes made by auto-fix:"
+            git diff --name-only
+          fi
+
+      - name: Commit auto-fixes
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action Auto-fix"
+
+          git add -A
+          git commit -m "🤖 Auto-fix code formatting and linting issues
+
+          Applied the following fixes:
+          - Ruff formatting for Python code
+          - Ruff auto-fix for linting issues
+          - ESLint auto-fix for frontend code
+
+          [skip ci]"
+
+      - name: Push auto-fixes
+        if: steps.changes.outputs.changed == 'true' && github.event_name == 'pull_request'
+        run: |
+          git push origin HEAD:${{ github.head_ref }}
+
+      - name: Push auto-fixes (direct push)
+        if: steps.changes.outputs.changed == 'true' && github.event_name != 'pull_request'
+        run: |
+          git push origin ${{ github.ref_name }}
+
+      - name: Comment on PR
+        if: steps.changes.outputs.changed == 'true' && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comment = `🤖 **Auto-fix Applied**
+
+            I've automatically fixed some code formatting and linting issues:
+
+            **Changes made:**
+            - ✨ Python code formatted with Ruff
+            - 🧹 Auto-fixable linting violations resolved
+            - 📝 Frontend ESLint issues fixed
+
+            **Next steps:**
+            - Pull the latest changes: \`git pull origin ${{ github.head_ref }}\`
+            - Review the auto-fixes to ensure they're correct
+            - The quality gate will re-run automatically
+
+            _This is an automated action to maintain code quality._`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: Summary
+        run: |
+          if [[ "${{ steps.changes.outputs.changed }}" == "true" ]]; then
+            echo "🎯 Auto-fix Summary:"
+            echo "✅ Code formatting applied"
+            echo "✅ Auto-fixable linting issues resolved"
+            echo "✅ Changes committed and pushed"
+            echo ""
+            echo "ℹ️ Manual review may still be needed for:"
+            echo "- Complex linting issues that require human judgment"
+            echo "- Type errors that need code logic changes"
+            echo "- Business logic or architectural decisions"
+          else
+            echo "✅ No auto-fixes needed - code already follows standards"
+          fi

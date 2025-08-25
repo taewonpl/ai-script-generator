@@ -1,0 +1,186 @@
+version: '3.8'
+
+services:
+  # Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: ai-script-postgres
+    environment:
+      POSTGRES_DB: ai_script_generator
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres123}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    networks:
+      - ai-script-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Redis for caching and session storage
+  redis:
+    image: redis:7-alpine
+    container_name: ai-script-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - ai-script-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # Core Service
+  core-service:
+    build:
+      context: ./services/core-service
+      dockerfile: Dockerfile
+    container_name: ai-script-core-service
+    environment:
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-postgres123}@postgres:5432/ai_script_generator
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379/0
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      - API_PORT=8000
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+    ports:
+      - "8000:8000"
+    networks:
+      - ai-script-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Project Service
+  project-service:
+    build:
+      context: ./services/project-service
+      dockerfile: Dockerfile
+    container_name: ai-script-project-service
+    environment:
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-postgres123}@postgres:5432/ai_script_generator
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379/1
+      - CORE_SERVICE_URL=http://core-service:8000
+      - API_PORT=8001
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+    ports:
+      - "8001:8001"
+    networks:
+      - ai-script-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      core-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Generation Service
+  generation-service:
+    build:
+      context: ./services/generation-service
+      dockerfile: Dockerfile
+    container_name: ai-script-generation-service
+    environment:
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD:-postgres123}@postgres:5432/ai_script_generator
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis123}@redis:6379/2
+      - CORE_SERVICE_URL=http://core-service:8000
+      - PROJECT_SERVICE_URL=http://project-service:8001
+      - API_PORT=8002
+      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    ports:
+      - "8002:8002"
+    networks:
+      - ai-script-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      core-service:
+        condition: service_healthy
+      project-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - REACT_APP_CORE_SERVICE_URL=http://localhost:8000
+        - REACT_APP_PROJECT_SERVICE_URL=http://localhost:8001
+        - REACT_APP_GENERATION_SERVICE_URL=http://localhost:8002
+        - REACT_APP_ENV=production
+    container_name: ai-script-frontend
+    environment:
+      - CORE_SERVICE_URL=http://core-service:8000
+      - PROJECT_SERVICE_URL=http://project-service:8001
+      - GENERATION_SERVICE_URL=http://generation-service:8002
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - ai-script-network
+    depends_on:
+      core-service:
+        condition: service_healthy
+      project-service:
+        condition: service_healthy
+      generation-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    volumes:
+      - ./frontend/docker/ssl:/etc/ssl/certs:ro  # For SSL certificates if needed
+
+networks:
+  ai-script-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local

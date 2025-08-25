@@ -1,0 +1,101 @@
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.tsbuildinfo",
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+
+    /* Module resolution */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+
+    /* Path mapping */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@/app/*": ["src/app/*"],
+      "@/shared/*": ["src/shared/*"],
+      "@/entities/*": ["src/entities/*"],
+      "@/features/*": ["src/features/*"],
+      "@/pages/*": ["src/pages/*"],
+      "@/widgets/*": ["src/widgets/*"],
+      "@app/*": ["src/app/*"],
+      "@shared/*": ["src/shared/*"],
+      "@entities/*": ["src/entities/*"],
+      "@features/*": ["src/features/*"],
+      "@pages/*": ["src/pages/*"],
+      "@widgets/*": ["src/widgets/*"]
+    },
+
+    /* Type checking - Progressive strictness approach */
+    "strict": true,
+    "exactOptionalPropertyTypes": false, // TODO: Enable after fixing all type issues
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "noImplicitOverride": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noUncheckedIndexedAccess": false, // TODO: Enable after fixing array access
+    "noPropertyAccessFromIndexSignature": false, // TODO: Enable after fixing env vars
+    "skipLibCheck": true, // Skip type checking of declaration files from node_modules
+
+    /* Additional checks */
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+
+    /* Import/Export */
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Advanced */
+    "skipLibCheck": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "removeComments": false,
+    "importHelpers": true,
+    "downlevelIteration": true,
+    "experimentalDecorators": false,
+    "emitDecoratorMetadata": false,
+
+    /* Bundle mode compatibility */
+    "erasableSyntaxOnly": true
+  },
+  "include": [
+    "src/**/*",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "playwright.config.ts",
+    "eslint.config.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "tests/**/*",
+    "public/**/*"
+  ],
+  "ts-node": {
+    "esm": true
+  }
+}

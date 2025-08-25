@@ -1,0 +1,52 @@
+# Core FastAPI and Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic[email]>=2.5.0,<3
+pydantic-settings>=2.1.0,<3
+python-multipart==0.0.6
+
+# Database and Storage
+sqlalchemy[asyncio]==2.0.25
+redis==5.0.1
+
+# HTTP and Network
+httpx>=0.25.2
+aiohttp>=3.9.0
+
+# Authentication and Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# AI Libraries
+openai>=1.12.0
+anthropic>=0.18.0
+tenacity>=8.2.0
+
+# LangGraph Workflow
+langgraph>=0.0.40
+langchain>=0.1.0
+
+# RAG and Vector Database
+chromadb>=0.4.18
+tiktoken>=0.5.2
+numpy>=1.24.0
+
+# Enhanced async support
+aiofiles>=23.0.0
+
+# Resource monitoring
+psutil>=5.9.0
+
+# Development dependencies
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+black==23.11.0
+isort==5.12.0
+flake8==6.1.0
+mypy==1.7.1
+
+# Core module (choose ONE approach if needed):
+# ai-script-core==<pin>                 # private index
+# git+https://<token>@github.com/<org>/core.git@<tag>  # from git
+# (or rely on built-in fallbacks)

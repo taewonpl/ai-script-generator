@@ -1,0 +1,39 @@
+# Prometheus configuration for development environment
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    environment: 'development'
+    service: 'generation-service'
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Generation Service metrics
+  - job_name: 'generation-service'
+    static_configs:
+      - targets: ['generation-service:8000']
+    metrics_path: '/api/monitoring/metrics/prometheus'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Redis metrics (if redis_exporter is added)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 30s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093

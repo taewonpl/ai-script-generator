@@ -1,0 +1,229 @@
+name: CI - Code Quality and Type Safety
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.10'
+
+jobs:
+  # Frontend TypeScript checks
+  frontend-checks:
+    name: Frontend TypeScript & Linting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Run ESLint
+        run: |
+          cd frontend
+          npm run lint
+
+      - name: Run TypeScript type check
+        run: |
+          cd frontend
+          npm run typecheck
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm run build
+
+  # Backend Python lint and type checks
+  python-quality-checks:
+    name: Python Code Quality (All Services)
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service:
+          - "shared/core"
+          - "services/generation-service"
+          - "services/project-service"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies for ${{ matrix.service }}
+        run: |
+          cd ${{ matrix.service }}
+          pip install -e ".[dev,testing]"
+
+      - name: Run Ruff linting
+        run: |
+          cd ${{ matrix.service }}
+          python -m ruff check src --config pyproject.toml
+
+      - name: Run Ruff formatting check
+        run: |
+          cd ${{ matrix.service }}
+          python -m ruff format --check src --config pyproject.toml
+
+      - name: Run MyPy type checking
+        run: |
+          cd ${{ matrix.service }}
+          python -m mypy src --strict --config-file pyproject.toml
+
+      - name: Run tests if available
+        run: |
+          cd ${{ matrix.service }}
+          if [ -d "tests" ]; then
+            python -m pytest tests/ --cov=src --cov-report=xml --cov-report=term-missing
+          else
+            echo "No tests directory found, skipping tests"
+          fi
+
+  # Security and secrets scanning
+  security-scan:
+    name: Security & Secrets Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run security check script
+        run: |
+          chmod +x security-check.sh
+          ./security-check.sh
+
+      - name: Detect secrets
+        uses: Yelp/detect-secrets-action@v1.4.0
+        with:
+          args: '--baseline .secrets.baseline'
+
+  # Integration and type compatibility
+  integration-checks:
+    name: Integration & Type Compatibility
+    runs-on: ubuntu-latest
+    needs: [frontend-checks, python-quality-checks]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Python core dependencies
+        run: |
+          cd shared/core
+          pip install -e ".[dev]"
+
+      - name: Install frontend dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Validate Python-TypeScript type compatibility
+        run: |
+          echo "🔄 Validating Python-TypeScript type compatibility..."
+
+          # Check if SSE types are in sync
+          if [[ -f "shared/core/src/ai_script_core/schemas/sse_types.py" && -f "frontend/src/shared/types/shared-schemas.ts" ]]; then
+            echo "✅ Type definition files exist"
+          else
+            echo "❌ Missing shared type definition files"
+            exit 1
+          fi
+
+          # Validate Python schemas can be imported
+          cd shared/core
+          python -c "
+          try:
+              from ai_script_core.schemas.sse_types import *
+              print('✅ Python SSE types import successfully')
+          except Exception as e:
+              print('❌ Python SSE types validation failed:', e)
+              exit(1)
+          "
+
+          echo "✅ Type compatibility validation passed"
+
+  # Code coverage reporting
+  coverage-report:
+    name: Code Coverage Report
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    needs: [python-quality-checks]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Generate coverage reports
+        run: |
+          for service_dir in shared/core services/*/; do
+            if [[ -f "$service_dir/pyproject.toml" && -d "$service_dir/tests" ]]; then
+              echo "Generating coverage for $service_dir"
+              cd "$service_dir"
+              pip install -e ".[dev,testing]"
+              python -m pytest tests/ --cov=src --cov-report=xml --cov-report=term-missing
+              cd - > /dev/null
+            fi
+          done
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./shared/core/coverage.xml,./services/generation-service/coverage.xml,./services/project-service/coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+  # Final validation
+  all-checks-passed:
+    name: All Quality Checks Passed
+    runs-on: ubuntu-latest
+    needs: [frontend-checks, python-quality-checks, security-scan, integration-checks]
+    if: always()
+
+    steps:
+      - name: Check all jobs status
+        run: |
+          if [[ "${{ needs.frontend-checks.result }}" != "success" ||
+                "${{ needs.python-quality-checks.result }}" != "success" ||
+                "${{ needs.security-scan.result }}" != "success" ||
+                "${{ needs.integration-checks.result }}" != "success" ]]; then
+            echo "❌ Some quality checks failed"
+            exit 1
+          else
+            echo "✅ All quality checks passed!"
+          fi

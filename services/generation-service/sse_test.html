@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head><title>SSE Test</title></head>
+<body>
+<h1>SSE Test</h1>
+<div id="status">Ready</div>
+<button onclick="connect()">Connect</button>
+<div id="events"></div>
+<script>
+function connect() {
+  const es = new EventSource('/api/v1/jobs/test/stream');
+  es.onmessage = e => document.getElementById('events').innerHTML += '<p>' + e.data + '</p>';
+  es.onerror = () => document.getElementById('status').innerHTML = 'Error';
+  es.onopen = () => document.getElementById('status').innerHTML = 'Connected';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,395 @@
+# Release Pipeline for Generation Service
+name: Release Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  PYTHON_VERSION: '3.11'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/generation-service
+
+jobs:
+  # Create GitHub Release
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      release_id: ${{ steps.create_release.outputs.id }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Generate changelog from git commits
+          previous_tag=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+          if [ -n "$previous_tag" ]; then
+            echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
+            echo "## Changes since $previous_tag" >> $GITHUB_OUTPUT
+            git log --pretty=format:"- %s (%h)" $previous_tag..HEAD >> $GITHUB_OUTPUT
+            echo "" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "CHANGELOG=Initial release" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Generation Service ${{ github.ref_name }}
+          body: |
+            # Generation Service Release ${{ github.ref_name }}
+
+            ${{ steps.changelog.outputs.CHANGELOG }}
+
+            ## Installation
+
+            ### Docker
+            ```bash
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+            ```
+
+            ### Docker Compose
+            ```bash
+            # Update your docker-compose.yml with the new version
+            docker-compose pull
+            docker-compose up -d
+            ```
+
+            ## Verification
+
+            After deployment, verify the service is running:
+            ```bash
+            curl http://your-service-url/api/monitoring/health
+            ```
+
+            ## Documentation
+
+            - [Installation Guide](./docs/installation.md)
+            - [API Documentation](./docs/api.md)
+            - [Deployment Guide](./docs/deployment.md)
+
+          draft: false
+          prerelease: ${{ contains(github.ref_name, 'alpha') || contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') }}
+
+  # Build and push release images
+  build-release:
+    name: Build Release Images
+    runs-on: ubuntu-latest
+    needs: create-release
+    strategy:
+      matrix:
+        platform: [linux/amd64, linux/arm64]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./docker/Dockerfile
+          target: production
+          platforms: ${{ matrix.platform }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Comprehensive release testing
+  release-testing:
+    name: Release Testing
+    runs-on: ubuntu-latest
+    needs: build-release
+
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: Pull and start release image
+        run: |
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+          docker run -d --name generation-service-release \
+            --network host \
+            -e ENVIRONMENT=testing \
+            -e REDIS_HOST=localhost \
+            -e REDIS_PORT=6379 \
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+
+      - name: Wait for service startup
+        run: |
+          timeout 120 bash -c 'until curl -f http://localhost:8000/api/monitoring/health; do sleep 5; done'
+
+      - name: Run comprehensive test suite
+        run: |
+          # Run all tests against the release image
+          pytest tests/ -v --tb=short
+
+      - name: Run performance validation
+        run: |
+          python -c "
+          import asyncio
+          from tests.performance.performance_validator import run_performance_validation
+
+          async def main():
+              print('Running performance validation on release...')
+              results = await run_performance_validation()
+
+              print(f'Overall status: {results[\"overall_status\"]}')
+
+              # Print summary
+              summary = results.get('summary', {})
+              validation_summary = summary.get('validation_summary', {})
+
+              print(f'Validation targets passed: {validation_summary.get(\"passed_targets\", 0)}/{validation_summary.get(\"total_targets\", 0)}')
+              print(f'Pass rate: {validation_summary.get(\"pass_rate\", 0):.1%}')
+
+              if results['overall_status'] not in ['PASS', 'PARTIAL']:
+                  print('❌ Performance validation failed')
+                  exit(1)
+              else:
+                  print('✅ Performance validation passed')
+
+          asyncio.run(main())
+          "
+
+      - name: Run load testing
+        run: |
+          python -c "
+          import asyncio
+          from tests.performance.load_tester import run_full_validation
+
+          async def main():
+              print('Running load testing on release...')
+              results = await run_full_validation()
+
+              validation = results.get('performance_validation', {})
+              score = validation.get('validation_score', 0.0)
+
+              print(f'Load test validation score: {score:.2f}')
+              print(f'Overall status: {validation.get(\"overall_status\", \"UNKNOWN\")}')
+
+              if score < 0.8:
+                  print('❌ Load testing failed')
+                  exit(1)
+              else:
+                  print('✅ Load testing passed')
+
+          asyncio.run(main())
+          "
+
+      - name: Generate release test report
+        run: |
+          echo "# Release Test Report for ${{ github.ref_name }}" > release-test-report.md
+          echo "" >> release-test-report.md
+          echo "## Test Results" >> release-test-report.md
+          echo "- ✅ Comprehensive test suite passed" >> release-test-report.md
+          echo "- ✅ Performance validation passed" >> release-test-report.md
+          echo "- ✅ Load testing passed" >> release-test-report.md
+          echo "" >> release-test-report.md
+          echo "## Image Information" >> release-test-report.md
+          echo "- **Registry:** ${{ env.REGISTRY }}" >> release-test-report.md
+          echo "- **Image:** ${{ env.IMAGE_NAME }}" >> release-test-report.md
+          echo "- **Tag:** ${{ github.ref_name }}" >> release-test-report.md
+          echo "" >> release-test-report.md
+          echo "## Deployment Commands" >> release-test-report.md
+          echo "\`\`\`bash" >> release-test-report.md
+          echo "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}" >> release-test-report.md
+          echo "docker run -d -p 8000:8000 ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}" >> release-test-report.md
+          echo "\`\`\`" >> release-test-report.md
+
+      - name: Upload release test report
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./release-test-report.md
+          asset_name: release-test-report.md
+          asset_content_type: text/markdown
+
+      - name: Stop release service
+        if: always()
+        run: docker stop generation-service-release && docker rm generation-service-release
+
+  # Security scanning for release
+  security-scan:
+    name: Security Scan Release
+    runs-on: ubuntu-latest
+    needs: build-release
+
+    steps:
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+          format: 'json'
+          output: 'trivy-release-report.json'
+
+      - name: Upload security scan report
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./trivy-release-report.json
+          asset_name: security-scan-report.json
+          asset_content_type: application/json
+
+  # Generate release artifacts
+  generate-artifacts:
+    name: Generate Release Artifacts
+    runs-on: ubuntu-latest
+    needs: create-release
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate deployment manifests
+        run: |
+          # Create deployment manifests directory
+          mkdir -p deployment-manifests
+
+          # Copy Docker compose files with version tags
+          sed "s|generation-service:latest|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}|g" \
+            docker/docker-compose.prod.yml > deployment-manifests/docker-compose.yml
+
+          # Generate Kubernetes manifests (if applicable)
+          cat > deployment-manifests/kubernetes-deployment.yaml << EOF
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: generation-service
+            labels:
+              app: generation-service
+              version: ${{ github.ref_name }}
+          spec:
+            replicas: 2
+            selector:
+              matchLabels:
+                app: generation-service
+            template:
+              metadata:
+                labels:
+                  app: generation-service
+                  version: ${{ github.ref_name }}
+              spec:
+                containers:
+                - name: generation-service
+                  image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+                  ports:
+                  - containerPort: 8000
+                  env:
+                  - name: ENVIRONMENT
+                    value: "production"
+                  resources:
+                    requests:
+                      memory: "1Gi"
+                      cpu: "500m"
+                    limits:
+                      memory: "2Gi"
+                      cpu: "1000m"
+          ---
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: generation-service
+          spec:
+            selector:
+              app: generation-service
+            ports:
+            - protocol: TCP
+              port: 80
+              targetPort: 8000
+            type: LoadBalancer
+          EOF
+
+      - name: Create deployment package
+        run: |
+          tar -czf deployment-manifests.tar.gz deployment-manifests/
+
+      - name: Upload deployment manifests
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./deployment-manifests.tar.gz
+          asset_name: deployment-manifests.tar.gz
+          asset_content_type: application/gzip
+
+  # Notify on release completion
+  notify-release:
+    name: Notify Release Completion
+    runs-on: ubuntu-latest
+    needs: [create-release, build-release, release-testing, security-scan, generate-artifacts]
+    if: always()
+
+    steps:
+      - name: Notify success
+        if: needs.release-testing.result == 'success' && needs.security-scan.result == 'success'
+        run: |
+          echo "🎉 Release ${{ github.ref_name }} completed successfully!"
+          echo "📦 Docker image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}"
+          echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ github.ref_name }}"
+          # Add notification logic here (Slack, Discord, email, etc.)
+
+      - name: Notify failure
+        if: needs.release-testing.result == 'failure' || needs.security-scan.result == 'failure'
+        run: |
+          echo "❌ Release ${{ github.ref_name }} failed!"
+          echo "Please check the logs and fix issues before releasing."
+          # Add failure notification logic here

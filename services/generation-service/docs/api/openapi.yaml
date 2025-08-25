@@ -1,0 +1,896 @@
+openapi: 3.0.3
+info:
+  title: Generation Service API
+  description: |
+    Comprehensive API for AI content generation with advanced performance optimization,
+    caching, monitoring, and analytics capabilities.
+
+    ## Features
+    - High-performance content generation
+    - Intelligent caching strategies
+    - Real-time monitoring and metrics
+    - Resource optimization
+    - Load balancing and scaling
+
+    ## Performance Targets
+    - Workflow execution: < 30 seconds
+    - Concurrent workflows: 20 simultaneous
+    - API response (cached): < 100ms
+    - Memory limit: < 2GB
+    - Cache hit ratio: > 70%
+    - Success rate: > 95%
+  version: 1.0.0
+  contact:
+    name: Generation Service Team
+    email: support@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8000
+    description: Development server
+  - url: https://api.example.com
+    description: Production server
+
+paths:
+  # Health and Monitoring Endpoints
+  /api/monitoring/health:
+    get:
+      tags:
+        - Monitoring
+      summary: Health check endpoint
+      description: Returns the current health status of the service and all its components
+      operationId: getHealthStatus
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+              example:
+                status: "healthy"
+                timestamp: "2024-01-15T10:30:00Z"
+                overall_status: "healthy"
+                components:
+                  cache: "healthy"
+                  database: "healthy"
+                  redis: "healthy"
+                  memory: "healthy"
+                uptime: 3600
+                version: "1.0.0"
+        '503':
+          description: Service is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/monitoring/metrics:
+    get:
+      tags:
+        - Monitoring
+      summary: Get system metrics
+      description: Returns comprehensive system metrics including performance, resource usage, and statistics
+      operationId: getSystemMetrics
+      responses:
+        '200':
+          description: System metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemMetrics'
+              example:
+                timestamp: "2024-01-15T10:30:00Z"
+                metrics:
+                  workflow_execution_time: 25.5
+                  concurrent_workflows: 8
+                  cache_hit_ratio: 0.75
+                  memory_usage_mb: 1024
+                  cpu_usage_percent: 45.2
+                  requests_per_second: 15.3
+                performance_targets:
+                  all_met: true
+                  workflow_time_target: 30.0
+                  cache_ratio_target: 0.7
+
+  /api/monitoring/status:
+    get:
+      tags:
+        - Monitoring
+      summary: Get detailed service status
+      description: Returns detailed status information for all service components
+      operationId: getServiceStatus
+      responses:
+        '200':
+          description: Service status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceStatus'
+
+  /api/monitoring/dashboard:
+    get:
+      tags:
+        - Monitoring
+      summary: Get dashboard data
+      description: Returns aggregated data for monitoring dashboard
+      operationId: getDashboardData
+      responses:
+        '200':
+          description: Dashboard data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardData'
+
+  /api/monitoring/metrics/prometheus:
+    get:
+      tags:
+        - Monitoring
+      summary: Prometheus metrics endpoint
+      description: Returns metrics in Prometheus format for scraping
+      operationId: getPrometheusMetrics
+      responses:
+        '200':
+          description: Prometheus metrics
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: |
+                # HELP generation_service_requests_total Total number of requests
+                # TYPE generation_service_requests_total counter
+                generation_service_requests_total{method="GET",endpoint="/api/monitoring/health"} 1234
+
+  # Cache Management Endpoints
+  /api/cache/status:
+    get:
+      tags:
+        - Cache
+      summary: Get cache system status
+      description: Returns the current status and configuration of the cache system
+      operationId: getCacheStatus
+      responses:
+        '200':
+          description: Cache status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CacheStatus'
+              example:
+                enabled: true
+                backend: "redis"
+                statistics:
+                  hits: 1500
+                  misses: 350
+                  hit_ratio: 0.81
+                  total_operations: 1850
+                health: "healthy"
+                memory_usage_mb: 128
+                key_count: 1250
+
+  /api/cache/stats:
+    get:
+      tags:
+        - Cache
+      summary: Get detailed cache statistics
+      description: Returns comprehensive cache usage statistics and analytics
+      operationId: getCacheStats
+      responses:
+        '200':
+          description: Cache statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CacheStats'
+
+  /api/cache/health:
+    get:
+      tags:
+        - Cache
+      summary: Cache health check
+      description: Performs a health check specifically for the cache system
+      operationId: getCacheHealth
+      responses:
+        '200':
+          description: Cache is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheck'
+        '503':
+          description: Cache is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/cache/analytics:
+    get:
+      tags:
+        - Cache
+      summary: Get cache analytics
+      description: Returns cache performance analytics and insights
+      operationId: getCacheAnalytics
+      parameters:
+        - name: period
+          in: query
+          description: Time period for analytics (1h, 24h, 7d, 30d)
+          schema:
+            type: string
+            enum: [1h, 24h, 7d, 30d]
+            default: 24h
+      responses:
+        '200':
+          description: Cache analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CacheAnalytics'
+
+  /api/cache/clear:
+    post:
+      tags:
+        - Cache
+      summary: Clear cache
+      description: Clears cache entries based on specified criteria
+      operationId: clearCache
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CacheClearRequest'
+            example:
+              cache_type: "prompt_result"
+              pattern: "gpt-*"
+              confirm: true
+      responses:
+        '200':
+          description: Cache cleared successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CacheClearResponse'
+        '400':
+          description: Invalid request
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  # Performance Monitoring Endpoints
+  /api/performance/status:
+    get:
+      tags:
+        - Performance
+      summary: Get performance system status
+      description: Returns the current status of performance optimization systems
+      operationId: getPerformanceStatus
+      responses:
+        '200':
+          description: Performance status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceStatus'
+              example:
+                optimization_enabled: true
+                async_enabled: true
+                current_load: 0.45
+                performance_rating: "good"
+                resource_usage:
+                  memory_percent: 42.3
+                  cpu_percent: 35.8
+                active_optimizations:
+                  - "connection_pooling"
+                  - "request_batching"
+                  - "smart_caching"
+
+  /api/performance/resources:
+    get:
+      tags:
+        - Performance
+      summary: Get resource usage metrics
+      description: Returns detailed resource usage metrics and optimization status
+      operationId: getResourceMetrics
+      responses:
+        '200':
+          description: Resource metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceMetrics'
+
+  /api/performance/load:
+    get:
+      tags:
+        - Performance
+      summary: Get current system load
+      description: Returns current system load and capacity information
+      operationId: getSystemLoad
+      responses:
+        '200':
+          description: System load retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemLoad'
+
+  /api/performance/analytics:
+    get:
+      tags:
+        - Performance
+      summary: Get performance analytics
+      description: Returns performance analytics and trend data
+      operationId: getPerformanceAnalytics
+      parameters:
+        - name: period
+          in: query
+          description: Time period for analytics
+          schema:
+            type: string
+            enum: [1h, 24h, 7d, 30d]
+            default: 24h
+        - name: metrics
+          in: query
+          description: Specific metrics to include
+          schema:
+            type: array
+            items:
+              type: string
+            example: ["response_time", "throughput", "error_rate"]
+      responses:
+        '200':
+          description: Performance analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PerformanceAnalytics'
+
+  /api/performance/optimize:
+    post:
+      tags:
+        - Performance
+      summary: Trigger performance optimization
+      description: Manually trigger performance optimization processes
+      operationId: optimizePerformance
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OptimizationRequest'
+            example:
+              optimization_type: "memory"
+              force: false
+              parameters:
+                target_memory_mb: 1024
+      responses:
+        '200':
+          description: Optimization triggered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OptimizationResponse'
+        '400':
+          description: Invalid optimization request
+        '401':
+          description: Unauthorized
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    HealthStatus:
+      type: object
+      required:
+        - status
+        - timestamp
+        - overall_status
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy, degraded]
+          description: Overall service status
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp of health check
+        overall_status:
+          type: string
+          enum: [healthy, unhealthy, degraded]
+          description: Aggregated status of all components
+        components:
+          type: object
+          additionalProperties:
+            type: string
+          description: Status of individual components
+        uptime:
+          type: integer
+          description: Service uptime in seconds
+        version:
+          type: string
+          description: Service version
+        memory_usage:
+          type: object
+          properties:
+            current_mb:
+              type: number
+            limit_mb:
+              type: number
+            percentage:
+              type: number
+
+    SystemMetrics:
+      type: object
+      required:
+        - timestamp
+        - metrics
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        metrics:
+          type: object
+          properties:
+            workflow_execution_time:
+              type: number
+              description: Average workflow execution time in seconds
+            concurrent_workflows:
+              type: integer
+              description: Number of currently running workflows
+            cache_hit_ratio:
+              type: number
+              minimum: 0
+              maximum: 1
+              description: Cache hit ratio (0-1)
+            memory_usage_mb:
+              type: number
+              description: Current memory usage in MB
+            cpu_usage_percent:
+              type: number
+              description: Current CPU usage percentage
+            requests_per_second:
+              type: number
+              description: Current request rate
+            error_rate:
+              type: number
+              description: Current error rate (0-1)
+        performance_targets:
+          type: object
+          properties:
+            all_met:
+              type: boolean
+            workflow_time_target:
+              type: number
+            cache_ratio_target:
+              type: number
+            memory_limit_mb:
+              type: number
+
+    ServiceStatus:
+      type: object
+      properties:
+        service_name:
+          type: string
+        version:
+          type: string
+        environment:
+          type: string
+        status:
+          type: string
+        started_at:
+          type: string
+          format: date-time
+        components:
+          type: array
+          items:
+            $ref: '#/components/schemas/ComponentStatus'
+
+    ComponentStatus:
+      type: object
+      properties:
+        name:
+          type: string
+        status:
+          type: string
+          enum: [healthy, unhealthy, degraded, unknown]
+        last_checked:
+          type: string
+          format: date-time
+        response_time_ms:
+          type: number
+        error_message:
+          type: string
+
+    DashboardData:
+      type: object
+      properties:
+        summary:
+          type: object
+          properties:
+            total_requests:
+              type: integer
+            successful_requests:
+              type: integer
+            error_rate:
+              type: number
+            avg_response_time:
+              type: number
+        real_time_metrics:
+          $ref: '#/components/schemas/SystemMetrics'
+        alerts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Alert'
+
+    Alert:
+      type: object
+      properties:
+        id:
+          type: string
+        level:
+          type: string
+          enum: [info, warning, error, critical]
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        component:
+          type: string
+
+    CacheStatus:
+      type: object
+      required:
+        - enabled
+        - backend
+        - health
+      properties:
+        enabled:
+          type: boolean
+        backend:
+          type: string
+          enum: [memory, redis, hybrid]
+        statistics:
+          type: object
+          properties:
+            hits:
+              type: integer
+            misses:
+              type: integer
+            hit_ratio:
+              type: number
+              minimum: 0
+              maximum: 1
+            total_operations:
+              type: integer
+        health:
+          type: string
+          enum: [healthy, unhealthy, degraded]
+        memory_usage_mb:
+          type: number
+        key_count:
+          type: integer
+        configuration:
+          type: object
+          properties:
+            ttl_seconds:
+              type: integer
+            max_size_mb:
+              type: integer
+            cleanup_interval:
+              type: integer
+
+    CacheStats:
+      type: object
+      properties:
+        operations:
+          type: object
+          properties:
+            total:
+              type: integer
+            hits:
+              type: integer
+            misses:
+              type: integer
+            sets:
+              type: integer
+            deletes:
+              type: integer
+        performance:
+          type: object
+          properties:
+            avg_response_time_ms:
+              type: number
+            hit_ratio:
+              type: number
+            throughput_ops_per_second:
+              type: number
+        by_cache_type:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              hits:
+                type: integer
+              misses:
+                type: integer
+              hit_ratio:
+                type: number
+
+    CacheAnalytics:
+      type: object
+      properties:
+        period:
+          type: string
+        trends:
+          type: object
+          properties:
+            hit_ratio_trend:
+              type: string
+              enum: [increasing, decreasing, stable]
+            usage_trend:
+              type: string
+              enum: [increasing, decreasing, stable]
+        hottest_keys:
+          type: array
+          items:
+            type: object
+            properties:
+              key_pattern:
+                type: string
+              access_count:
+                type: integer
+        recommendations:
+          type: array
+          items:
+            type: string
+
+    CacheClearRequest:
+      type: object
+      required:
+        - confirm
+      properties:
+        cache_type:
+          type: string
+          description: Specific cache type to clear
+        pattern:
+          type: string
+          description: Key pattern to match (supports wildcards)
+        confirm:
+          type: boolean
+          description: Confirmation flag to prevent accidental clears
+
+    CacheClearResponse:
+      type: object
+      properties:
+        cleared_count:
+          type: integer
+        cache_type:
+          type: string
+        pattern:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    PerformanceStatus:
+      type: object
+      properties:
+        optimization_enabled:
+          type: boolean
+        async_enabled:
+          type: boolean
+        current_load:
+          type: number
+          minimum: 0
+          maximum: 1
+        performance_rating:
+          type: string
+          enum: [excellent, good, fair, poor]
+        resource_usage:
+          type: object
+          properties:
+            memory_percent:
+              type: number
+            cpu_percent:
+              type: number
+            disk_percent:
+              type: number
+        active_optimizations:
+          type: array
+          items:
+            type: string
+
+    ResourceMetrics:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        memory:
+          type: object
+          properties:
+            used_mb:
+              type: number
+            available_mb:
+              type: number
+            percentage:
+              type: number
+        cpu:
+          type: object
+          properties:
+            usage_percent:
+              type: number
+            load_average:
+              type: array
+              items:
+                type: number
+        disk:
+          type: object
+          properties:
+            used_gb:
+              type: number
+            available_gb:
+              type: number
+            percentage:
+              type: number
+        network:
+          type: object
+          properties:
+            bytes_sent:
+              type: integer
+            bytes_received:
+              type: integer
+
+    SystemLoad:
+      type: object
+      properties:
+        current_load:
+          type: number
+        capacity:
+          type: object
+          properties:
+            max_concurrent_requests:
+              type: integer
+            current_concurrent_requests:
+              type: integer
+        queues:
+          type: object
+          properties:
+            pending_requests:
+              type: integer
+            processing_requests:
+              type: integer
+        bottlenecks:
+          type: array
+          items:
+            type: string
+
+    PerformanceAnalytics:
+      type: object
+      properties:
+        period:
+          type: string
+        metrics:
+          type: object
+          properties:
+            response_times:
+              type: object
+              properties:
+                avg:
+                  type: number
+                p50:
+                  type: number
+                p95:
+                  type: number
+                p99:
+                  type: number
+            throughput:
+              type: object
+              properties:
+                requests_per_second:
+                  type: number
+                peak_rps:
+                  type: number
+            error_rates:
+              type: object
+              properties:
+                overall:
+                  type: number
+                by_endpoint:
+                  type: object
+                  additionalProperties:
+                    type: number
+        trends:
+          type: object
+          additionalProperties:
+            type: string
+
+    OptimizationRequest:
+      type: object
+      required:
+        - optimization_type
+      properties:
+        optimization_type:
+          type: string
+          enum: [memory, cpu, cache, network, all]
+        force:
+          type: boolean
+          default: false
+        parameters:
+          type: object
+          additionalProperties: true
+
+    OptimizationResponse:
+      type: object
+      properties:
+        optimization_id:
+          type: string
+        status:
+          type: string
+          enum: [started, completed, failed]
+        actions_taken:
+          type: array
+          items:
+            type: string
+        estimated_improvement:
+          type: object
+          properties:
+            memory_saved_mb:
+              type: number
+            performance_gain_percent:
+              type: number
+        completion_time:
+          type: string
+          format: date-time
+
+    HealthCheck:
+      type: object
+      properties:
+        component:
+          type: string
+        status:
+          type: string
+          enum: [healthy, unhealthy, degraded]
+        response_time_ms:
+          type: number
+        timestamp:
+          type: string
+          format: date-time
+        details:
+          type: object
+          additionalProperties: true
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          additionalProperties: true
+          description: Additional error details
+        timestamp:
+          type: string
+          format: date-time
+        request_id:
+          type: string
+          description: Unique request identifier

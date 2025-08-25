@@ -1,0 +1,109 @@
+# Development environment docker-compose configuration
+version: '3.8'
+
+services:
+  generation-service:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: development
+    container_name: generation-service-dev
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=development
+      - DEBUG=true
+      - LOG_LEVEL=DEBUG
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ENABLE_MONITORING=true
+      - ENABLE_CACHING=true
+      - ENABLE_PERFORMANCE_OPTIMIZATION=true
+    volumes:
+      - ../src:/app/src:ro
+      - ../tests:/app/tests:ro
+      - generation-data:/app/data
+    depends_on:
+      - redis
+      - prometheus
+    networks:
+      - generation-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/health-check.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  redis:
+    image: redis:7-alpine
+    container_name: generation-redis-dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - generation-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: generation-prometheus-dev
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - generation-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: generation-grafana-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    networks:
+      - generation-network
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  generation-data:
+    driver: local
+
+networks:
+  generation-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

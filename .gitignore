@@ -1,0 +1,312 @@
+# AI Script Generator v3.0 - Git Ignore File
+
+# ===============================================
+# PYTHON
+# ===============================================
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Environments
+.env
+.env.local
+.env.development
+.env.staging
+.env.production
+.env.test
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# ===============================================
+# NODE.JS / FRONTEND
+# ===============================================
+
+# Dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# React build output
+build/
+
+# ===============================================
+# DATABASE FILES
+# ===============================================
+
+# SQLite
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# PostgreSQL
+*.dump
+*.sql
+
+# Backup files
+*.bak
+*.backup
+
+# ===============================================
+# LOG FILES
+# ===============================================
+
+# Application logs
+logs/
+*.log
+*.log.*
+
+# ===============================================
+# IDE / EDITOR
+# ===============================================
+
+# Visual Studio Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains IDEs
+.idea/
+*.swp
+*.swo
+*~
+
+# ===============================================
+# OPERATING SYSTEM
+# ===============================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+
+# ===============================================
+# PROJECT SPECIFIC
+# ===============================================
+
+# Environment Variables
+.env
+.env.local
+.env.development
+.env.staging
+.env.production
+
+# API Keys and Secrets
+secrets.json
+config.json
+credentials.json
+api_keys.json
+
+# AI Model files
+*.model
+*.pkl
+*.joblib
+*.h5
+*.weights
+*.bin
+*.onnx
+
+# Vector databases
+chroma_db/
+vector_store/
+embeddings/
+
+# Test virtual environments
+test_venv/
+clean_test_venv/
+venv_*/
+
+# Test reports
+test_report.md
+e2e_test_report_*.json
+
+# Cache directories
+cache/
+.cache/
+
+# Test data directories
+test_data/
+**/test_data/
+
+# Temporary files
+tmp/
+temp/
+
+# Generated files
+generated/
+
+# Uploads
+uploads/
+
+# Data directories (keep structure)
+data/
+!data/.gitkeep
+
+# Docker
+docker-compose.override.yml
+
+# Pre-commit
+.pre-commit-cache/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Vite
+.vite/
+
+# ===============================================
+# SECURITY ADDITIONS
+# ===============================================
+
+# Additional environment files
+*.env
+*.env.*
+!.env.example
+!*.env.example
+
+# Key files
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+
+# SSL certificates
+ssl/
+certs/
+certificates/
+
+# Database backups
+*.dump
+*.sql.gz
+*.sql.bz2
+
+# Additional sensitive files
+auth.json
+token.json
+service-account.json
+service_account.json
+google-credentials.json
+aws-credentials.json
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
+
+# IDE and OS additional files
+.history/
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+Thumbs.db:encryptable
+.Trashes
