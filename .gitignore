@@ -20,7 +20,10 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# lib/ - commented out to allow frontend/src/shared/lib
+# Only ignore Python lib directories
+**/lib/
+!**/src/**/lib/
 lib64/
 parts/
 sdist/

@@ -73,11 +73,16 @@ jobs:
         run: |
           cd frontend && pnpm install --frozen-lockfile
 
-      - name: Run TypeScript type check (warning level)
+      - name: Run TypeScript type check (build config)
         run: |
-          echo "::warning::Running TypeScript type check - errors are treated as warnings"
-          # Only run frontend typecheck to avoid Python dependency issues
-          cd frontend && pnpm run typecheck || echo "::warning::TypeScript errors found but continuing CI"
+          echo "::notice::Running TypeScript type check for build"
+          cd frontend && pnpm run typecheck:build
+        continue-on-error: false
+
+      - name: Run STRICT TypeScript type check (warning level)
+        run: |
+          echo "::warning::Running STRICT TypeScript type check - errors reported as warnings"
+          cd frontend && pnpm run typecheck:strict || echo "::warning::STRICT TypeScript errors found - reported for tracking"
         continue-on-error: true
 
   # Build verification
