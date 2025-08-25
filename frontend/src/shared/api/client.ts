@@ -521,19 +521,19 @@ interface RequestConfig {
 // Create configured API client instances
 export const coreServiceClient = new APIClient({
   baseURL:
-    process.env['VITE_CORE_SERVICE_URL'] || 'http://localhost:8000/api/v1',
+    import.meta.env.VITE_CORE_SERVICE_URL || 'http://localhost:8000/api/v1',
   service: 'core-service',
 })
 
 export const projectServiceClient = new APIClient({
   baseURL:
-    process.env['VITE_PROJECT_SERVICE_URL'] || 'http://localhost:8001/api/v1',
+    import.meta.env.VITE_PROJECT_SERVICE_URL || 'http://localhost:8001/api/v1',
   service: 'project-service',
 })
 
 export const generationServiceClient = new APIClient({
   baseURL:
-    process.env['VITE_GENERATION_SERVICE_URL'] ||
+    import.meta.env.VITE_GENERATION_SERVICE_URL ||
     'http://localhost:8002/api/v1',
   service: 'generation-service',
 })

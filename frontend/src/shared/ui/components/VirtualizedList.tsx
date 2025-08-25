@@ -1,6 +1,6 @@
 import React, { memo, useMemo, useCallback } from 'react'
 import { FixedSizeList as List, VariableSizeList } from 'react-window'
-// @ts-ignore - react-window-infinite-loader types not available
+// @ts-expect-error - react-window-infinite-loader types not available
 import InfiniteLoader from 'react-window-infinite-loader'
 import { Box, CircularProgress, Typography } from '@mui/material'
 

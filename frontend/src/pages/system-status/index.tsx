@@ -215,7 +215,7 @@ export default function SystemStatusPage() {
           overallHealth: 'warning',
         }
         return mockData
-      } catch (err) {
+      } catch {
         throw new Error('시스템 상태를 불러올 수 없습니다')
       }
     },

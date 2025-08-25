@@ -181,7 +181,7 @@ const simulateGeneration = (
         setTimeout(() => {
           try {
             controller.close()
-          } catch (e) {
+          } catch {
             // 이미 닫힌 경우 무시
           }
           sseConnections.delete(jobId)
@@ -217,7 +217,7 @@ const simulateGeneration = (
           setTimeout(() => {
             try {
               controller.close()
-            } catch (e) {
+            } catch {
               // 이미 닫힌 경우 무시
             }
             sseConnections.delete(jobId)
@@ -284,7 +284,7 @@ export const sseHandlers = [
         clearInterval(connection.interval)
         try {
           connection.controller.close()
-        } catch (e) {
+        } catch {
           // 이미 닫힌 경우 무시
         }
         sseConnections.delete(jobId as string)

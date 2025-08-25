@@ -555,9 +555,7 @@ export class ProductionSSEService {
   }
 
   private getBaseUrl(): string {
-    return process.env.NODE_ENV === 'production'
-      ? '/api/v1'
-      : 'http://localhost:8000/api/v1'
+    return import.meta.env.PROD ? '/api/v1' : 'http://localhost:8000/api/v1'
   }
 
   private clearManualRetryTimeout(): void {

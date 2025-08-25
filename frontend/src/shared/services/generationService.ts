@@ -157,10 +157,9 @@ export class GenerationService {
    * Build SSE URL for a job ID
    */
   static buildSSEUrl(jobId: string): string {
-    const baseUrl =
-      process.env.NODE_ENV === 'production'
-        ? '/api/v1'
-        : 'http://localhost:8000/api/v1'
+    const baseUrl = import.meta.env.PROD
+      ? '/api/v1'
+      : 'http://localhost:8000/api/v1'
 
     return `${baseUrl}${GENERATION_API_BASE}/${jobId}/events`
   }

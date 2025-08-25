@@ -324,10 +324,9 @@ export class SSEConnectionService {
     this.cleanup()
 
     // Reconstruct SSE URL (assuming the original pattern)
-    const baseUrl =
-      process.env.NODE_ENV === 'production'
-        ? '/api/v1'
-        : 'http://localhost:8000/api/v1'
+    const baseUrl = import.meta.env.PROD
+      ? '/api/v1'
+      : 'http://localhost:8000/api/v1'
     const sseUrl = `${baseUrl}/generations/${this.currentJobId}/events`
 
     // Reconnect
