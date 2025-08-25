@@ -41,8 +41,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd frontend
-          pnpm install --frozen-lockfile
+          pnpm install --filter frontend --frozen-lockfile
 
       - name: Install Python dependencies
         run: |
@@ -72,14 +71,13 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd frontend
-          pnpm install --frozen-lockfile
+          pnpm install --filter frontend --frozen-lockfile
 
       - name: Run TypeScript type check (warning level)
         run: |
           echo "::warning::Running TypeScript type check - errors are treated as warnings"
           # Only run frontend typecheck to avoid Python dependency issues
-          cd frontend && npm run typecheck || echo "::warning::TypeScript errors found but continuing CI"
+          pnpm --filter frontend run typecheck || echo "::warning::TypeScript errors found but continuing CI"
         continue-on-error: true
 
   # Build verification
@@ -96,15 +94,18 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
 
+      - name: Install pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+
       - name: Install frontend dependencies
         run: |
-          cd frontend
-          npm ci
+          pnpm install --filter frontend --frozen-lockfile
 
       - name: Build frontend
         run: |
-          cd frontend
-          npm run build
+          pnpm --filter frontend run build
 
       - name: Verify build artifacts
         run: |
@@ -137,13 +138,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd frontend
-          pnpm install --frozen-lockfile
+          pnpm install --filter frontend --frozen-lockfile
 
       - name: Run tests
         run: |
-          cd frontend
-          npm run test -- --run --passWithNoTests
+          pnpm --filter frontend run test -- --run --passWithNoTests
         continue-on-error: false
 
       - name: Test results summary
