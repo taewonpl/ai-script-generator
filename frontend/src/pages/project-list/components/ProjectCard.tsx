@@ -217,7 +217,6 @@ export const ProjectCard = memo(function ProjectCard({
               <Checkbox
                 checked={selected}
                 onChange={handleSelectionClick}
-                onClick={handleSelectionClick}
               />
             )}
 
@@ -298,7 +297,6 @@ export const ProjectCard = memo(function ProjectCard({
           <Checkbox
             checked={selected}
             onChange={handleSelectionClick}
-            onClick={handleSelectionClick}
             size="small"
             sx={{
               bgcolor: 'background.paper',

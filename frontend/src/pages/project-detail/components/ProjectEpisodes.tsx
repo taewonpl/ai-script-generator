@@ -42,7 +42,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { GenerateDrawer } from '@/features/script-generation/components/GenerateDrawer'
 import { useEpisodes } from '@/shared/hooks/api/useEpisodes'
 import { useToastHelpers } from '@/shared/ui/components/toast'
-import type { Project } from '@/shared/types/project'
+import type { Project } from '@/shared/types/api'
 
 // Updated Episode interface matching ChromaDB API
 interface Episode {

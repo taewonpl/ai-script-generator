@@ -23,7 +23,7 @@ import {
   ArrowDownward as DescIcon,
 } from '@mui/icons-material'
 
-import type { ProjectFilters } from '@features/project/hooks'
+import type { ProjectFilters } from '@/shared/types/api'
 
 interface ProjectListFiltersProps {
   filters: ProjectFilters
@@ -76,7 +76,7 @@ export function ProjectListFilters({
   // Debounce search input
   useEffect(() => {
     const timer = setTimeout(() => {
-      onFiltersChange.setSearch(searchDebounce)
+      onFiltersChange.setSearch(searchDebounce || '')
     }, 300)
 
     return () => clearTimeout(timer)

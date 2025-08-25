@@ -323,6 +323,7 @@ export function ProjectSettings({ project, onUpdate }: ProjectSettingsProps) {
             projectId={project.id}
             initialData={{
               ...project,
+              progressPercentage: project.progress_percentage,
               type: project.type as
                 | 'action'
                 | 'animation'
