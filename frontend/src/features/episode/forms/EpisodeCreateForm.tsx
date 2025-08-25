@@ -22,8 +22,8 @@ import { FormTextField, FormTextArea } from '@/shared/ui/forms/FormTextField'
 import { FormSelect } from '@/shared/ui/forms/FormSelect'
 import { FormDatePicker } from '@/shared/ui/forms/FormDatePicker'
 import { FormAutocomplete } from '@/shared/ui/forms/FormAutocomplete'
-import { EpisodeCreateSchema } from '@/shared/lib/validation/schemas'
-import type { EpisodeCreateFormData } from '@/shared/lib/validation/schemas'
+import { EpisodeCreateSchema } from '../../../shared/lib/validation/schemas'
+import type { EpisodeCreateFormData } from '../../../shared/lib/validation/schemas'
 import { useToastHelpers } from '@/shared/ui/components/toast'
 
 interface EpisodeCreateFormProps {

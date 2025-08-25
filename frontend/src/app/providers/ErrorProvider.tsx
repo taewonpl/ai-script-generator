@@ -17,11 +17,11 @@ import {
   BugReport as BugIcon,
 } from '@mui/icons-material'
 
-import { ErrorClassifier } from '@/shared/lib/errors/errorClassifier'
-import { SentryReporter } from '@/shared/lib/errors/sentryReporter'
+import { ErrorClassifier } from '../../shared/lib/errors/errorClassifier'
+import { SentryReporter } from '../../shared/lib/errors/sentryReporter'
 import { useToastHelpers } from '@/shared/ui/components/toast'
-import type { AppError } from '@/shared/lib/errors/types'
-import { analytics } from '@/shared/lib/analytics'
+import type { AppError } from '../../shared/lib/errors/types'
+import { analytics } from '../../shared/lib/analytics'
 
 interface ErrorFallbackProps {
   error: Error

@@ -4,7 +4,7 @@ import '@/shared/config/env'
 import { createRoot } from 'react-dom/client'
 import { ErrorProvider } from '@/app/providers/ErrorProvider'
 import { ToastProvider } from '@/shared/ui/components/toast'
-import { SentryReporter } from '@/shared/lib/errors'
+import { SentryReporter } from './shared/lib/errors'
 import App from '@/app'
 import { env } from '@/shared/config/env'
 

@@ -1,6 +1,6 @@
 import React, { memo, useEffect, useRef } from 'react'
 import * as Sentry from '@sentry/react'
-import { analytics } from '@/shared/lib/analytics'
+import { analytics } from '../../lib/analytics'
 
 export interface PerformanceMonitorProps {
   name: string
