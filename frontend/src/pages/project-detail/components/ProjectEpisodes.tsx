@@ -42,7 +42,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { GenerateDrawer } from '@/features/script-generation/components/GenerateDrawer'
 import { useEpisodes } from '@/shared/hooks/api/useEpisodes'
 import { useToastHelpers } from '@/shared/ui/components/toast'
-import type { Project } from '@/shared/types/api'
+import type { Project } from '@/shared/types/project'
 
 // Updated Episode interface matching ChromaDB API
 interface Episode {
@@ -414,7 +414,7 @@ export function ProjectEpisodes({ project }: ProjectEpisodesProps) {
         isOpen={showGenerateDrawer}
         onClose={handleCloseGenerateDrawer}
         project={project}
-        projectName={project.name || project.title}
+        projectName={project.title || project.name}
         initialEpisodeNumber={selectedEpisode?.number || getNextEpisodeNumber()}
         onEpisodeCreated={handleEpisodeCreated}
       />

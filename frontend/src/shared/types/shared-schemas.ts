@@ -324,27 +324,17 @@ export interface ValidationResult {
 // Export all types for easy importing
 // =============================================================================
 
+// Note: BaseSchema, IDMixin, TimestampMixin are already exported as interfaces above
+// Only re-export types that need to be available but are not already exported
 export type {
-  BaseSchema,
-  IDMixin,
-  TimestampMixin,
   // Generation types
   GenerationStatus,
   GenerationType,
   SupportedAIModel,
-  AIModelConfigDTO,
-  RAGConfigDTO,
-  GenerationRequestDTO,
-  GenerationMetadataDTO,
-  GenerationResponseDTO,
-  // Project types
+  // Project types  
   ProjectType,
   ProjectStatus,
-  ProjectDTO,
-  EpisodeDTO,
-  // Common types
-  APIError,
-  APIResponse,
+  // Validation types
   ValidationError,
   ValidationResult,
 }

@@ -84,18 +84,6 @@ const AVAILABLE_MODELS: ModelInfo[] = [
   },
 ]
 
-const GENRE_OPTIONS = [
-  '로맨스',
-  '코미디',
-  '드라마',
-  '액션',
-  '스릴러',
-  '호러',
-  '판타지',
-  'SF',
-  '다큐멘터리',
-  '애니메이션',
-]
 
 export function AIModelSettings() {
   const { showSuccess, showError } = useToastHelpers()

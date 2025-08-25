@@ -45,18 +45,22 @@ export function useJobControl() {
     mutationFn: async ({ jobId, reason }: CancelJobRequest) => {
       console.log(`🛑 Canceling job: ${jobId}`, { reason })
 
-      const response = await generationApi.delete(`/jobs/${jobId}`, {
+      const response = await generationApi.delete<CancelJobResponse>(`/jobs/${jobId}`, {
         data: { reason },
         headers: {
           'Content-Type': 'application/json',
         },
       })
 
-      return response.data
+      return response
     },
 
     // Optimistic update - immediately mark job as canceling
-    onMutate: async ({ jobId }) => {
+    onMutate: async ({ jobId }): Promise<{
+      previousJob: unknown
+      previousJobs: unknown
+      jobId: string
+    }> => {
       // Cancel any outgoing refetches for jobs
       await queryClient.cancelQueries({ queryKey: ['jobs'] })
       await queryClient.cancelQueries({ queryKey: ['job', jobId] })
@@ -134,10 +138,10 @@ export function useJobControl() {
       console.error('❌ Failed to cancel job:', error)
 
       // Rollback optimistic updates
-      if (context?.previousJob) {
+      if (context && typeof context === 'object' && 'previousJob' in context && context.previousJob !== undefined) {
         queryClient.setQueryData(['job', jobId], context.previousJob)
       }
-      if (context?.previousJobs) {
+      if (context && typeof context === 'object' && 'previousJobs' in context && context.previousJobs !== undefined) {
         queryClient.setQueryData(['jobs'], context.previousJobs)
       }
 
@@ -221,10 +225,10 @@ export function useJobControl() {
 
     return {
       message:
-        error.response?.data?.message ||
+        (error.response?.data as any)?.message ||
         error.message ||
         'Failed to cancel job',
-      code: error.response?.data?.code || 'CANCEL_ERROR',
+      code: (error.response?.data as any)?.code || 'CANCEL_ERROR',
       jobId,
     }
   }

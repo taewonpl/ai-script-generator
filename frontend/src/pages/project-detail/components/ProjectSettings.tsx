@@ -29,19 +29,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { ProjectEditForm } from '@features/project/forms'
 import { useToastHelpers } from '@/shared/ui/components/toast'
-
-interface Project {
-  id: string
-  name: string
-  description?: string
-  type: string
-  status: string
-  created_at: string
-  updated_at: string
-  episodes_count?: number
-  scripts_count?: number
-  progress_percentage?: number
-}
+import type { Project } from '@/shared/types/project'
 
 interface ProjectSettingsProps {
   project: Project
@@ -147,7 +135,7 @@ export function ProjectSettings({ project, onUpdate }: ProjectSettingsProps) {
                   생성일시
                 </Typography>
                 <Typography variant="body2">
-                  {formatDate(project.created_at)}
+                  {formatDate(project.created_at || project.createdAt || '')}
                 </Typography>
               </Box>
 
@@ -156,7 +144,7 @@ export function ProjectSettings({ project, onUpdate }: ProjectSettingsProps) {
                   마지막 수정
                 </Typography>
                 <Typography variant="body2">
-                  {formatDate(project.updated_at)}
+                  {formatDate(project.updated_at || project.updatedAt || '')}
                 </Typography>
               </Box>
 
@@ -332,6 +320,12 @@ export function ProjectSettings({ project, onUpdate }: ProjectSettingsProps) {
                 | 'romance'
                 | 'thriller'
                 | 'documentary',
+              status: project.status as
+                | 'planning'
+                | 'in_progress'
+                | 'completed'
+                | 'on_hold'
+                | 'cancelled',
               isPublic: false, // Add missing required field
             }}
             onSubmit={handleEdit}

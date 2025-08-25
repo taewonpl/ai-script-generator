@@ -1,3 +1,4 @@
+import React from 'react'
 import {
   Box,
   Container,
@@ -32,10 +33,11 @@ import {
   Memory as MemoryIcon,
   Computer as ServerIcon,
   NetworkCheck as NetworkIcon,
+  CheckCircle,
+  Warning,
 } from '@mui/icons-material'
 import { useQuery } from '@tanstack/react-query'
 
-import { useToastHelpers } from '@/shared/ui/components/toast'
 
 interface ServiceStatus {
   name: string
@@ -91,7 +93,6 @@ const STATUS_ICONS = {
 }
 
 export default function SystemStatusPage() {
-  const { showError } = useToastHelpers()
 
   // Load system status
   const {
@@ -224,7 +225,7 @@ export default function SystemStatusPage() {
   })
 
   const getStatusIcon = (status: 'healthy' | 'warning' | 'error') => {
-    const IconComponent = STATUS_ICONS[status]
+    const IconComponent = STATUS_ICONS[status] as React.ElementType
     return <IconComponent color={STATUS_COLORS[status]} />
   }
 

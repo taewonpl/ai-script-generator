@@ -35,18 +35,7 @@ import {
   Visibility as ViewIcon,
 } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
-
-interface Project {
-  id: string
-  name: string
-  description?: string
-  type: string
-  status: string
-  created_at: string
-  updated_at: string
-  episodes_count?: number
-  scripts_count?: number
-}
+import type { Project } from '@/shared/types/project'
 
 interface ProjectCardProps {
   project: Project
@@ -109,12 +98,12 @@ export const ProjectCard = memo(function ProjectCard({
   )
 
   const formattedCreatedAt = useMemo(
-    () => formatDate(project.created_at),
-    [project.created_at],
+    () => formatDate(project.created_at || project.createdAt || ''),
+    [project.created_at, project.createdAt],
   )
   const formattedUpdatedAt = useMemo(
-    () => formatDate(project.updated_at),
-    [project.updated_at],
+    () => formatDate(project.updated_at || project.updatedAt || ''),
+    [project.updated_at, project.updatedAt],
   )
 
   // Memoized callbacks
@@ -144,7 +133,7 @@ export const ProjectCard = memo(function ProjectCard({
   }, [showSelection, onSelect, project.id, navigate])
 
   const handleSelectionClick = useCallback(
-    (event: MouseEvent) => {
+    (event: React.ChangeEvent<HTMLInputElement>) => {
       event.stopPropagation()
       onSelect(project.id)
     },
@@ -214,10 +203,7 @@ export const ProjectCard = memo(function ProjectCard({
           <Box display="flex" alignItems="center" gap={2}>
             {/* Selection Checkbox */}
             {showSelection && (
-              <Checkbox
-                checked={selected}
-                onChange={handleSelectionClick}
-              />
+              <Checkbox checked={selected} onChange={handleSelectionClick} />
             )}
 
             {/* Project Icon */}

@@ -47,8 +47,6 @@
     "strictPropertyInitialization": true,
     "noUncheckedIndexedAccess": false, // TODO: Enable after fixing array access
     "noPropertyAccessFromIndexSignature": false, // TODO: Enable after fixing env vars
-    "skipLibCheck": true, // Skip type checking of declaration files from node_modules
-
     /* Additional checks */
     "noUnusedLocals": true,
     "noUnusedParameters": true,

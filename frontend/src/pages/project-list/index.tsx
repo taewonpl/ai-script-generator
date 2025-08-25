@@ -21,6 +21,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { projectApi } from '@/shared/api/client'
 import type { Project, ApiResponse } from '@/shared/api/types'
+import { toProjects } from '@/shared/api/mappers/projectMapper'
 
 const ProjectListPage = () => {
   const [searchTerm, setSearchTerm] = useState('')
@@ -36,6 +37,7 @@ const ProjectListPage = () => {
       const response = await projectApi.get<ApiResponse<Project[]>>('/projects')
       return response.data.data || []
     },
+    select: toProjects, // DTO를 UI 도메인으로 정규화
   })
 
   const filteredProjects = projects?.filter(project =>

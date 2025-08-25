@@ -121,7 +121,7 @@ export class APIClient {
         apiError.message =
           responseData.message || responseData.detail || error.message
         apiError.code = responseData.code
-        apiError.details = responseData.errors || responseData.details
+        apiError.details = (responseData.errors || responseData.details) as Record<string, unknown> | undefined
       } else {
         apiError.message = error.message
       }
@@ -138,44 +138,44 @@ export class APIClient {
   async get<T>(
     url: string,
     config?: AxiosRequestConfig,
-  ): Promise<APIResponse<T>> {
+  ): Promise<T> {
     const response = await this.client.get<APIResponse<T>>(url, config)
-    return response.data
+    return response.data.data
   }
 
   async post<T>(
     url: string,
     data?: unknown,
     config?: AxiosRequestConfig,
-  ): Promise<APIResponse<T>> {
+  ): Promise<T> {
     const response = await this.client.post<APIResponse<T>>(url, data, config)
-    return response.data
+    return response.data.data
   }
 
   async put<T>(
     url: string,
     data?: unknown,
     config?: AxiosRequestConfig,
-  ): Promise<APIResponse<T>> {
+  ): Promise<T> {
     const response = await this.client.put<APIResponse<T>>(url, data, config)
-    return response.data
+    return response.data.data
   }
 
   async patch<T>(
     url: string,
     data?: unknown,
     config?: AxiosRequestConfig,
-  ): Promise<APIResponse<T>> {
+  ): Promise<T> {
     const response = await this.client.patch<APIResponse<T>>(url, data, config)
-    return response.data
+    return response.data.data
   }
 
   async delete<T>(
     url: string,
     config?: AxiosRequestConfig,
-  ): Promise<APIResponse<T>> {
+  ): Promise<T> {
     const response = await this.client.delete<APIResponse<T>>(url, config)
-    return response.data
+    return response.data.data
   }
 
   // File upload
@@ -183,7 +183,7 @@ export class APIClient {
     url: string,
     file: File,
     onUploadProgress?: (progress: number) => void,
-  ): Promise<APIResponse<T>> {
+  ): Promise<T> {
     const formData = new FormData()
     formData.append('file', file)
 
@@ -201,7 +201,7 @@ export class APIClient {
       },
     })
 
-    return response.data
+    return response.data.data
   }
 
   // WebSocket connection helper
@@ -212,6 +212,17 @@ export class APIClient {
 
     return new WebSocket(url)
   }
+}
+
+// Simple get function for API unwrapping
+export async function get<T>(url: string): Promise<T> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  }
+  const data = await response.json();
+  // Unwrap { data: T } wrapper if present
+  return data.data ?? data;
 }
 
 // Service URLs from validated environment variables

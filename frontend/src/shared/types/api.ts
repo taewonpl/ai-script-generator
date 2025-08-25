@@ -58,28 +58,16 @@ export type ProjectType = (typeof ProjectType)[keyof typeof ProjectType]
 
 export const ProjectStatus = {
   PLANNING: 'planning',
-  ACTIVE: 'active',
-  PAUSED: 'paused',
+  IN_PROGRESS: 'in_progress',
   COMPLETED: 'completed',
-  ARCHIVED: 'archived',
+  ON_HOLD: 'on_hold',
+  CANCELLED: 'cancelled',
 } as const
 
 export type ProjectStatus = (typeof ProjectStatus)[keyof typeof ProjectStatus]
 
-export interface Project {
-  id: string
-  name: string
-  description?: string
-  type: ProjectType
-  status: ProjectStatus
-  progress_percentage: number
-  created_at: string
-  updated_at: string
-  user_id: string
-  episodes_count: number
-  scripts_count: number
-  metadata?: Record<string, unknown>
-}
+// Re-export canonical Project type
+export type { Project } from '@/shared/types/project'
 
 export interface ProjectCreateRequest {
   name: string
@@ -95,8 +83,8 @@ export interface ProjectUpdateRequest extends Partial<ProjectCreateRequest> {
 
 export interface ProjectFilters {
   search?: string
-  type?: ProjectType
-  status?: ProjectStatus
+  type?: ProjectType | 'all'
+  status?: ProjectStatus | 'all'
   sortBy?: 'name' | 'created_at' | 'updated_at' | 'progress_percentage'
   sortOrder?: 'asc' | 'desc'
   page?: number

@@ -237,5 +237,4 @@ if (typeof window !== 'undefined') {
   analytics.initialize()
 }
 
-// Export types
-export type { AnalyticsEvent, PerformanceMetric }
+// Note: AnalyticsEvent and PerformanceMetric are already exported as interfaces above

@@ -24,9 +24,9 @@ import {
 import {
   Email as EmailIcon,
   Phone as PhoneIcon,
-  Desktop as DesktopIcon,
+  Computer as DesktopIcon,
   Save as SaveIcon,
-  Test as TestIcon,
+  BugReport as TestIcon,
 } from '@mui/icons-material'
 import { useForm, Controller } from 'react-hook-form'
 
