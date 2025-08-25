@@ -23,11 +23,13 @@ repos:
     hooks:
       - id: eslint
         name: eslint
-        entry: bash -c 'cd /Users/al02475493/Documents/ai-script-generator-v3 && pnpm lint'
+        entry: bash -c 'cd /Users/al02475493/Documents/ai-script-generator-v3/frontend && pnpm lint'
         language: system
+        files: ^frontend/src/.*\.(ts|tsx|js|jsx)$
         pass_filenames: false
       - id: prettier
         name: prettier
-        entry: bash -c 'cd /Users/al02475493/Documents/ai-script-generator-v3 && pnpm format'
+        entry: bash -c 'cd /Users/al02475493/Documents/ai-script-generator-v3/frontend && pnpm format'
         language: system
+        files: ^frontend/.*\.(ts|tsx|js|jsx|css|md|json|yml|yaml)$
         pass_filenames: false
