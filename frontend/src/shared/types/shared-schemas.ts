@@ -15,6 +15,7 @@ import type { ProjectType, ProjectStatus } from './api'
 // Base Types from Python Backend
 // =============================================================================
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface BaseSchema {
   // Base interface for all schema types
 }

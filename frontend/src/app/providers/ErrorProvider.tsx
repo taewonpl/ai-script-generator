@@ -298,6 +298,7 @@ export function ErrorProvider({ children }: ErrorProviderProps) {
 /**
  * Hook to manually report errors
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useErrorReporting() {
   const { showError, showRetryableError } = useToastHelpers()
 

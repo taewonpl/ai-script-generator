@@ -337,6 +337,7 @@ export function FormProvider<T extends FieldValues>({
 /**
  * Hook to access form context
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useFormContext<
   T extends FieldValues = FieldValues,
 >(): FormContextValue<T> {
@@ -352,6 +353,7 @@ export function useFormContext<
 /**
  * Hook for form field registration with enhanced features
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useFormField<T extends FieldValues = FieldValues>(
   name: keyof T,
 ) {

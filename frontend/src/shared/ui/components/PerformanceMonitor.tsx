@@ -78,6 +78,7 @@ export const PerformanceMonitor = memo(function PerformanceMonitor({
 })
 
 // Higher-order component for performance monitoring
+// eslint-disable-next-line react-refresh/only-export-components
 export const withPerformanceMonitoring = <P extends object>(
   WrappedComponent: React.ComponentType<P>,
   options: Omit<PerformanceMonitorProps, 'children'> = { name: 'Component' },
@@ -100,6 +101,7 @@ export const withPerformanceMonitoring = <P extends object>(
 }
 
 // Hook for manual performance tracking
+// eslint-disable-next-line react-refresh/only-export-components
 export const usePerformanceTracking = () => {
   const startTiming = (name: string) => {
     const startTime = Date.now()

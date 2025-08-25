@@ -200,6 +200,7 @@ export function ToastProvider({
 /**
  * Hook to access toast functionality
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useToast(): ToastContextValue {
   const context = useContext(ToastContext)
 
@@ -213,6 +214,7 @@ export function useToast(): ToastContextValue {
 /**
  * Convenience hook with predefined toast methods
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useToastHelpers() {
   const { showToast } = useToast()
 

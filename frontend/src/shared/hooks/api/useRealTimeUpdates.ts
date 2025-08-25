@@ -252,22 +252,23 @@ export function useRealTimeUpdates(
     generationId,
   } = config
 
-  const systemConnection = enableSystemUpdates
-    ? useRealTimeSystemUpdates()
-    : null
-  const queueConnection = enableQueueUpdates ? useRealTimeQueueUpdates() : null
-  const projectConnection = projectId
-    ? useRealTimeProjectUpdates(projectId)
-    : null
-  const generationConnection = generationId
-    ? useRealTimeGenerationUpdates(generationId)
-    : null
+  // Always call hooks to maintain consistent order
+  const systemConnection = useRealTimeSystemUpdates()
+  const queueConnection = useRealTimeQueueUpdates()
+  const projectConnection = useRealTimeProjectUpdates(projectId || '')
+  const generationConnection = useRealTimeGenerationUpdates(generationId || '')
+
+  // Apply conditional logic after hook calls
+  const activeSystemConnection = enableSystemUpdates ? systemConnection : null
+  const activeQueueConnection = enableQueueUpdates ? queueConnection : null
+  const activeProjectConnection = projectId ? projectConnection : null
+  const activeGenerationConnection = generationId ? generationConnection : null
 
   const isConnected = [
-    systemConnection?.isConnected,
-    queueConnection?.isConnected,
-    projectConnection?.isConnected,
-    generationConnection?.isConnected,
+    activeSystemConnection?.isConnected,
+    activeQueueConnection?.isConnected,
+    activeProjectConnection?.isConnected,
+    activeGenerationConnection?.isConnected,
   ]
     .filter(Boolean)
     .every(Boolean)
@@ -275,10 +276,10 @@ export function useRealTimeUpdates(
   return {
     isConnected,
     connections: {
-      system: systemConnection?.isConnected ?? false,
-      queue: queueConnection?.isConnected ?? false,
-      project: projectConnection?.isConnected ?? false,
-      generation: generationConnection?.isConnected ?? false,
+      system: activeSystemConnection?.isConnected ?? false,
+      queue: activeQueueConnection?.isConnected ?? false,
+      project: activeProjectConnection?.isConnected ?? false,
+      generation: activeGenerationConnection?.isConnected ?? false,
     },
   }
 }

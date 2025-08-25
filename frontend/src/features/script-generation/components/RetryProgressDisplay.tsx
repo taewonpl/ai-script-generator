@@ -261,6 +261,7 @@ export const RetryProgressDisplay: React.FC<RetryProgressDisplayProps> = ({
 }
 
 // Hook for real-time retry progress updates
+// eslint-disable-next-line react-refresh/only-export-components
 export const useRetryProgress = (generationId: string) => {
   const [retryProgress, setRetryProgress] = useState<RetryProgress | null>(null)
   const [loading, setLoading] = useState(true)

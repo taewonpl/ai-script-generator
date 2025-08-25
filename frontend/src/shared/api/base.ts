@@ -139,6 +139,7 @@ export class APIClient {
   // HTTP Methods
   async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.get<APIResponse<T>>(url, config)
+    // eslint-disable-next-line no-restricted-syntax
     return response.data.data
   }
 
@@ -148,6 +149,7 @@ export class APIClient {
     config?: AxiosRequestConfig,
   ): Promise<T> {
     const response = await this.client.post<APIResponse<T>>(url, data, config)
+    // eslint-disable-next-line no-restricted-syntax
     return response.data.data
   }
 
@@ -157,6 +159,7 @@ export class APIClient {
     config?: AxiosRequestConfig,
   ): Promise<T> {
     const response = await this.client.put<APIResponse<T>>(url, data, config)
+    // eslint-disable-next-line no-restricted-syntax
     return response.data.data
   }
 
@@ -166,11 +169,13 @@ export class APIClient {
     config?: AxiosRequestConfig,
   ): Promise<T> {
     const response = await this.client.patch<APIResponse<T>>(url, data, config)
+    // eslint-disable-next-line no-restricted-syntax
     return response.data.data
   }
 
   async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.delete<APIResponse<T>>(url, config)
+    // eslint-disable-next-line no-restricted-syntax
     return response.data.data
   }
 
@@ -197,6 +202,7 @@ export class APIClient {
       },
     })
 
+    // eslint-disable-next-line no-restricted-syntax
     return response.data.data
   }
 

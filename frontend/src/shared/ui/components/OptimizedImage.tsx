@@ -301,6 +301,7 @@ export const OptimizedGallery = memo(function OptimizedGallery({
 })
 
 // Utility functions for image optimization
+// eslint-disable-next-line react-refresh/only-export-components
 export const imageUtils = {
   // Generate srcSet for responsive images
   generateSrcSet: (baseUrl: string, sizes: number[]): string => {

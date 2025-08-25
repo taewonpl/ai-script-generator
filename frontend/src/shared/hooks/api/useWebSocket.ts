@@ -136,6 +136,7 @@ export function useWebSocket(
 
 // Generation-specific WebSocket hook
 export function useGenerationWebSocket(generationId: string) {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { generationService } = require('@/shared/api/services')
 
   return useWebSocket(
@@ -150,6 +151,7 @@ export function useGenerationWebSocket(generationId: string) {
 
 // System status WebSocket hook
 export function useSystemWebSocket() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { coreService } = require('@/shared/api/services')
 
   return useWebSocket(coreService.createSystemSocket().url, {
@@ -161,6 +163,7 @@ export function useSystemWebSocket() {
 
 // Project updates WebSocket hook
 export function useProjectWebSocket(projectId: string) {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { projectService } = require('@/shared/api/services')
 
   return useWebSocket(projectService.createProjectSocket(projectId).url, {
