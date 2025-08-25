@@ -250,10 +250,7 @@ export class TracedPerformanceTimer {
   private readonly _operation: string
   private readonly context?: TraceContext
 
-  constructor(
-    operation: string,
-    context?: TraceContext,
-  ) {
+  constructor(operation: string, context?: TraceContext) {
     this._operation = operation
     this.context = context
     this.startTime = Date.now()

@@ -155,7 +155,8 @@ export const GenerationStatus = {
   CANCELLED: 'cancelled',
 } as const
 
-export type GenerationStatus = (typeof GenerationStatus)[keyof typeof GenerationStatus]
+export type GenerationStatus =
+  (typeof GenerationStatus)[keyof typeof GenerationStatus]
 
 export interface GenerationRequest {
   project_id: string

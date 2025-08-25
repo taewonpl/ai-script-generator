@@ -41,7 +41,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pnpm install --filter ai-script-generator-frontend --frozen-lockfile
+          cd frontend && pnpm install --frozen-lockfile
 
       - name: Install Python dependencies
         run: |
@@ -71,13 +71,13 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pnpm install --filter ai-script-generator-frontend --frozen-lockfile
+          cd frontend && pnpm install --frozen-lockfile
 
       - name: Run TypeScript type check (warning level)
         run: |
           echo "::warning::Running TypeScript type check - errors are treated as warnings"
           # Only run frontend typecheck to avoid Python dependency issues
-          pnpm --filter ai-script-generator-frontend run typecheck || echo "::warning::TypeScript errors found but continuing CI"
+          cd frontend && pnpm run typecheck || echo "::warning::TypeScript errors found but continuing CI"
         continue-on-error: true
 
   # Build verification
@@ -101,11 +101,11 @@ jobs:
 
       - name: Install frontend dependencies
         run: |
-          pnpm install --filter ai-script-generator-frontend --frozen-lockfile
+          cd frontend && pnpm install --frozen-lockfile
 
       - name: Build frontend
         run: |
-          pnpm --filter ai-script-generator-frontend run build
+          cd frontend && pnpm run build
 
       - name: Verify build artifacts
         run: |
@@ -138,11 +138,11 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pnpm install --filter ai-script-generator-frontend --frozen-lockfile
+          cd frontend && pnpm install --frozen-lockfile
 
       - name: Run tests
         run: |
-          pnpm --filter ai-script-generator-frontend run test -- --run --passWithNoTests
+          cd frontend && pnpm run test -- --run --passWithNoTests
         continue-on-error: false
 
       - name: Test results summary
