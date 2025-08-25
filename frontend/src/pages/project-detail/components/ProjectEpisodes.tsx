@@ -82,7 +82,9 @@ export function ProjectEpisodes({ project }: ProjectEpisodesProps) {
     error,
   } = useEpisodes(project.id)
 
-  const episodes = Array.isArray(episodesResponse) ? episodesResponse : episodesResponse.items || []
+  const episodes = Array.isArray(episodesResponse)
+    ? episodesResponse
+    : episodesResponse.items || []
 
   // Check URL for generation trigger
   const shouldOpenGenerate = searchParams.get('gen') === 'new'

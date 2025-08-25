@@ -59,7 +59,10 @@ export class ProductionSSEClient {
   private onError?: (error: Error) => void
   private onManualRetryAvailable?: () => void
 
-  constructor(private options: ProductionSSEOptions) {
+  private options: ProductionSSEOptions
+
+  constructor(options: ProductionSSEOptions) {
+    this.options = options
     const {
       maxRetries = DEFAULT_MAX_RETRIES,
       retryDelays = DEFAULT_RETRY_DELAYS,

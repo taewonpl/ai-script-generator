@@ -34,9 +34,7 @@ interface FormContextValue<T extends FieldValues> {
   clearAutoSavedData: () => void
 }
 
-const FormContext = createContext<FormContextValue<any> | undefined>(
-  undefined,
-)
+const FormContext = createContext<FormContextValue<any> | undefined>(undefined)
 
 interface FormProviderProps<T extends FieldValues> {
   children: ReactNode
@@ -262,7 +260,7 @@ export function FormProvider<T extends FieldValues>({
       console.error('Form submission error:', error)
 
       // Handle server validation errors
-      // @ts-expect-error Server error response handling  
+      // @ts-expect-error Server error response handling
       if (error?.response?.data?.errors) {
         const serverErrors = (
           error as { response?: { data?: { errors?: Record<string, string> } } }

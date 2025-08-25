@@ -85,7 +85,7 @@ export const RetryProgressDisplay: React.FC<RetryProgressDisplayProps> = ({
 
       return () => clearInterval(timer)
     }
-    
+
     return () => {} // cleanup function for when condition is not met
   }, [nextRetry?.nextRetryAt])
 

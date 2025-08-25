@@ -247,10 +247,15 @@ export class TracedPerformanceTimer {
   private endMark: string
   private measureName: string
 
+  private readonly _operation: string
+  private readonly context?: TraceContext
+
   constructor(
-    private readonly _operation: string,
-    private readonly context?: TraceContext,
+    operation: string,
+    context?: TraceContext,
   ) {
+    this._operation = operation
+    this.context = context
     this.startTime = Date.now()
     this.startMark = `${this._operation}-start-${this.context?.traceId || 'unknown'}`
     this.endMark = `${this._operation}-end-${this.context?.traceId || 'unknown'}`

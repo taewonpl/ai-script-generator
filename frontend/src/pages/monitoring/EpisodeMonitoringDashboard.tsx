@@ -124,7 +124,7 @@ export const EpisodeMonitoringDashboard: React.FC = () => {
       const interval = setInterval(fetchMonitoringData, refreshInterval * 1000)
       return () => clearInterval(interval)
     }
-    
+
     return () => {} // cleanup function for when autoRefresh is false
   }, [autoRefresh, refreshInterval])
 
@@ -163,7 +163,6 @@ export const EpisodeMonitoringDashboard: React.FC = () => {
     if (percentage >= 95) return 'warning'
     return 'error'
   }
-
 
   // Overview Tab
   const renderOverview = () => (

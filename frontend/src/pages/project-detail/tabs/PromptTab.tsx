@@ -128,9 +128,9 @@ export function PromptTab({ projectId }: PromptTabProps) {
 
   return (
     <Box>
-      <MuiBox container spacing={3}>
+      <Box display="flex" flexWrap="wrap" gap={3}>
         {/* 시스템 프롬프트 에디터 */}
-        <MuiBox xs={12} lg={8}>
+        <Box flex="1 1 65%" minWidth="400px">
           <Card>
             <CardContent>
               <Box
@@ -213,10 +213,10 @@ export function PromptTab({ projectId }: PromptTabProps) {
               </Box>
             </CardContent>
           </Card>
-        </MuiBox>
+        </Box>
 
         {/* 버전 정보 및 도움말 */}
-        <MuiBox xs={12} lg={4}>
+        <Box flex="1 1 30%" minWidth="300px">
           <Stack spacing={3}>
             {/* 현재 버전 정보 */}
             {currentPrompt && (
@@ -290,8 +290,8 @@ export function PromptTab({ projectId }: PromptTabProps) {
               </CardContent>
             </Card>
           </Stack>
-        </MuiBox>
-      </MuiBox>
+        </Box>
+      </Box>
     </Box>
   )
 }

@@ -448,15 +448,24 @@ class APIClient {
 
 // Standardized API Error class
 export class StandardizedAPIError extends Error {
+  public code: ErrorCodeType
+  public statusCode: number
+  public details?: Record<string, unknown>
+  public traceId?: string
+
   constructor(
-    public code: ErrorCodeType,
+    code: ErrorCodeType,
     message: string,
-    public statusCode: number,
-    public details?: Record<string, unknown>,
-    public traceId?: string,
+    statusCode: number,
+    details?: Record<string, unknown>,
+    traceId?: string,
   ) {
     super(message)
     this.name = 'StandardizedAPIError'
+    this.code = code
+    this.statusCode = statusCode
+    this.details = details
+    this.traceId = traceId
   }
 
   // Check if error is retryable

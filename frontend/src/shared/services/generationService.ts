@@ -229,13 +229,20 @@ export class GenerationService {
  * Custom error class for generation operations
  */
 export class GenerationError extends Error {
+  public code: string
+  public retryable: boolean
+  public details?: Record<string, unknown>
+
   constructor(
     message: string,
-    public code: string,
-    public retryable: boolean,
-    public details?: Record<string, unknown>,
+    code: string,
+    retryable: boolean,
+    details?: Record<string, unknown>,
   ) {
     super(message)
     this.name = 'GenerationError'
+    this.code = code
+    this.retryable = retryable
+    this.details = details
   }
 }

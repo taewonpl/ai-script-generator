@@ -62,7 +62,7 @@ export const SaveProgressIndicator: React.FC<SaveProgressIndicatorProps> = ({
 
       return () => clearInterval(timer)
     }
-    
+
     return () => {} // cleanup function for when condition is not met
   }, [saveState.nextRetryAt])
 
