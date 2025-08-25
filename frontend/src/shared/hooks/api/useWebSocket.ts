@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import type {
-  GenerationUpdate,
-  SystemUpdate,
+  // GenerationUpdate,
+  // SystemUpdate,
   WebSocketMessage,
 } from '@/shared/types/api'
 
@@ -37,7 +37,7 @@ export function useWebSocket(
 
   const ws = useRef<WebSocket | null>(null)
   const reconnectAttempts = useRef(0)
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout>()
+  const reconnectTimeoutRef = useRef<any>(null)
 
   const [isConnected, setIsConnected] = useState(false)
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null)
@@ -141,7 +141,7 @@ export function useGenerationWebSocket(generationId: string) {
   return useWebSocket(
     generationService.createGenerationSocket(generationId).url,
     {
-      onMessage: (data: WebSocketMessage<GenerationUpdate>) => {
+      onMessage: (data: any) => {
         console.log('Generation update:', data)
       },
     },
@@ -153,7 +153,7 @@ export function useSystemWebSocket() {
   const { coreService } = require('@/shared/api/services')
 
   return useWebSocket(coreService.createSystemSocket().url, {
-    onMessage: (data: WebSocketMessage<SystemUpdate>) => {
+    onMessage: (data: any) => {
       console.log('System update:', data)
     },
   })

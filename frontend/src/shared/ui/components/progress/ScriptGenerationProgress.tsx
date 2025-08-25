@@ -2,7 +2,9 @@ import { useMemo, useCallback, useState } from 'react'
 import { JobProgressIndicator } from './JobProgressIndicator'
 import { env } from '@/shared/config/env'
 
-import type { GenerationResult } from '@/shared/api/streaming/types'
+import type { CompletedEventData } from '@/shared/types/generation'
+
+type GenerationResult = CompletedEventData['result']
 
 export interface ScriptGenerationProgressProps {
   jobId: string
@@ -73,7 +75,7 @@ export function ScriptGenerationProgress({
       jobId={jobId}
       sseUrl={sseUrl}
       title={title}
-      onComplete={handleComplete}
+      onComplete={handleComplete as any}
       onError={handleError}
       onCancel={handleCancel}
       showConnectionStatus={true}

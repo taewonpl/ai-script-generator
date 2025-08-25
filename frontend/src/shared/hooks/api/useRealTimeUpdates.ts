@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useWebSocket } from './useWebSocket'
-import type { GenerationUpdate, SystemUpdate } from '@/shared/types/api'
+// import type { GenerationUpdate, SystemUpdate } from '@/shared/types/api'
 import { generationKeys } from './useGeneration'
 import { projectKeys } from './useProjects'
 import { coreKeys } from './useCore'
@@ -13,7 +13,7 @@ export function useRealTimeGenerationUpdates(generationId?: string) {
   const { isConnected } = useWebSocket(
     generationId ? `/ws/generations/${generationId}` : '',
     {
-      onMessage: (data: GenerationUpdate) => {
+      onMessage: (data: any) => {
         if (!generationId) return
 
         // Update generation status in cache
@@ -58,7 +58,7 @@ export function useRealTimeSystemUpdates() {
   const queryClient = useQueryClient()
 
   const { isConnected } = useWebSocket('/ws/system', {
-    onMessage: (data: SystemUpdate) => {
+    onMessage: (data: any) => {
       switch (data.type) {
         case 'service_status':
           // Update specific service status

@@ -17,9 +17,9 @@ export const PerformanceMonitor = memo(function PerformanceMonitor({
   trackMount = true,
   trackRender = true,
 }: PerformanceMonitorProps) {
-  const startTimeRef = useRef<number>()
+  const startTimeRef = useRef<number>(0)
   const renderCountRef = useRef(0)
-  const mountTimeRef = useRef<number>()
+  const mountTimeRef = useRef<number>(0)
 
   useEffect(() => {
     if (trackMount) {
@@ -80,7 +80,7 @@ export const PerformanceMonitor = memo(function PerformanceMonitor({
 // Higher-order component for performance monitoring
 export const withPerformanceMonitoring = <P extends object>(
   WrappedComponent: React.ComponentType<P>,
-  options: Omit<PerformanceMonitorProps, 'children'> = {},
+  options: Omit<PerformanceMonitorProps, 'children'> = { name: 'Component' },
 ) => {
   const componentName =
     options.name ||

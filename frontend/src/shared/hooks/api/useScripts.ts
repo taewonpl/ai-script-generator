@@ -98,7 +98,7 @@ export function useCreateScript() {
       projectService.createScript(data),
     onSuccess: (newScript, { project_id, episode_id }) => {
       // Add new script to cache
-      queryClient.setQueryData(scriptKeys.detail(newScript.data.id), newScript)
+      queryClient.setQueryData(scriptKeys.detail(newScript.id), newScript)
 
       // Invalidate scripts lists
       queryClient.invalidateQueries({

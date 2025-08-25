@@ -102,7 +102,7 @@ export function ToastProvider({
       })
 
       // Auto-dismiss after duration (unless persistent)
-      if (!options.persistent && toast.duration > 0) {
+      if (!options.persistent && toast.duration && toast.duration > 0) {
         setTimeout(() => {
           hideToast(id)
         }, toast.duration)

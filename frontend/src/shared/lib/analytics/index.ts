@@ -134,11 +134,11 @@ class Analytics {
     }
 
     // Collect Core Web Vitals
-    onCLS(handleMetric)
-    onFCP(handleMetric)
-    onINP(handleMetric)
-    onLCP(handleMetric)
-    onTTFB(handleMetric)
+    onCLS((metric: any) => handleMetric(metric))
+    onFCP((metric: any) => handleMetric(metric))
+    onINP((metric: any) => handleMetric(metric))
+    onLCP((metric: any) => handleMetric(metric))
+    onTTFB((metric: any) => handleMetric(metric))
   }
 
   // Specific tracking methods for common events

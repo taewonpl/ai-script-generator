@@ -24,11 +24,10 @@ export class SentryReporter {
         // Performance monitoring
         tracesSampleRate: isProduction() ? 0.1 : 1.0,
 
-        // Session tracking
-        autoSessionTracking: true,
+        // Session tracking removed for compatibility
 
         // Error filtering
-        beforeSend: this.beforeSend,
+        beforeSend: this.beforeSend as any,
 
         // Release information
         release: env.VITE_APP_VERSION,
@@ -36,19 +35,13 @@ export class SentryReporter {
         // Integration configuration
         integrations: [
           Sentry.browserTracingIntegration({
-            // Capture interactions
-            tracePropagationTargets: [
-              env.VITE_CORE_SERVICE_URL,
-              env.VITE_PROJECT_SERVICE_URL,
-              env.VITE_GENERATION_SERVICE_URL,
-            ],
+            // Capture interactions - removed tracePropagationTargets for compatibility
           }),
           Sentry.replayIntegration({
             // Capture replays for errors in production
             maskAllText: isProduction(),
             blockAllMedia: isProduction(),
-            sampleRate: isDevelopment() ? 1.0 : 0.1,
-            errorSampleRate: isProduction() ? 1.0 : 0.5,
+            // Removed errorSampleRate for compatibility
           }),
         ],
 

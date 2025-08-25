@@ -40,9 +40,9 @@ export const ProjectCreateSchema = z
         'thriller',
         'documentary',
         'animation',
-      ],
+      ] as const,
       {
-        errorMap: () => ({ message: '프로젝트 타입을 선택해주세요' }),
+        message: '프로젝트 타입을 선택해주세요',
       },
     ),
 
@@ -53,8 +53,8 @@ export const ProjectCreateSchema = z
     genre: optionalString,
 
     targetAudience: z
-      .enum(['all', 'kids', 'teens', 'adults'], {
-        errorMap: () => ({ message: '대상 연령을 선택해주세요' }),
+      .enum(['all', 'kids', 'teens', 'adults'] as const, {
+        message: '대상 연령을 선택해주세요',
       })
       .optional(),
 
@@ -82,9 +82,12 @@ export const ProjectEditSchema = ProjectCreateSchema.extend({
   id: requiredString('프로젝트 ID가 필요합니다'),
 
   status: z
-    .enum(['planning', 'in_progress', 'completed', 'on_hold', 'cancelled'], {
-      errorMap: () => ({ message: '프로젝트 상태를 선택해주세요' }),
-    })
+    .enum(
+      ['planning', 'in_progress', 'completed', 'on_hold', 'cancelled'] as const,
+      {
+        message: '프로젝트 상태를 선택해주세요',
+      },
+    )
     .optional(),
 
   progressPercentage: z
@@ -131,9 +134,16 @@ export const EpisodeCreateSchema = z.object({
 
   mood: z
     .enum(
-      ['light', 'serious', 'dramatic', 'comedic', 'suspenseful', 'romantic'],
+      [
+        'light',
+        'serious',
+        'dramatic',
+        'comedic',
+        'suspenseful',
+        'romantic',
+      ] as const,
       {
-        errorMap: () => ({ message: '에피소드 무드를 선택해주세요' }),
+        message: '에피소드 무드를 선택해주세요',
       },
     )
     .optional(),
@@ -150,9 +160,16 @@ export const EpisodeEditSchema = EpisodeCreateSchema.extend({
 
   status: z
     .enum(
-      ['draft', 'outline', 'first_draft', 'revision', 'final', 'approved'],
+      [
+        'draft',
+        'outline',
+        'first_draft',
+        'revision',
+        'final',
+        'approved',
+      ] as const,
       {
-        errorMap: () => ({ message: '에피소드 상태를 선택해주세요' }),
+        message: '에피소드 상태를 선택해주세요',
       },
     )
     .optional(),

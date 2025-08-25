@@ -45,18 +45,23 @@ export function useJobControl() {
     mutationFn: async ({ jobId, reason }: CancelJobRequest) => {
       console.log(`🛑 Canceling job: ${jobId}`, { reason })
 
-      const response = await generationApi.delete<CancelJobResponse>(`/jobs/${jobId}`, {
-        data: { reason },
-        headers: {
-          'Content-Type': 'application/json',
+      const response = await generationApi.delete<CancelJobResponse>(
+        `/jobs/${jobId}`,
+        {
+          data: { reason },
+          headers: {
+            'Content-Type': 'application/json',
+          },
         },
-      })
+      )
 
       return response
     },
 
     // Optimistic update - immediately mark job as canceling
-    onMutate: async ({ jobId }): Promise<{
+    onMutate: async ({
+      jobId,
+    }): Promise<{
       previousJob: unknown
       previousJobs: unknown
       jobId: string
@@ -138,10 +143,20 @@ export function useJobControl() {
       console.error('❌ Failed to cancel job:', error)
 
       // Rollback optimistic updates
-      if (context && typeof context === 'object' && 'previousJob' in context && context.previousJob !== undefined) {
+      if (
+        context &&
+        typeof context === 'object' &&
+        'previousJob' in context &&
+        context.previousJob !== undefined
+      ) {
         queryClient.setQueryData(['job', jobId], context.previousJob)
       }
-      if (context && typeof context === 'object' && 'previousJobs' in context && context.previousJobs !== undefined) {
+      if (
+        context &&
+        typeof context === 'object' &&
+        'previousJobs' in context &&
+        context.previousJobs !== undefined
+      ) {
         queryClient.setQueryData(['jobs'], context.previousJobs)
       }
 

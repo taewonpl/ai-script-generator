@@ -40,14 +40,14 @@ export const GENERATION_POLICY = {
    * @param project 프로젝트 객체
    * @returns 프로젝트 톤
    */
-  getTone: (project: Project): string => project.tone,
+  getTone: (project: Project): string => project.tone || '',
 
   /**
    * 프로젝트의 시스템 프롬프트를 가져오는 함수 (항상 최신)
    * @param project 프로젝트 객체
    * @returns 시스템 프롬프트
    */
-  getSystemPrompt: (project: Project): string => project.systemPrompt,
+  getSystemPrompt: (project: Project): string => project.systemPrompt || '',
 } as const
 
 /**

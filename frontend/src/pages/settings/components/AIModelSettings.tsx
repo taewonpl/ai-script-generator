@@ -84,7 +84,6 @@ const AVAILABLE_MODELS: ModelInfo[] = [
   },
 ]
 
-
 export function AIModelSettings() {
   const { showSuccess, showError } = useToastHelpers()
 

@@ -408,7 +408,7 @@ export class ProductionSSEClient {
  * Production SSE Hook with enhanced features
  */
 export function useProductionSSE(
-  _options?: ProductionSSEOptions,  // removed: unused param to avoid TS6133
+  _options?: ProductionSSEOptions, // removed: unused param to avoid TS6133
 ): SSEHookReturn & {
   manualRetry: () => boolean
   canManualRetry: boolean

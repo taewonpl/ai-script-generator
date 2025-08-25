@@ -7,7 +7,11 @@ export interface ApiResponse<T = any> {
 }
 
 // Re-export canonical Project types
-export type { Project, CreateProjectRequest as ProjectCreateRequest, UpdateProjectRequest as ProjectUpdateRequest } from '@/shared/types/project'
+export type {
+  Project,
+  CreateProjectRequest as ProjectCreateRequest,
+  UpdateProjectRequest as ProjectUpdateRequest,
+} from '@/shared/types/project'
 
 // Episode types
 export interface Episode {

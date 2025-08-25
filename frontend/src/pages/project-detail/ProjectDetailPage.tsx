@@ -68,12 +68,7 @@ export default function ProjectDetailPage() {
   const [currentTab, setCurrentTab] = useState(0)
 
   // Load project data using unified hook
-  const {
-    data: project,
-    isLoading,
-    error,
-    refetch,
-  } = useProject(projectId!)
+  const { data: project, isLoading, error, refetch } = useProject(projectId!)
 
   const handleTabChange = (_: SyntheticEvent, newValue: number) => {
     setCurrentTab(newValue)
@@ -185,10 +180,12 @@ export default function ProjectDetailPage() {
 
               <Stack direction="row" spacing={3} color="textSecondary">
                 <Typography variant="body2">
-                  생성일: {formatDate(project.created_at || project.createdAt || '')}
+                  생성일:{' '}
+                  {formatDate(project.created_at || project.createdAt || '')}
                 </Typography>
                 <Typography variant="body2">
-                  수정일: {formatDate(project.updated_at || project.updatedAt || '')}
+                  수정일:{' '}
+                  {formatDate(project.updated_at || project.updatedAt || '')}
                 </Typography>
                 {project.episodes_count !== undefined && (
                   <Typography variant="body2">

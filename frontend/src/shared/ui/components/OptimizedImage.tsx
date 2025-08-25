@@ -18,6 +18,7 @@ interface OptimizedImageProps {
   className?: string
   sizes?: string
   priority?: boolean
+  onClick?: () => void
 }
 
 export const OptimizedImage = memo(function OptimizedImage({

@@ -9,6 +9,8 @@
  * Generated: 2025-01-22
  */
 
+import type { ProjectType, ProjectStatus } from './api'
+
 // =============================================================================
 // Base Types from Python Backend
 // =============================================================================
@@ -27,16 +29,10 @@ export interface TimestampMixin {
 }
 
 // =============================================================================
-// Generation Status (from common.py)
+// Generation Status (from common.py) - USE api.ts instead
 // =============================================================================
 
-export type GenerationStatus =
-  | 'queued'
-  | 'processing'
-  | 'streaming'
-  | 'completed'
-  | 'failed'
-  | 'canceled'
+// export type GenerationStatus - REMOVED: conflicts with api.ts
 
 // =============================================================================
 // AI Model Configuration (from generation.py)
@@ -177,7 +173,7 @@ export interface GenerationResponseDTO
   episodeId?: string // 에피소드 ID
 
   // 상태 및 결과
-  status: GenerationStatus // 생성 상태
+  status: ProjectStatus // 생성 상태
   progressPercentage?: number // 진행률 (0.0-100.0)
 
   // 생성된 내용
@@ -201,30 +197,11 @@ export interface GenerationResponseDTO
 }
 
 // =============================================================================
-// Project Types (from project.py)
+// Project Types (from project.py) - USE api.ts instead
 // =============================================================================
 
-export type ProjectType =
-  | 'drama'
-  | 'comedy'
-  | 'documentary'
-  | 'variety'
-  | 'news'
-  | 'educational'
-  | 'commercial'
-  | 'music_video'
-  | 'short_film'
-  | 'web_series'
-
-export type ProjectStatus =
-  | 'planning'
-  | 'development'
-  | 'pre_production'
-  | 'production'
-  | 'post_production'
-  | 'completed'
-  | 'archived'
-  | 'cancelled'
+// export type ProjectType - REMOVED: conflicts with api.ts
+// export type ProjectStatus - REMOVED: conflicts with api.ts
 
 export interface ProjectDTO extends BaseSchema, IDMixin, TimestampMixin {
   name: string // 프로젝트 명
@@ -326,15 +303,4 @@ export interface ValidationResult {
 
 // Note: BaseSchema, IDMixin, TimestampMixin are already exported as interfaces above
 // Only re-export types that need to be available but are not already exported
-export type {
-  // Generation types
-  GenerationStatus,
-  GenerationType,
-  SupportedAIModel,
-  // Project types  
-  ProjectType,
-  ProjectStatus,
-  // Validation types
-  ValidationError,
-  ValidationResult,
-}
+// Export section removed - types are already exported where they are defined

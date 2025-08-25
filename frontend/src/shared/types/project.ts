@@ -5,23 +5,28 @@
  *   in '@/shared/api/mappers/projectMapper'.
  */
 
-export type SortKey = 'createdAt' | 'updatedAt' | 'name' | 'title' | 'progress_percentage';
+export type SortKey =
+  | 'createdAt'
+  | 'updatedAt'
+  | 'name'
+  | 'title'
+  | 'progress_percentage'
 
 export interface ProjectFilters {
   /** free text search */
-  search?: string;
+  search?: string
   /** filter by type */
-  type?: string | 'all';
-  /** filter by status */  
-  status?: string | 'all';
+  type?: string | 'all'
+  /** filter by status */
+  status?: string | 'all'
   /** sort key */
-  sortBy?: SortKey;
+  sortBy?: SortKey
   /** sort order */
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: 'asc' | 'desc'
   /** pagination page (1-based) */
-  page?: number;
+  page?: number
   /** page size */
-  limit?: number;
+  limit?: number
 }
 
 /**
@@ -33,42 +38,42 @@ export interface ProjectFilters {
  *    everything mandatory in the UI domain.
  */
 export interface Project {
-  id: string;
-  name: string;
-  title?: string;
-  tone?: string;
-  systemPrompt?: string;
-  summary?: string;
-  description?: string;
-  type?: string;
-  genre?: string;
-  status?: string;
-  isPublic?: boolean;
-  tags?: string[];
-  
-  // Timestamps (camelCase preferred)  
-  createdAt?: string;
-  updatedAt?: string;
-  user_id?: string;
-  
+  id: string
+  name: string
+  title?: string
+  tone?: string
+  systemPrompt?: string
+  summary?: string
+  description?: string
+  type?: string
+  genre?: string
+  status?: string
+  isPublic?: boolean
+  tags?: string[]
+
+  // Timestamps (camelCase preferred)
+  createdAt?: string
+  updatedAt?: string
+  user_id?: string
+
   // Backend compatibility - transitional aliases for legacy references
   /** @deprecated transitional alias for legacy references */
-  created_at?: string;
+  created_at?: string
   /** @deprecated transitional alias for legacy references */
-  updated_at?: string;
+  updated_at?: string
   /** optional progress 0..100 */
-  progressPercentage?: number;
+  progressPercentage?: number
   /** @deprecated transitional alias */
-  progress_percentage?: number;
-  
+  progress_percentage?: number
+
   // Counts
-  episodesCount?: number;
-  scriptsCount?: number;
-  episodes_count?: number;
-  scripts_count?: number;
-  
+  episodesCount?: number
+  scriptsCount?: number
+  episodes_count?: number
+  scripts_count?: number
+
   /** arbitrary metadata */
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, unknown>
 }
 
 export interface Episode {

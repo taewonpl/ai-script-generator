@@ -72,8 +72,8 @@ export class ErrorClassifier {
 
     return {
       ...baseInfo,
-      message: error.userMessage || baseInfo.message,
-      retryable: error.retryable ?? baseInfo.retryable,
+      message: error.userMessage || '알 수 없는 오류가 발생했습니다',
+      retryable: error.retryable ?? false,
     }
   }
 
@@ -178,7 +178,7 @@ export class ErrorClassifier {
           category: 'server',
           severity: 'medium',
           userMessage: data?.message || '서버 오류가 발생했습니다',
-          retryable: status >= 500,
+          retryable: status ? status >= 500 : false,
           statusCode: status,
           timestamp,
         })

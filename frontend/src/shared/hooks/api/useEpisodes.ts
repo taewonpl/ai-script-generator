@@ -100,7 +100,7 @@ export function useCreateEpisode() {
     onSuccess: (newEpisode, { project_id }) => {
       // Add new episode to cache
       queryClient.setQueryData(
-        episodeKeys.detail(project_id, newEpisode.data.id),
+        episodeKeys.detail(project_id, newEpisode.id),
         newEpisode,
       )
 
@@ -200,11 +200,11 @@ export function useReorderEpisodes() {
     }) => projectService.reorderEpisodes(projectId, episodeIds),
     onSuccess: (reorderedEpisodes, { projectId }) => {
       // Update episodes in cache
-      reorderedEpisodes.data.forEach(episode => {
-        queryClient.setQueryData(episodeKeys.detail(projectId, episode.id), {
-          data: episode,
-          success: true,
-        })
+      reorderedEpisodes.forEach((episode: any) => {
+        queryClient.setQueryData(
+          episodeKeys.detail(projectId, episode.id),
+          episode,
+        )
       })
 
       // Invalidate lists to refresh order
@@ -231,7 +231,7 @@ export function useDuplicateEpisode() {
     onSuccess: (newEpisode, { projectId }) => {
       // Add duplicated episode to cache
       queryClient.setQueryData(
-        episodeKeys.detail(projectId, newEpisode.data.id),
+        episodeKeys.detail(projectId, newEpisode.id),
         newEpisode,
       )
 

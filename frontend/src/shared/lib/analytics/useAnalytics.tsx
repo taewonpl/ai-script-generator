@@ -11,7 +11,7 @@ export interface UseAnalyticsOptions {
 export const useAnalytics = (options: UseAnalyticsOptions = {}) => {
   const { trackPageViews = true, userId } = options
   const location = useLocation()
-  const previousPathRef = useRef<string>()
+  const previousPathRef = useRef<string>('')
 
   // Set user ID if provided
   useEffect(() => {

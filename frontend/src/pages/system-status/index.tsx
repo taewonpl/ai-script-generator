@@ -38,7 +38,6 @@ import {
 } from '@mui/icons-material'
 import { useQuery } from '@tanstack/react-query'
 
-
 interface ServiceStatus {
   name: string
   status: 'healthy' | 'warning' | 'error'
@@ -93,7 +92,6 @@ const STATUS_ICONS = {
 }
 
 export default function SystemStatusPage() {
-
   // Load system status
   const {
     data: systemStatus,

@@ -15,7 +15,7 @@ export interface ProjectDTO {
   type?: string
   status?: string
   tone?: string
-  system_prompt?: string // snake_case example  
+  system_prompt?: string // snake_case example
   summary?: string
   progress_percentage?: number
   created_at?: string
@@ -32,12 +32,12 @@ export interface ProjectDTO {
  * can rely on consistent values.
  */
 export function toProject(dto: ProjectDTO): Project {
-  const createdAt = dto.created_at ?? '';
-  const updatedAt = dto.updated_at ?? '';
+  const createdAt = dto.created_at ?? ''
+  const updatedAt = dto.updated_at ?? ''
   const progressPercentage =
     typeof dto.progress_percentage === 'number'
       ? Math.max(0, Math.min(100, dto.progress_percentage))
-      : 0;
+      : 0
 
   return {
     id: dto.id,

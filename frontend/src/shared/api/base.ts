@@ -121,7 +121,9 @@ export class APIClient {
         apiError.message =
           responseData.message || responseData.detail || error.message
         apiError.code = responseData.code
-        apiError.details = (responseData.errors || responseData.details) as Record<string, unknown> | undefined
+        apiError.details = (responseData.errors || responseData.details) as
+          | Record<string, unknown>
+          | undefined
       } else {
         apiError.message = error.message
       }
@@ -135,10 +137,7 @@ export class APIClient {
   }
 
   // HTTP Methods
-  async get<T>(
-    url: string,
-    config?: AxiosRequestConfig,
-  ): Promise<T> {
+  async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.get<APIResponse<T>>(url, config)
     return response.data.data
   }
@@ -170,10 +169,7 @@ export class APIClient {
     return response.data.data
   }
 
-  async delete<T>(
-    url: string,
-    config?: AxiosRequestConfig,
-  ): Promise<T> {
+  async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.delete<APIResponse<T>>(url, config)
     return response.data.data
   }
@@ -216,13 +212,13 @@ export class APIClient {
 
 // Simple get function for API unwrapping
 export async function get<T>(url: string): Promise<T> {
-  const response = await fetch(url);
+  const response = await fetch(url)
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`)
   }
-  const data = await response.json();
+  const data = await response.json()
   // Unwrap { data: T } wrapper if present
-  return data.data ?? data;
+  return data.data ?? data
 }
 
 // Service URLs from validated environment variables

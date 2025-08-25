@@ -30,15 +30,15 @@ export class GenerationService {
         request,
       )
 
-      if (!response.data?.success || !response.data.data) {
+      if (!response?.success || !response.data) {
         throw new GenerationError(
-          response.data?.error?.message || 'Failed to start generation',
+          response?.error?.message || 'Failed to start generation',
           'GENERATION_START_FAILED',
           false,
         )
       }
 
-      return response.data.data
+      return response.data
     } catch (error) {
       console.error('Failed to start generation:', error)
 
@@ -63,19 +63,19 @@ export class GenerationService {
         `${GENERATION_API_BASE}/${jobId}`,
       )
 
-      if (response.status === 404) {
+      if ((response as any).status === 404) {
         return null // Job not found
       }
 
-      if (!response.data?.success) {
+      if (!response?.success) {
         throw new GenerationError(
-          response.data?.error?.message || 'Failed to get generation status',
+          response?.error?.message || 'Failed to get generation status',
           'STATUS_FETCH_FAILED',
           true,
         )
       }
 
-      return response.data.data || null
+      return response.data || null
     } catch (error) {
       console.error('Failed to get generation status:', error)
 
@@ -103,7 +103,7 @@ export class GenerationService {
       const response = await client.delete(`${GENERATION_API_BASE}/${jobId}`)
 
       // DELETE returns 204 for successful cancellation (idempotent)
-      return response.status === 204
+      return (response as any).status === 204
     } catch (error) {
       console.error('Failed to cancel generation:', error)
 
@@ -122,11 +122,11 @@ export class GenerationService {
         `${GENERATION_API_BASE}/active`,
       )
 
-      if (!response.data?.success || !response.data.data) {
+      if (!response?.success || !response.data) {
         return []
       }
 
-      return response.data.data.active_jobs || []
+      return response.data.active_jobs || []
     } catch (error) {
       console.error('Failed to list active generations:', error)
       return []
@@ -142,11 +142,11 @@ export class GenerationService {
         `${GENERATION_API_BASE}/_stats`,
       )
 
-      if (!response.data?.success || !response.data.data) {
+      if (!response?.success || !response.data) {
         return {}
       }
 
-      return response.data.data.job_statistics || {}
+      return response.data.job_statistics || {}
     } catch (error) {
       console.error('Failed to get generation stats:', error)
       return {}
@@ -222,27 +222,5 @@ export class GenerationService {
 
     const estimated = baseTime + contentFactor * 10 + lengthFactor * 30
     return Math.max(30, Math.min(300, Math.round(estimated))) // Between 30s and 5 minutes
-  }
-}
-
-/**
- * Custom error class for generation operations
- */
-export class GenerationError extends Error {
-  public code: string
-  public retryable: boolean
-  public details?: Record<string, unknown>
-
-  constructor(
-    message: string,
-    code: string,
-    retryable: boolean,
-    details?: Record<string, unknown>,
-  ) {
-    super(message)
-    this.name = 'GenerationError'
-    this.code = code
-    this.retryable = retryable
-    this.details = details
   }
 }

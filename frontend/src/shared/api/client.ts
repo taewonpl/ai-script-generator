@@ -121,8 +121,7 @@ class APIClient {
     this.client.interceptors.response.use(
       (response: AxiosResponse) => {
         const config = response.config as ExtendedAxiosRequestConfig
-        const requestContext = config.metadata
-          ?.requestContext as RequestContext
+        const requestContext = config.metadata?.requestContext as RequestContext
         if (requestContext) {
           this.logSuccessfulRequest(response, requestContext)
         }
@@ -355,13 +354,10 @@ class APIClient {
   }
 
   async delete<T>(url: string, config?: RequestConfig): Promise<T> {
-    const response = await this.client.delete<StandardSuccessResponse<T>>(
-      url,
-      {
-        ...config,
-        data: config?.data, // Pass data for DELETE with body
-      },
-    )
+    const response = await this.client.delete<StandardSuccessResponse<T>>(url, {
+      ...config,
+      data: config?.data, // Pass data for DELETE with body
+    })
     return this.extractData(response)
   }
 
@@ -519,7 +515,7 @@ interface RequestConfig {
   headers?: Record<string, string>
   timeout?: number
   params?: Record<string, unknown>
-  data?: unknown  // Added for DELETE requests with body
+  data?: unknown // Added for DELETE requests with body
 }
 
 // Create configured API client instances

@@ -93,11 +93,11 @@ export function useUsageStats(
 
 // User Stats Hook
 interface UserStats {
-  totalProjects: number
-  totalEpisodes: number
-  totalScripts: number
-  storageUsed: number
-  [key: string]: unknown
+  total_projects: number
+  total_scripts: number
+  total_generations: number
+  usage_hours: number
+  join_date: string
 }
 
 export function useUserStats(
@@ -130,20 +130,16 @@ export function useSettings(
 
 // Notifications Hook
 interface NotificationResponse {
-  data: Array<{
+  notifications: Array<{
     id: string
-    type: string
+    title: string
     message: string
-    createdAt: string
+    type: 'info' | 'warning' | 'error' | 'success'
     read: boolean
-    [key: string]: unknown
+    created_at: string
   }>
-  pagination: {
-    page: number
-    limit: number
-    total: number
-    pages: number
-  }
+  total: number
+  unread_count: number
 }
 
 export function useNotifications(
@@ -163,11 +159,9 @@ export function useNotifications(
 // Backups Hook
 interface BackupInfo {
   id: string
-  filename: string
+  created_at: string
   size: number
-  createdAt: string
-  type: 'auto' | 'manual'
-  [key: string]: unknown
+  status: 'completed' | 'failed'
 }
 
 export function useBackups(
