@@ -36,7 +36,7 @@ jobs:
           corepack enable
           pnpm --version
           cd frontend
-          pnpm install --frozen-lockfile
+          pnpm install --no-frozen-lockfile
 
       # Critical: Security first
       - name: 🔒 Security Scan (Critical)

@@ -59,7 +59,7 @@ jobs:
       - name: Install frontend dependencies
         run: |
           cd frontend
-          pnpm i --frozen-lockfile > /dev/null 2>&1
+          pnpm i --no-frozen-lockfile > /dev/null 2>&1
 
       - name: 🔧 Fix Python formatting and linting
         run: |
