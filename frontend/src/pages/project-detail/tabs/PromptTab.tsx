@@ -10,7 +10,6 @@ import {
   Stack,
   Chip,
   CircularProgress,
-  Box as MuiBox,
 } from '@mui/material'
 import SaveIcon from '@mui/icons-material/Save'
 import AIIcon from '@mui/icons-material/AutoAwesome'
