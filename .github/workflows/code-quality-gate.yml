@@ -30,12 +30,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
 
-      - name: Enable Corepack
+      - name: Enable Corepack & Install Dependencies
         run: |
           corepack enable
           pnpm --version
+          cd frontend
+          pnpm install --frozen-lockfile
 
       # Critical: Security first
       - name: 🔒 Security Scan (Critical)
@@ -75,7 +76,6 @@ jobs:
         run: |
           echo "🔍 Checking frontend TypeScript type safety..."
           cd frontend
-          corepack enable && pnpm i --frozen-lockfile > /dev/null 2>&1
 
           if ! pnpm run typecheck; then
             echo "❌ Frontend TypeScript check failed"
