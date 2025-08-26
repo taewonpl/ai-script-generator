@@ -115,10 +115,7 @@ export function useCreateProject() {
       queryClient.invalidateQueries({ queryKey: projectKeys.lists() })
 
       // Add new project to cache
-      queryClient.setQueryData(
-        projectKeys.detail(newProject.data.id),
-        newProject,
-      )
+      queryClient.setQueryData(projectKeys.detail(newProject.id), newProject)
     },
   })
 }
@@ -172,10 +169,7 @@ export function useDuplicateProject() {
       projectService.duplicateProject(projectId, name),
     onSuccess: newProject => {
       // Add duplicated project to cache
-      queryClient.setQueryData(
-        projectKeys.detail(newProject.data.id),
-        newProject,
-      )
+      queryClient.setQueryData(projectKeys.detail(newProject.id), newProject)
 
       // Invalidate lists
       queryClient.invalidateQueries({ queryKey: projectKeys.lists() })
@@ -294,10 +288,7 @@ export function useCreateProjectFromTemplate() {
     mutationFn: ({ templateId, name }: { templateId: string; name: string }) =>
       projectService.createProjectFromTemplate(templateId, name),
     onSuccess: newProject => {
-      queryClient.setQueryData(
-        projectKeys.detail(newProject.data.id),
-        newProject,
-      )
+      queryClient.setQueryData(projectKeys.detail(newProject.id), newProject)
       queryClient.invalidateQueries({ queryKey: projectKeys.lists() })
     },
   })

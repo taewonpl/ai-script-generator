@@ -75,7 +75,7 @@ export function UserProfile() {
       console.log('Save profile:', data)
       showSuccess('프로필이 업데이트되었습니다.')
       setIsEditing(false)
-    } catch (error) {
+    } catch {
       showError('프로필 업데이트에 실패했습니다.')
     }
   }

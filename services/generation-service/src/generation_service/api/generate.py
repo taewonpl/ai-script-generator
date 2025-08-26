@@ -2,6 +2,8 @@
 Script generation endpoints with Core Module integration
 """
 
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from generation_service.models.generation import (
@@ -65,7 +67,7 @@ async def generate_script(
     request: GenerationRequest,
     http_request: Request,
     service: GenerationService = Depends(get_generation_service),
-):
+) -> GenerationResponse:
     """Generate a script based on the request parameters"""
 
     try:
@@ -117,7 +119,7 @@ async def generate_script(
 )
 async def get_generation_status(
     generation_id: str, service: GenerationService = Depends(get_generation_service)
-):
+) -> GenerationResponse:
     """Get the status of a generation request"""
 
     try:
@@ -177,7 +179,7 @@ async def get_generation_status(
 )
 async def cancel_generation(
     generation_id: str, service: GenerationService = Depends(get_generation_service)
-):
+) -> None:
     """Cancel a generation request"""
 
     try:
@@ -203,7 +205,7 @@ async def cancel_generation(
 )
 async def get_generation_quality(
     generation_id: str, service: GenerationService = Depends(get_generation_service)
-):
+) -> dict[str, Any]:
     """Get quality metrics for a generation"""
 
     try:
@@ -233,7 +235,7 @@ async def get_generation_quality(
 )
 async def get_quality_statistics(
     service: GenerationService = Depends(get_generation_service),
-):
+) -> dict[str, Any]:
     """Get service quality statistics"""
 
     try:
@@ -255,7 +257,7 @@ async def get_quality_statistics(
 )
 async def list_active_generations(
     service: GenerationService = Depends(get_generation_service),
-):
+) -> dict[str, list[str]]:
     """List active generations"""
 
     try:
@@ -275,7 +277,7 @@ async def list_active_generations(
     summary="List Generation Templates",
     description="Get available script generation templates",
 )
-async def list_templates():
+async def list_templates() -> dict[str, list[dict[str, str]]]:
     """List available generation templates"""
 
     # TODO: Implement template management
@@ -317,7 +319,7 @@ async def generate_hybrid_script(
     request: ScriptGenerationRequest,
     http_request: Request,
     service: GenerationService = Depends(get_generation_service),
-):
+) -> HybridWorkflowResponse:
     """Execute hybrid LangGraph workflow for script generation"""
 
     try:
@@ -383,7 +385,7 @@ async def generate_hybrid_script(
 )
 async def get_workflow_status(
     workflow_id: str, service: GenerationService = Depends(get_generation_service)
-):
+) -> WorkflowStatusResponse:
     """Get real-time workflow status and progress"""
 
     try:
@@ -447,7 +449,7 @@ async def execute_custom_workflow(
     request: CustomWorkflowRequest,
     http_request: Request,
     service: GenerationService = Depends(get_generation_service),
-):
+) -> HybridWorkflowResponse:
     """Execute custom workflow with user-defined configuration"""
 
     try:
@@ -514,7 +516,7 @@ async def execute_custom_workflow(
 )
 async def cancel_workflow(
     workflow_id: str, service: GenerationService = Depends(get_generation_service)
-):
+) -> None:
     """Cancel a running workflow"""
 
     try:
@@ -544,7 +546,7 @@ async def cancel_workflow(
 )
 async def list_active_workflows(
     service: GenerationService = Depends(get_generation_service),
-):
+) -> dict[str, Any]:
     """List all active workflows"""
 
     try:
@@ -569,7 +571,7 @@ async def list_active_workflows(
 )
 async def get_workflow_info(
     service: GenerationService = Depends(get_generation_service),
-):
+) -> dict[str, Any]:
     """Get workflow system information"""
 
     try:

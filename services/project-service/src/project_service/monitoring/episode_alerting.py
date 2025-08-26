@@ -18,7 +18,7 @@ try:
 except ImportError:
     import logging
 
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__)  # type: ignore[assignment]
 
 
 class AlertSeverity(str, Enum):
@@ -88,7 +88,7 @@ class EpisodeAlertManager:
         # Default alert rules
         self._setup_default_rules()
 
-    def _setup_default_rules(self):
+    def _setup_default_rules(self) -> None:
         """Setup default alert rules"""
         self.alert_rules = {
             "episode_failure_rate": AlertRule(
@@ -125,7 +125,7 @@ class EpisodeAlertManager:
             ),
         }
 
-    def add_alert_handler(self, handler: Callable[[Alert], None]):
+    def add_alert_handler(self, handler: Callable[[Alert], None]) -> None:
         """Add an alert handler function"""
         self.alert_handlers.append(handler)
 
@@ -178,7 +178,7 @@ class EpisodeAlertManager:
 
             # Query success/failure counts (this would integrate with actual metrics)
             query_filter = ""
-            params = {"since": since}
+            params: dict[str, Any] = {"since": since}
 
             if project_id:
                 query_filter = "AND project_id = :project_id"
@@ -194,7 +194,8 @@ class EpisodeAlertManager:
             )
 
             result = self.db.execute(total_query, params)
-            total_attempts = result.fetchone().total or 0
+            row = result.fetchone()
+            total_attempts = row.total if row else 0
 
             if total_attempts == 0:
                 return None
@@ -366,8 +367,8 @@ class EpisodeAlertManager:
         """Get summary of alert status"""
         active_alerts = self.get_active_alerts()
 
-        by_severity = {}
-        by_type = {}
+        by_severity: dict[str, int] = {}
+        by_type: dict[str, int] = {}
 
         for alert in active_alerts:
             # Count by severity
@@ -390,7 +391,7 @@ class EpisodeAlertManager:
 class AlertHandler:
     """Base alert handler"""
 
-    def handle(self, alert: Alert):
+    def handle(self, alert: Alert) -> None:
         """Handle an alert"""
         raise NotImplementedError
 
@@ -398,7 +399,7 @@ class AlertHandler:
 class LogAlertHandler(AlertHandler):
     """Log alert handler"""
 
-    def handle(self, alert: Alert):
+    def handle(self, alert: Alert) -> None:
         """Log the alert"""
         level = {
             AlertSeverity.INFO: logger.info,
@@ -412,10 +413,10 @@ class LogAlertHandler(AlertHandler):
 class WebhookAlertHandler(AlertHandler):
     """Webhook alert handler"""
 
-    def __init__(self, webhook_url: str):
+    def __init__(self, webhook_url: str) -> None:
         self.webhook_url = webhook_url
 
-    def handle(self, alert: Alert):
+    def handle(self, alert: Alert) -> None:
         """Send alert to webhook"""
         # This would make an HTTP request to the webhook
         payload = {"alert": alert.to_dict(), "timestamp": datetime.utcnow().isoformat()}
@@ -427,10 +428,10 @@ class WebhookAlertHandler(AlertHandler):
 class SlackAlertHandler(AlertHandler):
     """Slack alert handler"""
 
-    def __init__(self, webhook_url: str):
+    def __init__(self, webhook_url: str) -> None:
         self.webhook_url = webhook_url
 
-    def handle(self, alert: Alert):
+    def handle(self, alert: Alert) -> None:
         """Send alert to Slack"""
         color = {
             AlertSeverity.INFO: "good",
@@ -485,7 +486,7 @@ def setup_alert_handlers(
     db: Session,
     slack_webhook: str | None = None,
     general_webhook: str | None = None,
-):
+) -> None:
     """Setup alert handlers with configuration"""
     manager = get_alert_manager(db)
 

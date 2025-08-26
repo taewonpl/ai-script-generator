@@ -35,7 +35,7 @@ class RetryConfig:
     strategy: RetryStrategy = RetryStrategy.EXPONENTIAL
     backoff_multiplier: float = 2.0
     jitter: bool = True
-    exceptions: tuple = (Exception,)
+    exceptions: tuple[type[Exception], ...] = (Exception,)
     timeout: float | None = None
 
 
@@ -71,7 +71,7 @@ def calculate_delay(attempt: int, config: RetryConfig) -> float:
 
 
 async def async_retry(
-    func: Callable[..., Any], config: RetryConfig, *args, **kwargs
+    func: Callable[..., Any], config: RetryConfig, *args: Any, **kwargs: Any
 ) -> Any:
     """Execute async function with retry logic"""
 
@@ -143,7 +143,9 @@ async def async_retry(
     raise RetryError(error_msg, config.max_attempts, last_exception)
 
 
-def sync_retry(func: Callable[..., Any], config: RetryConfig, *args, **kwargs) -> Any:
+def sync_retry(
+    func: Callable[..., Any], config: RetryConfig, *args: Any, **kwargs: Any
+) -> Any:
     """Execute sync function with retry logic"""
 
     last_exception = None
@@ -211,16 +213,18 @@ def sync_retry(func: Callable[..., Any], config: RetryConfig, *args, **kwargs) -
     raise RetryError(error_msg, config.max_attempts, last_exception)
 
 
-def retry_decorator(config: RetryConfig):
+def retry_decorator(
+    config: RetryConfig,
+) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """Decorator for adding retry logic to functions"""
 
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
         @wraps(func)
-        async def async_wrapper(*args, **kwargs) -> T:
+        async def async_wrapper(*args: Any, **kwargs: Any) -> T:
             return await async_retry(func, config, *args, **kwargs)
 
         @wraps(func)
-        def sync_wrapper(*args, **kwargs) -> T:
+        def sync_wrapper(*args: Any, **kwargs: Any) -> T:
             return sync_retry(func, config, *args, **kwargs)
 
         # Return appropriate wrapper based on function type
@@ -329,13 +333,13 @@ class TimeoutContext:
     def __init__(self, timeout: float, operation_name: str = "operation"):
         self.timeout = timeout
         self.operation_name = operation_name
-        self.start_time = None
+        self.start_time: float | None = None
 
-    def __enter__(self):
+    def __enter__(self) -> "TimeoutContext":
         self.start_time = time.time()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         if self.start_time:
             elapsed = time.time() - self.start_time
             if elapsed > self.timeout:
@@ -344,7 +348,7 @@ class TimeoutContext:
                     f"(exceeded timeout of {self.timeout}s)"
                 )
 
-    def check_timeout(self):
+    def check_timeout(self) -> None:
         """Check if timeout has been exceeded"""
         if self.start_time:
             elapsed = time.time() - self.start_time
@@ -362,7 +366,9 @@ class TimeoutContext:
         return self.timeout
 
 
-async def with_timeout(coro, timeout: float, operation_name: str = "operation"):
+async def with_timeout(
+    coro: Any, timeout: float, operation_name: str = "operation"
+) -> Any:
     """Execute coroutine with timeout"""
     try:
         return await asyncio.wait_for(coro, timeout=timeout)
@@ -396,10 +402,10 @@ class CircuitBreaker:
         self.config = config
         self.state = CircuitBreakerState.CLOSED
         self.failure_count = 0
-        self.last_failure_time = None
+        self.last_failure_time: float | None = None
         self.success_count = 0
 
-    async def call(self, func: Callable, *args, **kwargs):
+    async def call(self, func: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:
         """Execute function through circuit breaker"""
 
         if self.state == CircuitBreakerState.OPEN:

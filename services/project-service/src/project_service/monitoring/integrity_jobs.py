@@ -20,7 +20,7 @@ try:
 except ImportError:
     import logging
 
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__)  # type: ignore[assignment]
 
 
 @dataclass
@@ -42,14 +42,14 @@ class EpisodeIntegrityJob:
         self.db = db
         self.config = config or IntegrityJobConfig()
         self.is_running = False
-        self.last_check = None
-        self.last_deep_check = None
-        self.stats = {
+        self.last_check: datetime | None = None
+        self.last_deep_check: datetime | None = None
+        self.stats: dict[str, Any] = {
             "total_runs": 0,
             "total_projects_checked": 0,
             "total_issues_found": 0,
-            "last_run_duration": 0,
-            "avg_run_duration": 0,
+            "last_run_duration": 0.0,
+            "avg_run_duration": 0.0,
         }
 
     async def run_basic_check(self) -> dict[str, Any]:
@@ -99,7 +99,7 @@ class EpisodeIntegrityJob:
                 "status": "completed",
                 "duration_seconds": duration,
                 "summary": summary,
-                "timestamp": self.last_check.isoformat(),
+                "timestamp": self.last_check.isoformat() if self.last_check else "",
             }
 
             logger.info(f"Basic integrity check completed in {duration:.2f}s")
@@ -174,21 +174,23 @@ class EpisodeIntegrityJob:
             self.stats["total_projects_checked"] += len(results)
             self.stats["total_issues_found"] += total_issues
 
-            result = {
+            deep_check_result: dict[str, Any] = {
                 "status": "completed",
                 "duration_seconds": duration,
                 "projects_checked": len(results),
                 "projects_with_issues": len(project_issues),
                 "total_issues": total_issues,
                 "project_issues": project_issues,
-                "timestamp": self.last_deep_check.isoformat(),
+                "timestamp": (
+                    self.last_deep_check.isoformat() if self.last_deep_check else ""
+                ),
             }
 
             logger.info(
                 f"Deep integrity check completed in {duration:.2f}s - "
                 f"found issues in {len(project_issues)}/{len(results)} projects"
             )
-            return result
+            return deep_check_result
 
         except Exception as e:
             logger.error(f"Deep integrity check failed: {e}")
@@ -207,7 +209,7 @@ class EpisodeIntegrityJob:
         health_score = max(0, 100 - (issue_count / result.total_episodes * 100))
         return round(health_score, 2)
 
-    async def run_continuous_monitoring(self):
+    async def run_continuous_monitoring(self) -> None:
         """Run continuous monitoring loop"""
         self.is_running = True
         logger.info("Starting continuous episode integrity monitoring")
@@ -238,7 +240,7 @@ class EpisodeIntegrityJob:
         finally:
             self.is_running = False
 
-    def stop_monitoring(self):
+    def stop_monitoring(self) -> None:
         """Stop continuous monitoring"""
         self.is_running = False
 
@@ -359,7 +361,7 @@ def get_integrity_job(
 
 async def start_integrity_monitoring(
     db: Session, config: IntegrityJobConfig | None = None
-):
+) -> asyncio.Task[None] | None:
     """Start integrity monitoring background job"""
     job = get_integrity_job(db, config)
     if not job.is_running:
@@ -371,7 +373,7 @@ async def start_integrity_monitoring(
         return None
 
 
-def stop_integrity_monitoring(db: Session):
+def stop_integrity_monitoring(db: Session) -> None:
     """Stop integrity monitoring background job"""
     job = get_integrity_job(db)
     job.stop_monitoring()

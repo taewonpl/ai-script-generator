@@ -9,7 +9,7 @@ from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel
 
@@ -27,17 +27,18 @@ try:
 except ImportError:
     TENACITY_AVAILABLE = False
 
-# Import Core Module components
-try:
+# Import Core Module components with TYPE_CHECKING pattern
+if TYPE_CHECKING:
+    # Type-only imports
     from ai_script_core import (
         AIModelConfigDTO,
-        BaseServiceException,
-        ErrorCategory,
-        ErrorSeverity,
-        ExternalServiceError,
         GenerationMetadataDTO,
+    )
+
+try:
+    from ai_script_core import (
+        BaseServiceException,
         GenerationServiceError,
-        ServiceUnavailableError,
         ValidationException,
         calculate_hash,
         generate_uuid,
@@ -46,6 +47,33 @@ try:
         safe_json_loads,
         utc_now,
     )
+
+    # Try to import optional attributes
+    try:
+        from ai_script_core import (
+            ErrorCategory,
+            ErrorSeverity,
+            ExternalServiceError,
+            ServiceUnavailableError,
+        )
+    except ImportError:
+        # Define fallback classes if not available in Core
+        class ErrorCategory(Enum):
+            VALIDATION = "validation"
+            EXTERNAL_SERVICE = "external_service"
+            INTERNAL = "internal"
+
+        class ErrorSeverity(Enum):
+            LOW = "low"
+            MEDIUM = "medium"
+            HIGH = "high"
+            CRITICAL = "critical"
+
+        class ExternalServiceError(Exception):
+            pass
+
+        class ServiceUnavailableError(Exception):
+            pass
 
     CORE_AVAILABLE = True
     logger = get_service_logger("generation-service.base_provider")
@@ -56,19 +84,19 @@ except (ImportError, RuntimeError):
     logger = logging.getLogger(__name__)
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -89,6 +117,77 @@ except (ImportError, RuntimeError):
         """Fallback error response DTO"""
 
         pass
+
+    class AIModelConfigDTO:
+        """Fallback AI model config DTO"""
+
+        pass
+
+    class GenerationMetadataDTO:
+        """Fallback generation metadata DTO"""
+
+        pass
+
+    # Fallback exception classes
+    class BaseServiceException(Exception):
+        """Fallback base service exception"""
+
+        pass
+
+    class GenerationServiceError(BaseServiceException):
+        """Fallback generation service error"""
+
+        pass
+
+    class ValidationException(BaseServiceException):
+        """Fallback validation exception"""
+
+        pass
+
+    class ExternalServiceError(BaseServiceException):
+        """Fallback external service error"""
+
+        pass
+
+    class ServiceUnavailableError(BaseServiceException):
+        """Fallback service unavailable error"""
+
+        pass
+
+    # Fallback enums
+    class ErrorCategory(str, Enum):
+        """Fallback error category"""
+
+        VALIDATION = "validation"
+        EXTERNAL_SERVICE = "external_service"
+        INTERNAL = "internal"
+
+    class ErrorSeverity(str, Enum):
+        """Fallback error severity"""
+
+        LOW = "low"
+        MEDIUM = "medium"
+        HIGH = "high"
+        CRITICAL = "critical"
+
+    # Fallback utility functions
+    def calculate_hash(data: str) -> str:
+        """Fallback hash calculation"""
+        import hashlib
+
+        return hashlib.md5(data.encode()).hexdigest()
+
+    def safe_json_dumps(data: Any) -> str:
+        """Fallback JSON serialization"""
+        import json
+
+        return json.dumps(data, default=str)
+
+    def safe_json_loads(data: str) -> Any:
+        """Fallback JSON deserialization"""
+        import json
+
+        return json.loads(data)
 
 
 class ModelType(str, Enum):
@@ -126,7 +225,7 @@ if CORE_AVAILABLE:
         created_at: datetime = None
         model_hash: str | None = None
 
-        def __post_init__(self):
+        def __post_init__(self) -> None:
             if self.created_at is None:
                 self.created_at = utc_now()
             if self.model_hash is None:
@@ -148,7 +247,7 @@ if CORE_AVAILABLE:
         request_id: str = None
         created_at: datetime = None
 
-        def __post_init__(self):
+        def __post_init__(self) -> None:
             if self.request_id is None:
                 self.request_id = generate_uuid()
             if self.created_at is None:
@@ -166,7 +265,7 @@ if CORE_AVAILABLE:
         metadata: dict[str, Any] | None = None
         request_id: str | None = None
 
-        def __post_init__(self):
+        def __post_init__(self) -> None:
             if self.created_at is None:
                 self.created_at = utc_now()
 
@@ -292,7 +391,7 @@ else:
 class BaseProvider(ABC):
     """Abstract base class for AI providers with Core Module integration"""
 
-    def __init__(self, name: str, config: dict[str, Any]):
+    def __init__(self, name: str, config: dict[str, Any]) -> None:
         self.name = name
         self.config = config
         self._status = ProviderStatus.UNKNOWN

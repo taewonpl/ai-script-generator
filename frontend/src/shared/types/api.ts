@@ -43,39 +43,31 @@ export interface UserPreferences {
 }
 
 // Project Service Types (Port 8001)
-export enum ProjectType {
-  DRAMA = 'drama',
-  COMEDY = 'comedy',
-  ACTION = 'action',
-  ROMANCE = 'romance',
-  THRILLER = 'thriller',
-  HORROR = 'horror',
-  FANTASY = 'fantasy',
-  SCIFI = 'scifi',
-}
+export const ProjectType = {
+  DRAMA: 'drama',
+  COMEDY: 'comedy',
+  ACTION: 'action',
+  ROMANCE: 'romance',
+  THRILLER: 'thriller',
+  HORROR: 'horror',
+  FANTASY: 'fantasy',
+  SCIFI: 'scifi',
+} as const
 
-export enum ProjectStatus {
-  PLANNING = 'planning',
-  ACTIVE = 'active',
-  PAUSED = 'paused',
-  COMPLETED = 'completed',
-  ARCHIVED = 'archived',
-}
+export type ProjectType = (typeof ProjectType)[keyof typeof ProjectType]
 
-export interface Project {
-  id: string
-  name: string
-  description?: string
-  type: ProjectType
-  status: ProjectStatus
-  progress_percentage: number
-  created_at: string
-  updated_at: string
-  user_id: string
-  episodes_count: number
-  scripts_count: number
-  metadata?: Record<string, unknown>
-}
+export const ProjectStatus = {
+  PLANNING: 'planning',
+  IN_PROGRESS: 'in_progress',
+  COMPLETED: 'completed',
+  ON_HOLD: 'on_hold',
+  CANCELLED: 'cancelled',
+} as const
+
+export type ProjectStatus = (typeof ProjectStatus)[keyof typeof ProjectStatus]
+
+// Re-export canonical Project type
+export type { Project } from '@/shared/types/project'
 
 export interface ProjectCreateRequest {
   name: string
@@ -91,22 +83,24 @@ export interface ProjectUpdateRequest extends Partial<ProjectCreateRequest> {
 
 export interface ProjectFilters {
   search?: string
-  type?: ProjectType
-  status?: ProjectStatus
+  type?: ProjectType | 'all'
+  status?: ProjectStatus | 'all'
   sortBy?: 'name' | 'created_at' | 'updated_at' | 'progress_percentage'
   sortOrder?: 'asc' | 'desc'
   page?: number
   limit?: number
 }
 
-export enum EpisodeStatus {
-  DRAFT = 'draft',
-  OUTLINE = 'outline',
-  FIRST_DRAFT = 'first_draft',
-  REVISION = 'revision',
-  FINAL = 'final',
-  APPROVED = 'approved',
-}
+export const EpisodeStatus = {
+  DRAFT: 'draft',
+  OUTLINE: 'outline',
+  FIRST_DRAFT: 'first_draft',
+  REVISION: 'revision',
+  FINAL: 'final',
+  APPROVED: 'approved',
+} as const
+
+export type EpisodeStatus = (typeof EpisodeStatus)[keyof typeof EpisodeStatus]
 
 export interface Episode {
   id: string
@@ -141,13 +135,16 @@ export interface EpisodeUpdateRequest
 }
 
 // Generation Service Types (Port 8002)
-export enum GenerationStatus {
-  PENDING = 'pending',
-  IN_PROGRESS = 'in_progress',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  CANCELLED = 'cancelled',
-}
+export const GenerationStatus = {
+  PENDING: 'pending',
+  IN_PROGRESS: 'in_progress',
+  COMPLETED: 'completed',
+  FAILED: 'failed',
+  CANCELLED: 'cancelled',
+} as const
+
+export type GenerationStatus =
+  (typeof GenerationStatus)[keyof typeof GenerationStatus]
 
 export interface GenerationRequest {
   project_id: string

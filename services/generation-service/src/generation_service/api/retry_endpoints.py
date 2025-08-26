@@ -33,7 +33,7 @@ router = APIRouter(prefix="/api/v1/retry", tags=["Retry Management"])
 
 
 @router.get("/queue/stats")
-async def get_queue_stats():
+async def get_queue_stats() -> SuccessResponseDTO | dict[str, Any]:
     """Get retry queue statistics"""
     try:
         queue = get_retry_queue()
@@ -57,7 +57,7 @@ async def get_queue_stats():
 
 
 @router.get("/job/{job_id}/status")
-async def get_job_status(job_id: str):
+async def get_job_status(job_id: str) -> SuccessResponseDTO | dict[str, Any]:
     """Get status of a specific retry job"""
     try:
         queue = get_retry_queue()
@@ -88,7 +88,9 @@ async def get_job_status(job_id: str):
 
 
 @router.get("/generation/{generation_id}/retry-progress")
-async def get_generation_retry_progress(generation_id: str):
+async def get_generation_retry_progress(
+    generation_id: str,
+) -> SuccessResponseDTO | dict[str, Any]:
     """Get retry progress for a generation"""
     try:
         # This would need to be implemented to track generation-specific retry jobs
@@ -138,7 +140,7 @@ async def get_generation_retry_progress(generation_id: str):
 @router.post("/generation/{generation_id}/manual-save")
 async def manual_save_generation(
     generation_id: str, save_data: dict[str, Any] | None = None
-):
+) -> SuccessResponseDTO | dict[str, Any]:
     """Manually trigger save for a generation"""
     try:
         # Extract save data from request or fetch from cache
@@ -186,7 +188,9 @@ async def manual_save_generation(
 
 
 @router.post("/cleanup/old-jobs")
-async def cleanup_old_jobs(older_than_hours: int = 24):
+async def cleanup_old_jobs(
+    older_than_hours: int = 24,
+) -> SuccessResponseDTO | dict[str, Any]:
     """Clean up old retry jobs"""
     try:
         queue = get_retry_queue()

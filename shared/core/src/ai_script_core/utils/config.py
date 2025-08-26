@@ -71,7 +71,7 @@ class DatabaseSettings(BaseServiceSettings):
     echo_pool: bool = Field(default=False, description="커넥션 풀 로깅 여부")
 
     # 성능 최적화
-    isolation_level: str | None = Field(default=None, description="트랜잭션 격리 수준")
+    isolation_level: str | None = Field(default=None, description="트랜쟭션 격리 수준")
 
     @field_validator("database_url")
     @classmethod

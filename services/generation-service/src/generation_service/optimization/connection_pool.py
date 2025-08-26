@@ -32,22 +32,22 @@ except (ImportError, RuntimeError):
     CORE_AVAILABLE = False
     import logging
 
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__)  # type: ignore[assignment]
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -191,7 +191,7 @@ class Connection:
 
         return False
 
-    async def close(self):
+    async def close(self) -> None:
         """Close the connection"""
 
         try:
@@ -256,7 +256,7 @@ class ConnectionPool:
                 },
             )
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """Initialize the connection pool"""
 
         if self._initialized:
@@ -277,7 +277,7 @@ class ConnectionPool:
             f"ConnectionPool '{self.name}' initialized with {len(self._connections)} connections"
         )
 
-    async def shutdown(self):
+    async def shutdown(self) -> None:
         """Shutdown the connection pool"""
 
         self._shutdown_event.set()
@@ -343,7 +343,7 @@ class ConnectionPool:
             self._connection_semaphore.release()
             raise e
 
-    async def release_connection(self, connection: Connection):
+    async def release_connection(self, connection: Connection) -> None:
         """Release a connection back to the pool"""
 
         try:
@@ -520,7 +520,7 @@ class AIProviderPool:
         # Initialize pools for each provider
         self._initialize_provider_pools()
 
-    def _initialize_provider_pools(self):
+    def _initialize_provider_pools(self) -> None:
         """Initialize connection pools for AI providers"""
 
         providers_config = self.config.get("providers", {})
@@ -580,7 +580,7 @@ class AIProviderPool:
 
         return factory
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """Initialize all provider pools"""
 
         for pool in self.pools.values():
@@ -590,7 +590,7 @@ class AIProviderPool:
             "AIProviderPool initialized", extra={"providers": list(self.pools.keys())}
         )
 
-    async def shutdown(self):
+    async def shutdown(self) -> None:
         """Shutdown all provider pools"""
 
         for pool in self.pools.values():
@@ -656,7 +656,7 @@ class AIProviderPool:
 
         return False
 
-    def _record_failure(self, provider_name: str):
+    def _record_failure(self, provider_name: str) -> None:
         """Record failure for circuit breaker"""
 
         cb = self.circuit_breakers[provider_name]
@@ -667,7 +667,7 @@ class AIProviderPool:
             cb["state"] = "open"
             logger.warning(f"Circuit breaker opened for provider {provider_name}")
 
-    def _reset_circuit_breaker(self, provider_name: str):
+    def _reset_circuit_breaker(self, provider_name: str) -> None:
         """Reset circuit breaker on successful request"""
 
         cb = self.circuit_breakers[provider_name]
@@ -718,7 +718,7 @@ def initialize_ai_provider_pool(config: dict[str, Any]) -> AIProviderPool:
     return _ai_provider_pool
 
 
-async def shutdown_ai_provider_pool():
+async def shutdown_ai_provider_pool() -> None:
     """Shutdown global AI provider pool"""
     global _ai_provider_pool
 

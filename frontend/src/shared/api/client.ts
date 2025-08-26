@@ -8,6 +8,14 @@ import type {
   AxiosError,
   InternalAxiosRequestConfig,
 } from 'axios'
+
+// Extend Axios request config to include custom metadata
+interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
+  metadata?: {
+    requestContext?: any
+    [key: string]: unknown
+  }
+}
 import axios from 'axios'
 import type {
   StandardErrorResponse,
@@ -22,7 +30,7 @@ import {
 } from '../types/observability'
 import { createLogger } from '../utils/logger'
 import { generateTraceId, generateRequestId } from '../utils/tracing'
-import { createIdempotencyKey, IdempotencyManager } from '../utils/idempotency'
+import { createIdempotencyKey } from '../utils/idempotency'
 
 const logger = createLogger('api-client')
 
@@ -42,7 +50,7 @@ interface RequestContext {
 
 class APIClient {
   private client: AxiosInstance
-  private idempotencyManager: IdempotencyManager
+  // private _idempotencyManager: IdempotencyManager // Currently unused
   private config: APIClientConfig
 
   constructor(config: APIClientConfig) {
@@ -54,7 +62,7 @@ class APIClient {
       ...config,
     }
 
-    this.idempotencyManager = new IdempotencyManager()
+    // this._idempotencyManager = new IdempotencyManager()  // Currently unused
 
     this.client = axios.create({
       baseURL: config.baseURL,
@@ -71,7 +79,7 @@ class APIClient {
   private setupInterceptors(): void {
     // Request interceptor for tracing and idempotency
     this.client.interceptors.request.use(
-      (config: InternalAxiosRequestConfig) => {
+      (config: ExtendedAxiosRequestConfig) => {
         const requestContext = this.createRequestContext(config)
 
         // Store request context for response interceptor
@@ -112,8 +120,8 @@ class APIClient {
     // Response interceptor for error handling and metrics
     this.client.interceptors.response.use(
       (response: AxiosResponse) => {
-        const requestContext = response.config.metadata
-          ?.requestContext as RequestContext
+        const config = response.config as ExtendedAxiosRequestConfig
+        const requestContext = config.metadata?.requestContext as RequestContext
         if (requestContext) {
           this.logSuccessfulRequest(response, requestContext)
         }
@@ -121,7 +129,8 @@ class APIClient {
         return response
       },
       (error: AxiosError) => {
-        const requestContext = error.config?.metadata
+        const config = error.config as ExtendedAxiosRequestConfig | undefined
+        const requestContext = config?.metadata
           ?.requestContext as RequestContext
         if (requestContext) {
           this.logFailedRequest(error, requestContext)
@@ -135,7 +144,7 @@ class APIClient {
   }
 
   private createRequestContext(
-    config: InternalAxiosRequestConfig,
+    config: ExtendedAxiosRequestConfig,
   ): RequestContext {
     const traceContext: TraceContext = {
       traceId: generateTraceId(),
@@ -175,11 +184,11 @@ class APIClient {
   }
 
   private injectTracingHeaders(
-    config: InternalAxiosRequestConfig,
+    config: ExtendedAxiosRequestConfig,
     traceContext: TraceContext,
   ): void {
     if (!config.headers) {
-      config.headers = {}
+      config.headers = {} as any
     }
 
     config.headers[TraceHeaders.TRACE_ID] = traceContext.traceId
@@ -281,7 +290,7 @@ class APIClient {
     if (!error.response) {
       // Network error
       return new StandardizedAPIError(
-        'NETWORK_ERROR',
+        'REQUEST_TIMEOUT',
         '네트워크 연결을 확인해주세요.',
         0,
       )
@@ -345,10 +354,10 @@ class APIClient {
   }
 
   async delete<T>(url: string, config?: RequestConfig): Promise<T> {
-    const response = await this.client.delete<StandardSuccessResponse<T>>(
-      url,
-      config,
-    )
+    const response = await this.client.delete<StandardSuccessResponse<T>>(url, {
+      ...config,
+      data: config?.data, // Pass data for DELETE with body
+    })
     return this.extractData(response)
   }
 
@@ -448,15 +457,24 @@ class APIClient {
 
 // Standardized API Error class
 export class StandardizedAPIError extends Error {
+  public code: ErrorCodeType
+  public statusCode: number
+  public details?: Record<string, unknown>
+  public traceId?: string
+
   constructor(
-    public code: ErrorCodeType,
+    code: ErrorCodeType,
     message: string,
-    public statusCode: number,
-    public details?: Record<string, unknown>,
-    public traceId?: string,
+    statusCode: number,
+    details?: Record<string, unknown>,
+    traceId?: string,
   ) {
     super(message)
     this.name = 'StandardizedAPIError'
+    this.code = code
+    this.statusCode = statusCode
+    this.details = details
+    this.traceId = traceId
   }
 
   // Check if error is retryable
@@ -497,24 +515,25 @@ interface RequestConfig {
   headers?: Record<string, string>
   timeout?: number
   params?: Record<string, unknown>
+  data?: unknown // Added for DELETE requests with body
 }
 
 // Create configured API client instances
 export const coreServiceClient = new APIClient({
   baseURL:
-    process.env['VITE_CORE_SERVICE_URL'] || 'http://localhost:8000/api/v1',
+    import.meta.env.VITE_CORE_SERVICE_URL || 'http://localhost:8000/api/v1',
   service: 'core-service',
 })
 
 export const projectServiceClient = new APIClient({
   baseURL:
-    process.env['VITE_PROJECT_SERVICE_URL'] || 'http://localhost:8001/api/v1',
+    import.meta.env.VITE_PROJECT_SERVICE_URL || 'http://localhost:8001/api/v1',
   service: 'project-service',
 })
 
 export const generationServiceClient = new APIClient({
   baseURL:
-    process.env['VITE_GENERATION_SERVICE_URL'] ||
+    import.meta.env.VITE_GENERATION_SERVICE_URL ||
     'http://localhost:8002/api/v1',
   service: 'generation-service',
 })
@@ -636,6 +655,9 @@ export const projectApi = {
     return { data: response }
   },
 }
+
+// Export generationApi for compatibility with useJobControl
+export const generationApi = generationServiceClient
 
 export { APIClient }
 export type { APIClientConfig, RequestConfig }

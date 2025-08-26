@@ -23,22 +23,22 @@ except (ImportError, RuntimeError):
     CORE_AVAILABLE = False
     import logging
 
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__)  # type: ignore[assignment]
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -94,7 +94,7 @@ class TaskResult:
     execution_time: float | None = None
     metadata: dict[str, Any] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.metadata is None:
             self.metadata = {}
 
@@ -158,7 +158,7 @@ class AsyncTaskPool:
         self._on_task_complete: list[Callable] = []
         self._on_task_error: list[Callable] = []
 
-    async def start(self):
+    async def start(self) -> None:
         """Start the task pool"""
 
         if self._worker_task and not self._worker_task.done():
@@ -176,7 +176,7 @@ class AsyncTaskPool:
             },
         )
 
-    async def stop(self):
+    async def stop(self) -> None:
         """Stop the task pool and wait for completion"""
 
         self._shutdown_event.set()
@@ -340,7 +340,7 @@ class AsyncTaskPool:
         # Wait for all tasks to complete
         return await self.wait_for_tasks(task_ids, timeout)
 
-    async def _worker(self):
+    async def _worker(self) -> None:
         """Main worker that processes tasks from the queue"""
 
         while not self._shutdown_event.is_set():
@@ -376,7 +376,9 @@ class AsyncTaskPool:
                 logger.error(f"Worker error: {e}")
                 await asyncio.sleep(1.0)
 
-    async def _execute_task(self, task_id: str, coro: Awaitable[Any], timeout: float):
+    async def _execute_task(
+        self, task_id: str, coro: Awaitable[Any], timeout: float
+    ) -> None:
         """Execute a single task with timeout and error handling"""
 
         result = self._task_results[task_id]
@@ -456,7 +458,7 @@ class AsyncTaskPool:
             # Remove from running tasks
             self._running_tasks.pop(task_id, None)
 
-    async def _cleanup_worker(self):
+    async def _cleanup_worker(self) -> None:
         """Background worker for cleaning up old task results"""
 
         while not self._shutdown_event.is_set():
@@ -494,7 +496,7 @@ class AsyncTaskPool:
 
     def add_task_callback(
         self, event: str, callback: Callable[[str, TaskResult], Awaitable[None]]
-    ):
+    ) -> None:
         """Add callback for task lifecycle events"""
 
         if event == "start":
@@ -555,7 +557,7 @@ class AsyncManager:
         # Initialize default pools
         self._initialize_default_pools()
 
-    def _initialize_default_pools(self):
+    def _initialize_default_pools(self) -> None:
         """Initialize default task pools"""
 
         pools_config = self.config.get("pools", {})
@@ -581,7 +583,7 @@ class AsyncManager:
             default_timeout=priority_config.get("timeout", 120.0),
         )
 
-    async def start(self):
+    async def start(self) -> None:
         """Start the async manager"""
 
         # Start all pools
@@ -596,7 +598,7 @@ class AsyncManager:
             extra={"pools": list(self.pools.keys()), "config": self.config},
         )
 
-    async def stop(self):
+    async def stop(self) -> None:
         """Stop the async manager"""
 
         # Stop load monitoring
@@ -650,7 +652,7 @@ class AsyncManager:
             coro, priority=TaskPriority.CRITICAL, timeout=timeout
         )
 
-    def create_rate_limiter(self, name: str, rate: int):
+    def create_rate_limiter(self, name: str, rate: int) -> None:
         """Create rate limiter for external service calls"""
 
         self._rate_limiters[name] = asyncio.Semaphore(rate)
@@ -666,7 +668,7 @@ class AsyncManager:
         async with semaphore:
             return await coro
 
-    async def _monitor_system_load(self):
+    async def _monitor_system_load(self) -> None:
         """Monitor system load and adjust concurrency"""
 
         while True:
@@ -730,7 +732,7 @@ def initialize_async_manager(config: dict[str, Any] | None = None) -> AsyncManag
     return _async_manager
 
 
-async def shutdown_async_manager():
+async def shutdown_async_manager() -> None:
     """Shutdown global async manager"""
     global _async_manager
 

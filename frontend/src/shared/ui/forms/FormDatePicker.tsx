@@ -1,7 +1,8 @@
-import { Controller, useFormContext } from 'react-hook-form'
+import { Controller } from 'react-hook-form'
 import type { FieldValues } from 'react-hook-form'
 import { TextField, FormControl, FormHelperText } from '@mui/material'
 import type { BaseFormProps } from './types'
+import { useFormContext } from './FormProvider'
 
 export interface FormDatePickerProps<T extends FieldValues>
   extends BaseFormProps<T> {
@@ -173,30 +174,34 @@ export function FormDateRangePicker<T extends FieldValues>({
 }: FormDateRangePickerProps<T>) {
   const { form } = useFormContext<T>()
 
-  const startValue = form.watch(startDateName as string)
-  const endValue = form.watch(endDateName as string)
+  const startValue = form.watch(startDateName as any)
+  const endValue = form.watch(endDateName as any)
 
   return (
     <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+      {/* @ts-expect-error - control prop type mismatch with RHF generic constraints */}
       <FormDatePicker
-        name={startDateName}
+        name={startDateName as any}
         label={startLabel}
         disabled={disabled}
         required={required}
         fullWidth={fullWidth}
         maxDate={
-          endValue ? new Date(endValue).toISOString().split('T')[0] : undefined
+          endValue
+            ? new Date(endValue as any).toISOString().split('T')[0]
+            : undefined
         }
       />
+      {/* @ts-expect-error - control prop type mismatch with RHF generic constraints */}
       <FormDatePicker
-        name={endDateName}
+        name={endDateName as any}
         label={endLabel}
         disabled={disabled}
         required={required}
         fullWidth={fullWidth}
         minDate={
           startValue
-            ? new Date(startValue).toISOString().split('T')[0]
+            ? new Date(startValue as any).toISOString().split('T')[0]
             : undefined
         }
         helperText={helperText}

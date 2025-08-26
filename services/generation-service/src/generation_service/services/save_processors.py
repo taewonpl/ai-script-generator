@@ -21,7 +21,7 @@ except ImportError:
 class SaveProcessors:
     """Collection of save processors for different job types"""
 
-    def __init__(self, project_service_url: str = "http://localhost:8002"):
+    def __init__(self, project_service_url: str = "http://localhost:8002") -> None:
         self.project_service_url = project_service_url.rstrip("/")
 
     async def save_generation_processor(self, payload: dict[str, Any]) -> None:
@@ -145,7 +145,9 @@ class SaveProcessors:
         logger.info("Cache cleanup completed")
 
 
-def register_save_processors(project_service_url: str = "http://localhost:8002"):
+def register_save_processors(
+    project_service_url: str = "http://localhost:8002",
+) -> None:
     """Register all save processors with the retry queue"""
     processors = SaveProcessors(project_service_url)
     queue = get_retry_queue()

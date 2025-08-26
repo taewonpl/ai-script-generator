@@ -4,13 +4,14 @@ Logging filters for sensitive data masking and security
 
 import logging
 import re
+from collections.abc import Mapping
 from typing import Any
 
 
 class APIKeyMaskingFilter(logging.Filter):
     """Filter to mask API keys and sensitive data in log messages"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
 
         # Common API key patterns
@@ -96,7 +97,7 @@ class APIKeyMaskingFilter(logging.Filter):
 
         return masked_text
 
-    def _replace_with_mask(self, match: re.Match) -> str:
+    def _replace_with_mask(self, match: re.Match[str]) -> str:
         """Replace matched sensitive data with masked version"""
         matched_text = match.group(0)
 
@@ -124,12 +125,18 @@ class APIKeyMaskingFilter(logging.Filter):
         # Show first 4 and last 4 characters
         return f"{value[:4]}...{value[-4:]}"
 
-    def _mask_args(self, args: tuple) -> tuple:
+    def _mask_args(self, args: tuple[Any, ...] | Mapping[str, Any]) -> tuple[Any, ...]:
         """Mask sensitive data in log arguments"""
         if not args:
-            return args
+            return ()
 
-        masked_args = []
+        # Handle Mapping case (keyword arguments)
+        if isinstance(args, Mapping):
+            # Convert mapping to tuple of values for compatibility
+            return tuple(args.values())
+
+        # Handle tuple case
+        masked_args: list[Any] = []
         for arg in args:
             if isinstance(arg, str):
                 masked_args.append(self._mask_sensitive_data(arg))
@@ -162,12 +169,14 @@ class APIKeyMaskingFilter(logging.Filter):
 
         return masked_dict
 
-    def _mask_collection(self, data: list[Any]) -> list[Any]:
+    def _mask_collection(
+        self, data: list[Any] | tuple[Any, ...]
+    ) -> list[Any] | tuple[Any, ...]:
         """Mask sensitive data in list/tuple"""
         if not isinstance(data, (list, tuple)):
             return data
 
-        masked_items = []
+        masked_items: list[Any] = []
         for item in data:
             if isinstance(item, str):
                 masked_items.append(self._mask_sensitive_data(item))
@@ -178,13 +187,17 @@ class APIKeyMaskingFilter(logging.Filter):
             else:
                 masked_items.append(item)
 
-        return type(data)(masked_items)
+        # Type-safe reconstruction
+        if isinstance(data, list):
+            return masked_items
+        else:
+            return tuple(masked_items)
 
 
 class StructuredLoggingFilter(logging.Filter):
     """Filter to add structured logging context"""
 
-    def __init__(self, service_name: str = "generation-service"):
+    def __init__(self, service_name: str = "generation-service") -> None:
         super().__init__()
         self.service_name = service_name
 
@@ -236,7 +249,7 @@ class PerformanceLoggingFilter(logging.Filter):
 
 def setup_logging_filters(
     logger: logging.Logger, service_name: str = "generation-service"
-):
+) -> None:
     """Setup all logging filters for a logger"""
 
     # Add API key masking filter

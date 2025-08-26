@@ -25,22 +25,22 @@ except (ImportError, RuntimeError):
     CORE_AVAILABLE = False
     import logging
 
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__)  # type: ignore[assignment]
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -186,8 +186,8 @@ class MetricsCollector:
 
         # Collection state
         self._collection_enabled = False
-        self._collection_task: asyncio.Task | None = None
-        self._cleanup_task: asyncio.Task | None = None
+        self._collection_task: asyncio.Task[None] | None = None
+        self._cleanup_task: asyncio.Task[None] | None = None
 
         # Event handlers
         self._metric_handlers: list[Callable[[str, MetricValue], None]] = []
@@ -195,7 +195,7 @@ class MetricsCollector:
         # Initialize core metrics
         self._initialize_core_metrics()
 
-    def _initialize_core_metrics(self):
+    def _initialize_core_metrics(self) -> None:
         """Initialize core performance metrics"""
 
         core_metrics = [
@@ -223,7 +223,7 @@ class MetricsCollector:
 
     def register_metric(
         self, name: str, metric_type: MetricType, description: str = ""
-    ):
+    ) -> None:
         """Register a new metric for collection"""
 
         self._metric_types[name] = metric_type
@@ -233,25 +233,25 @@ class MetricsCollector:
 
     def record_counter(
         self, name: str, value: float = 1.0, labels: dict[str, str] | None = None
-    ):
+    ) -> None:
         """Record a counter metric (cumulative value)"""
         self._record_metric(name, MetricType.COUNTER, value, labels)
 
     def record_gauge(
         self, name: str, value: float, labels: dict[str, str] | None = None
-    ):
+    ) -> None:
         """Record a gauge metric (current value)"""
         self._record_metric(name, MetricType.GAUGE, value, labels)
 
     def record_histogram(
         self, name: str, value: float, labels: dict[str, str] | None = None
-    ):
+    ) -> None:
         """Record a histogram metric (distribution of values)"""
         self._record_metric(name, MetricType.HISTOGRAM, value, labels)
 
     def record_timer(
         self, name: str, duration: float, labels: dict[str, str] | None = None
-    ):
+    ) -> None:
         """Record a timer metric (duration measurement)"""
         self._record_metric(name, MetricType.TIMER, duration, labels)
 
@@ -261,7 +261,7 @@ class MetricsCollector:
         expected_type: MetricType,
         value: float,
         labels: dict[str, str] | None = None,
-    ):
+    ) -> None:
         """Internal method to record metric value"""
 
         # Verify metric type
@@ -292,7 +292,7 @@ class MetricsCollector:
             except Exception as e:
                 logger.error(f"Metric handler failed: {e}")
 
-    async def start_collection(self):
+    async def start_collection(self) -> None:
         """Start metrics collection"""
 
         if self._collection_enabled:
@@ -304,7 +304,7 @@ class MetricsCollector:
 
         logger.info("MetricsCollector started")
 
-    async def stop_collection(self):
+    async def stop_collection(self) -> None:
         """Stop metrics collection"""
 
         self._collection_enabled = False
@@ -325,7 +325,7 @@ class MetricsCollector:
 
         logger.info("MetricsCollector stopped")
 
-    async def _collection_worker(self):
+    async def _collection_worker(self) -> None:
         """Background worker for metric aggregation"""
 
         while self._collection_enabled:
@@ -342,7 +342,7 @@ class MetricsCollector:
                 logger.error(f"Metrics collection worker error: {e}")
                 await asyncio.sleep(10.0)
 
-    async def _cleanup_worker(self):
+    async def _cleanup_worker(self) -> None:
         """Background worker for cleaning old metrics"""
 
         while self._collection_enabled:
@@ -369,7 +369,7 @@ class MetricsCollector:
             except Exception as e:
                 logger.error(f"Metrics cleanup worker error: {e}")
 
-    async def _update_current_metrics(self):
+    async def _update_current_metrics(self) -> None:
         """Update current aggregated metrics"""
 
         try:
@@ -441,7 +441,7 @@ class MetricsCollector:
 
         return [m.value for m in self._metrics[metric_name] if m.timestamp >= since]
 
-    async def _calculate_success_rates(self, window: datetime):
+    async def _calculate_success_rates(self, window: datetime) -> None:
         """Calculate success and error rates"""
 
         # This would integrate with actual error tracking
@@ -582,7 +582,7 @@ class MetricsCollector:
 
         return target_status
 
-    def add_metric_handler(self, handler: Callable[[str, MetricValue], None]):
+    def add_metric_handler(self, handler: Callable[[str, MetricValue], None]) -> None:
         """Add event handler for metric updates"""
         self._metric_handlers.append(handler)
 
@@ -626,11 +626,16 @@ class MetricTimer:
         self.labels = labels
         self.start_time = None
 
-    def __enter__(self):
+    def __enter__(self) -> "MetricTimer":
         self.start_time = time.time()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self,
+        exc_type: type | None,
+        exc_val: BaseException | None,
+        exc_tb: object | None,
+    ) -> None:
         if self.start_time:
             duration = time.time() - self.start_time
             self.collector.record_timer(self.metric_name, duration, self.labels)
@@ -656,7 +661,7 @@ def initialize_metrics_collector(
     return _metrics_collector
 
 
-async def shutdown_metrics_collector():
+async def shutdown_metrics_collector() -> None:
     """Shutdown global metrics collector"""
     global _metrics_collector
 

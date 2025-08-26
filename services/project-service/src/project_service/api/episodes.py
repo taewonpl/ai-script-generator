@@ -2,48 +2,44 @@
 Episodes API Router
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+# Use fallback DTOs - Core integration disabled for type stability
+from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import status as http_status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-try:
-    # Prefer Core
-    from ai_script_core import (
-        EpisodeCreateDTO,
-        EpisodeDTO,
-        EpisodeUpdateDTO,
-        SuccessResponseDTO,
-    )
-except Exception:  # fallback
-    from typing import Any
 
-    from pydantic import BaseModel
+class EpisodeDTO(BaseModel):
+    id: str
+    title: str
+    project_id: str
+    number: int  # 에피소드 번호 (자동 할당)
+    order: int  # 표시 순서
+    status: str | None = None
+    description: str | None = None
+    created_at: str | None = None
+    updated_at: str | None = None
 
-    class EpisodeDTO(BaseModel):
-        id: str
-        title: str
-        project_id: str
-        number: int  # 에피소드 번호 (자동 할당)
-        order: int  # 표시 순서
-        status: str | None = None
-        description: str | None = None
-        created_at: str | None = None
-        updated_at: str | None = None
 
-    class SuccessResponseDTO(BaseModel):
-        success: bool = True
-        message: str = "Success"
-        data: Any = None
+class SuccessResponseDTO(BaseModel):
+    success: bool = True
+    message: str = "Success"
+    data: Any = None
+    error: str | None = None
 
-    class EpisodeCreateDTO(BaseModel):
-        title: str
-        description: str | None = None
 
-    class EpisodeUpdateDTO(BaseModel):
-        title: str | None = None
-        description: str | None = None
-        duration: int | None = None
-        notes: str | None = None
+class EpisodeCreateDTO(BaseModel):
+    title: str
+    description: str | None = None
+
+
+class EpisodeUpdateDTO(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    duration: int | None = None
+    notes: str | None = None
 
 
 from ..database import get_db
@@ -57,7 +53,7 @@ async def get_episodes(
     project_id: str,
     published_only: bool = Query(False, description="공개된 에피소드만 조회"),
     db: Session = Depends(get_db),
-):
+) -> SuccessResponseDTO:
     """프로젝트의 에피소드 목록 조회"""
     try:
         service = EpisodeService(db)
@@ -70,19 +66,19 @@ async def get_episodes(
         )
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
 
 @router.post(
-    "/", response_model=SuccessResponseDTO, status_code=status.HTTP_201_CREATED
+    "/", response_model=SuccessResponseDTO, status_code=http_status.HTTP_201_CREATED
 )
 async def create_episode(
     project_id: str,
     episode_data: EpisodeCreateDTO,
     request: Request,
     db: Session = Depends(get_db),
-):
+) -> SuccessResponseDTO:
     """에피소드 생성"""
     try:
         service = EpisodeService(db)
@@ -96,17 +92,23 @@ async def create_episode(
             success=True, message="에피소드가 성공적으로 생성되었습니다.", data=episode
         )
     except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND, detail=e.message
+        )
     except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+        raise HTTPException(
+            status_code=http_status.HTTP_400_BAD_REQUEST, detail=e.message
+        )
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
 
 @router.get("/{episode_id}", response_model=SuccessResponseDTO)
-async def get_episode(project_id: str, episode_id: str, db: Session = Depends(get_db)):
+async def get_episode(
+    project_id: str, episode_id: str, db: Session = Depends(get_db)
+) -> SuccessResponseDTO:
     """에피소드 상세 조회"""
     try:
         service = EpisodeService(db)
@@ -116,10 +118,12 @@ async def get_episode(project_id: str, episode_id: str, db: Session = Depends(ge
             success=True, message="에피소드를 성공적으로 조회했습니다.", data=episode
         )
     except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND, detail=e.message
+        )
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
 
@@ -129,7 +133,7 @@ async def update_episode(
     episode_id: str,
     episode_data: EpisodeUpdateDTO,
     db: Session = Depends(get_db),
-):
+) -> SuccessResponseDTO:
     """에피소드 수정"""
     try:
         service = EpisodeService(db)
@@ -145,19 +149,23 @@ async def update_episode(
             success=True, message="에피소드가 성공적으로 수정되었습니다.", data=episode
         )
     except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND, detail=e.message
+        )
     except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+        raise HTTPException(
+            status_code=http_status.HTTP_400_BAD_REQUEST, detail=e.message
+        )
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
 
 @router.delete("/{episode_id}", response_model=SuccessResponseDTO)
 async def delete_episode(
     project_id: str, episode_id: str, db: Session = Depends(get_db)
-):
+) -> SuccessResponseDTO:
     """에피소드 삭제"""
     try:
         service = EpisodeService(db)
@@ -171,21 +179,23 @@ async def delete_episode(
             )
         else:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="에피소드 삭제에 실패했습니다.",
             )
     except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND, detail=e.message
+        )
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
 
 @router.patch("/{episode_id}/publish", response_model=SuccessResponseDTO)
 async def publish_episode(
     project_id: str, episode_id: str, db: Session = Depends(get_db)
-):
+) -> SuccessResponseDTO:
     """에피소드 공개"""
     try:
         service = EpisodeService(db)
@@ -195,17 +205,19 @@ async def publish_episode(
             success=True, message="에피소드가 성공적으로 공개되었습니다.", data=episode
         )
     except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND, detail=e.message
+        )
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
 
 @router.patch("/{episode_id}/unpublish", response_model=SuccessResponseDTO)
 async def unpublish_episode(
     project_id: str, episode_id: str, db: Session = Depends(get_db)
-):
+) -> SuccessResponseDTO:
     """에피소드 비공개"""
     try:
         service = EpisodeService(db)
@@ -217,8 +229,10 @@ async def unpublish_episode(
             data=episode,
         )
     except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND, detail=e.message
+        )
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )

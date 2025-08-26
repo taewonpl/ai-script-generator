@@ -63,7 +63,7 @@ class CompletedEventData(BaseModel):
 
     @classmethod
     def create_result(
-        cls, job_id: str, markdown: str, tokens: int, **kwargs
+        cls, job_id: str, markdown: str, tokens: int, **kwargs: Any
     ) -> "CompletedEventData":
         """Create completed event with result data"""
         result = {"markdown": markdown, "tokens": tokens, **kwargs}
@@ -79,7 +79,12 @@ class FailedEventData(BaseModel):
 
     @classmethod
     def create_error(
-        cls, job_id: str, code: str, message: str, retryable: bool = False, **kwargs
+        cls,
+        job_id: str,
+        code: str,
+        message: str,
+        retryable: bool = False,
+        **kwargs: Any,
     ) -> "FailedEventData":
         """Create failed event with error data"""
         error = {"code": code, "message": message, "retryable": retryable, **kwargs}
@@ -183,6 +188,7 @@ class GenerationJob(BaseModel):
             value=self.progress,
             currentStep=self.currentStep,
             estimatedTime=self.get_estimated_remaining_time(),
+            metadata=None,
         )
         return SSEEvent(event=SSEEventType.PROGRESS, data=data)
 
@@ -233,7 +239,7 @@ class GenerationJob(BaseModel):
         remaining = max(0, estimated_total - elapsed)
         return int(remaining)
 
-    def update_progress(self, progress: int, step: str, content: str = ""):
+    def update_progress(self, progress: int, step: str, content: str = "") -> None:
         """Update job progress"""
         self.progress = max(0, min(100, progress))
         self.currentStep = step
@@ -248,7 +254,9 @@ class GenerationJob(BaseModel):
         self.eventSequence += 1
         self.lastEventId = f"{self.jobId}_{self.eventSequence}"
 
-    def complete(self, final_content: str, tokens: int = 0, model_used: str = None):
+    def complete(
+        self, final_content: str, tokens: int = 0, model_used: str | None = None
+    ) -> None:
         """Mark job as completed"""
         self.status = GenerationJobStatus.COMPLETED
         self.progress = 100
@@ -261,7 +269,7 @@ class GenerationJob(BaseModel):
         if model_used:
             self.modelUsed = model_used
 
-    def fail(self, error_code: str, error_message: str):
+    def fail(self, error_code: str, error_message: str) -> None:
         """Mark job as failed"""
         self.status = GenerationJobStatus.FAILED
         self.currentStep = "실패"
@@ -269,7 +277,7 @@ class GenerationJob(BaseModel):
         self.errorMessage = error_message
         self.completedAt = datetime.now(timezone.utc)
 
-    def cancel(self):
+    def cancel(self) -> None:
         """Mark job as canceled"""
         self.status = GenerationJobStatus.CANCELED
         self.currentStep = "취소됨"

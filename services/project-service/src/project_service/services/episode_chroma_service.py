@@ -38,7 +38,9 @@ class EpisodeChromaService:
         )
 
         try:
-            self.chroma_store = EpisodeChromaStore(db_path=self.chroma_db_path)
+            self.chroma_store = EpisodeChromaStore(
+                db_path=self.chroma_db_path or "./data/chroma"
+            )
             logger.info(
                 f"EpisodeChromaService initialized with ChromaDB at {self.chroma_db_path}"
             )
@@ -262,7 +264,7 @@ class EpisodeChromaService:
                 return 1
 
             # Find the maximum episode number
-            max_number = max(episode["number"] for episode in episodes)
+            max_number: int = max(episode["number"] for episode in episodes)
             return max_number + 1
 
         except ChromaStoreError as e:

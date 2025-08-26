@@ -21,7 +21,7 @@ except (ImportError, RuntimeError):
     CORE_AVAILABLE = False
     import logging
 
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__)  # type: ignore[assignment]
 
     # Fallback utility functions
     def utc_now():
@@ -30,13 +30,13 @@ except (ImportError, RuntimeError):
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -112,7 +112,7 @@ class QualityAssessor:
     - Configurable quality standards
     """
 
-    def __init__(self, config: dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] | None = None) -> None:
         self.config = config or {}
 
         # Quality dimension weights (customizable)

@@ -138,8 +138,8 @@ export function FormAutocomplete<T extends FieldValues>({
 
         const handleChange = (
           _event: SyntheticEvent,
-          value: string | string[] | null,
-          _reason: string,
+          value: any,
+          _reason: any,
         ) => {
           if (multiple) {
             field.onChange(value || [])
@@ -195,7 +195,6 @@ export function FormAutocomplete<T extends FieldValues>({
             renderTags={(value, getTagProps) =>
               value.map((option, index) => (
                 <Chip
-                  key={typeof option === 'string' ? option : option.value}
                   label={typeof option === 'string' ? option : option.label}
                   size="small"
                   {...getTagProps({ index })}

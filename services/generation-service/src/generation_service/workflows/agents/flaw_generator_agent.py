@@ -20,19 +20,19 @@ except (ImportError, RuntimeError):
     logger = logging.getLogger(__name__)
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -116,7 +116,9 @@ class FlawGeneratorAgent(BaseSpecialAgent):
         },
     }
 
-    def __init__(self, provider_factory=None, config: dict[str, Any] = None):
+    def __init__(
+        self, provider_factory: Any | None = None, config: dict[str, Any] | None = None
+    ) -> None:
         default_config = {
             "max_flaws_per_character": 2,  # Maximum flaws to add per character
             "flaw_intensity": 0.6,  # How prominent flaws should be (0.1-1.0)
@@ -653,7 +655,9 @@ Please provide the enhanced script with realistic character flaws seamlessly int
 
         return results
 
-    def _count_added_flaws(self, original_chars: dict, enhanced_chars: dict) -> int:
+    def _count_added_flaws(
+        self, original_chars: dict[str, Any], enhanced_chars: dict[str, Any]
+    ) -> int:
         """Count how many new flaws were added"""
 
         original_flaw_count = 0
@@ -687,7 +691,7 @@ Please provide the enhanced script with realistic character flaws seamlessly int
 
         return max(0.0, enhanced_depth - original_depth)
 
-    def _calculate_overall_character_depth(self, characters: dict) -> float:
+    def _calculate_overall_character_depth(self, characters: dict[str, Any]) -> float:
         """Calculate overall character depth for all characters"""
 
         if not characters:

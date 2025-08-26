@@ -84,19 +84,6 @@ const AVAILABLE_MODELS: ModelInfo[] = [
   },
 ]
 
-const GENRE_OPTIONS = [
-  '로맨스',
-  '코미디',
-  '드라마',
-  '액션',
-  '스릴러',
-  '호러',
-  '판타지',
-  'SF',
-  '다큐멘터리',
-  '애니메이션',
-]
-
 export function AIModelSettings() {
   const { showSuccess, showError } = useToastHelpers()
 
@@ -135,7 +122,7 @@ export function AIModelSettings() {
       // TODO: Implement API call to save AI settings
       console.log('Save AI settings:', data)
       showSuccess('AI 설정이 저장되었습니다.')
-    } catch (error) {
+    } catch {
       showError('AI 설정 저장에 실패했습니다.')
     }
   }

@@ -6,30 +6,12 @@ export interface ApiResponse<T = any> {
   error?: string
 }
 
-// Project types
-export interface Project {
-  id: string
-  name: string
-  type: 'drama' | 'comedy' | 'documentary' | 'other'
-  status: 'active' | 'completed' | 'paused' | 'draft'
-  description?: string
-  created_at: string
-  updated_at: string
-  progress_percentage?: number
-}
-
-export interface ProjectCreateRequest {
-  name: string
-  type: Project['type']
-  description?: string
-}
-
-export interface ProjectUpdateRequest {
-  name?: string
-  type?: Project['type']
-  description?: string
-  status?: Project['status']
-}
+// Re-export canonical Project types
+export type {
+  Project,
+  CreateProjectRequest as ProjectCreateRequest,
+  UpdateProjectRequest as ProjectUpdateRequest,
+} from '@/shared/types/project'
 
 // Episode types
 export interface Episode {

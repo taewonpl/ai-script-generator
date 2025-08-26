@@ -69,7 +69,9 @@ class SuccessResponse(BaseModel):
 
 
 @router.post("/", response_model=SuccessResponse, status_code=status.HTTP_201_CREATED)
-async def create_episode(project_id: str, request: EpisodeCreateRequest):
+async def create_episode(
+    project_id: str, request: EpisodeCreateRequest
+) -> SuccessResponse:
     """
     Create episode with automatic number assignment
 
@@ -108,7 +110,7 @@ async def create_episode(project_id: str, request: EpisodeCreateRequest):
 
 
 @router.get("/", response_model=SuccessResponse)
-async def get_episodes(project_id: str):
+async def get_episodes(project_id: str) -> SuccessResponse:
     """
     Get all episodes for a project, sorted by episode number
     """
@@ -132,7 +134,7 @@ async def get_episodes(project_id: str):
 
 
 @router.get("/{episode_id}", response_model=SuccessResponse)
-async def get_episode(project_id: str, episode_id: str):
+async def get_episode(project_id: str, episode_id: str) -> SuccessResponse:
     """Get single episode by ID"""
     try:
         service = get_episode_service()
@@ -169,7 +171,7 @@ async def get_episode(project_id: str, episode_id: str):
 @router.put("/{episode_id}/script", response_model=SuccessResponse)
 async def update_episode_script(
     project_id: str, episode_id: str, request: EpisodeUpdateRequest
-):
+) -> SuccessResponse:
     """Update episode script content"""
     try:
         service = get_episode_service()
@@ -224,7 +226,7 @@ async def update_episode_script(
 
 
 @router.delete("/{episode_id}", response_model=SuccessResponse)
-async def delete_episode(project_id: str, episode_id: str):
+async def delete_episode(project_id: str, episode_id: str) -> SuccessResponse:
     """Delete episode"""
     try:
         service = get_episode_service()
@@ -269,7 +271,7 @@ async def delete_episode(project_id: str, episode_id: str):
 
 
 @router.get("/_next-number", response_model=SuccessResponse)
-async def get_next_episode_number(project_id: str):
+async def get_next_episode_number(project_id: str) -> SuccessResponse:
     """Get the next episode number for a project"""
     try:
         service = get_episode_service()
@@ -291,7 +293,7 @@ async def get_next_episode_number(project_id: str):
 
 
 @router.post("/_register-project", response_model=SuccessResponse)
-async def register_project(project_id: str, project_name: str):
+async def register_project(project_id: str, project_name: str) -> SuccessResponse:
     """Register a project for episode tracking"""
     try:
         service = get_episode_service()
@@ -320,7 +322,7 @@ async def register_project(project_id: str, project_name: str):
 
 # Health and Stats Endpoints
 @router.get("/_stats", response_model=SuccessResponse)
-async def get_episode_stats():
+async def get_episode_stats() -> SuccessResponse:
     """Get episode service statistics"""
     try:
         service = get_episode_service()

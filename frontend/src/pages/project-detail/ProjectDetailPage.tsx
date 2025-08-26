@@ -27,28 +27,12 @@ import {
   MoreVert as MoreIcon,
 } from '@mui/icons-material'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
-
 import { ProjectOverview } from './components/ProjectOverview'
 import { ProjectEpisodes } from './components/ProjectEpisodes'
 import { ProjectScripts } from './components/ProjectScripts'
 import { ProjectSettings } from './components/ProjectSettings'
-import { projectApi } from '@/shared/api/client'
-import { validateApiResponse } from '@/shared/api/base'
 import { useToastHelpers } from '@/shared/ui/components/toast'
-
-interface Project {
-  id: string
-  name: string
-  description?: string
-  type: string
-  status: string
-  created_at: string
-  updated_at: string
-  episodes_count?: number
-  scripts_count?: number
-  progress_percentage?: number
-}
+import { useProject } from '@/shared/api/hooks/projects'
 
 interface TabPanelProps {
   children?: ReactNode
@@ -83,20 +67,8 @@ export default function ProjectDetailPage() {
   const { showSuccess: _showSuccess, showError: _showError } = useToastHelpers()
   const [currentTab, setCurrentTab] = useState(0)
 
-  // Load project data
-  const {
-    data: project,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
-    queryKey: ['project', projectId],
-    queryFn: async () => {
-      const response = await projectApi.get(`/projects/${projectId}`)
-      return validateApiResponse<Project>(response.data)
-    },
-    enabled: !!projectId,
-  })
+  // Load project data using unified hook
+  const { data: project, isLoading, error, refetch } = useProject(projectId!)
 
   const handleTabChange = (_: SyntheticEvent, newValue: number) => {
     setCurrentTab(newValue)
@@ -208,10 +180,12 @@ export default function ProjectDetailPage() {
 
               <Stack direction="row" spacing={3} color="textSecondary">
                 <Typography variant="body2">
-                  생성일: {formatDate(project.created_at)}
+                  생성일:{' '}
+                  {formatDate(project.created_at || project.createdAt || '')}
                 </Typography>
                 <Typography variant="body2">
-                  수정일: {formatDate(project.updated_at)}
+                  수정일:{' '}
+                  {formatDate(project.updated_at || project.updatedAt || '')}
                 </Typography>
                 {project.episodes_count !== undefined && (
                   <Typography variant="body2">

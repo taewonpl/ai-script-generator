@@ -24,19 +24,19 @@ except (ImportError, RuntimeError):
     logger = logging.getLogger(__name__)
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -100,11 +100,11 @@ class CacheAPI:
     - Backend health monitoring
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.router = APIRouter(prefix="/api/cache", tags=["cache"])
         self._setup_routes()
 
-    def _setup_routes(self):
+    def _setup_routes(self) -> None:
         """Setup API routes"""
 
         # Status and monitoring
@@ -185,7 +185,7 @@ class CacheAPI:
                 status_code=500, detail=f"Cache status retrieval failed: {e!s}"
             )
 
-    async def get_cache_statistics(self):
+    async def get_cache_statistics(self) -> dict[str, Any]:
         """Get detailed cache statistics"""
 
         try:
@@ -209,7 +209,7 @@ class CacheAPI:
             logger.error(f"Cache statistics retrieval failed: {e}")
             return {"error": f"Cache statistics retrieval failed: {e!s}"}
 
-    async def get_cache_health(self):
+    async def get_cache_health(self) -> dict[str, Any]:
         """Get cache system health"""
 
         try:
@@ -235,7 +235,7 @@ class CacheAPI:
             logger.error(f"Cache health check failed: {e}")
             return {"status": "error", "error": str(e)}
 
-    async def cache_get(self, request: CacheOperationRequest):
+    async def cache_get(self, request: CacheOperationRequest) -> dict[str, Any]:
         """Get value from cache"""
 
         try:
@@ -379,7 +379,7 @@ class CacheAPI:
                 error=str(e),
             )
 
-    async def cache_exists(self, request: CacheOperationRequest):
+    async def cache_exists(self, request: CacheOperationRequest) -> dict[str, Any]:
         """Check if key exists in cache"""
 
         try:
@@ -423,7 +423,7 @@ class CacheAPI:
                 "error": str(e),
             }
 
-    async def clear_cache_type(self, cache_type: str):
+    async def clear_cache_type(self, cache_type: str) -> dict[str, Any]:
         """Clear all entries of specific cache type"""
 
         try:
@@ -462,7 +462,7 @@ class CacheAPI:
                 status_code=500, detail=f"Cache type clear failed: {e!s}"
             )
 
-    async def clear_all_cache(self):
+    async def clear_all_cache(self) -> dict[str, Any]:
         """Clear all cache entries"""
 
         try:
@@ -500,7 +500,9 @@ class CacheAPI:
                 status_code=500, detail=f"Cache clear all failed: {e!s}"
             )
 
-    async def warm_cache(self, cache_type: str, warm_data: list[dict[str, Any]]):
+    async def warm_cache(
+        self, cache_type: str, warm_data: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """Warm cache with precomputed data"""
 
         try:
@@ -538,7 +540,7 @@ class CacheAPI:
             logger.error(f"Cache warming failed: {e}")
             raise HTTPException(status_code=500, detail=f"Cache warming failed: {e!s}")
 
-    async def optimize_cache(self):
+    async def optimize_cache(self) -> dict[str, Any]:
         """Optimize cache performance"""
 
         try:
@@ -568,7 +570,7 @@ class CacheAPI:
                 status_code=500, detail=f"Cache optimization failed: {e!s}"
             )
 
-    async def get_cache_analytics(self):
+    async def get_cache_analytics(self) -> dict[str, Any]:
         """Get cache usage analytics"""
 
         try:
@@ -627,7 +629,9 @@ class CacheAPI:
             logger.error(f"Cache analytics retrieval failed: {e}")
             return {"error": f"Cache analytics retrieval failed: {e!s}"}
 
-    async def get_hit_ratio(self, hours: int = Query(default=1, ge=1, le=24)):
+    async def get_hit_ratio(
+        self, hours: int = Query(default=1, ge=1, le=24)
+    ) -> dict[str, Any]:
         """Get cache hit ratio over time"""
 
         try:
@@ -658,7 +662,7 @@ class CacheAPI:
             logger.error(f"Hit ratio retrieval failed: {e}")
             return {"error": f"Hit ratio retrieval failed: {e!s}"}
 
-    async def get_cache_performance(self):
+    async def get_cache_performance(self) -> dict[str, Any]:
         """Get cache performance metrics"""
 
         try:

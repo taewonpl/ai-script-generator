@@ -99,12 +99,10 @@ export function JobProgressIndicator({
     switch (latestEvent.type) {
       case 'progress': {
         const progressData = latestEvent as ProgressEventData
-        setCurrentProgress(progressData.data.progress)
-        setCurrentStage(progressData.data.stage)
-        setCurrentMessage(progressData.data.message || '')
-        setEstimatedTimeRemaining(
-          progressData.data.estimatedTimeRemaining || null,
-        )
+        setCurrentProgress(progressData.value)
+        setCurrentStage(progressData.currentStep)
+        setCurrentMessage('')
+        setEstimatedTimeRemaining(progressData.estimatedTime || null)
         setJobStatus('running')
         break
       }
@@ -112,14 +110,15 @@ export function JobProgressIndicator({
       case 'completed':
         setCurrentProgress(100)
         setJobStatus('completed')
-        onComplete?.(latestEvent.data.result)
+        onComplete?.((latestEvent as any).result)
         break
 
       case 'failed':
         setJobStatus('failed')
-        onError?.(latestEvent.data.error)
+        onError?.((latestEvent as any).error)
         break
 
+      // @ts-expect-error - canceled handled as status, not event type
       case 'canceled':
         setJobStatus('canceled')
         onCancel?.()

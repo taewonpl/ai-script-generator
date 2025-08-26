@@ -24,42 +24,50 @@ except (ImportError, RuntimeError):
     CORE_AVAILABLE = False
     import logging
 
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__)  # type: ignore[assignment]
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
         return str(uuid.uuid4())[:8]
 
-    # Fallback base classes
-    class BaseDTO:
-        """Fallback base DTO class"""
+    def generate_prefixed_id(prefix: str) -> str:
+        """Fallback prefixed ID generation"""
+        import uuid
+
+        return f"{prefix}_{str(uuid.uuid4())[:8]}"
+
+    # Fallback base classes - inherit from BaseModel for type safety
+    class BaseDTO(BaseModel):
+        """Fallback base DTO class using Pydantic"""
 
         pass
 
-    class SuccessResponseDTO:
+    class SuccessResponseDTO(BaseModel):
         """Fallback success response DTO"""
 
-        pass
+        success: bool = True
+        message: str = "Success"
 
-    class ErrorResponseDTO:
+    class ErrorResponseDTO(BaseModel):
         """Fallback error response DTO"""
 
-        pass
+        success: bool = False
+        error: str
 
 
 class DocumentType(str, Enum):
@@ -150,14 +158,14 @@ if CORE_AVAILABLE:
 
         @field_validator("content")
         @classmethod
-        def validate_content(cls, v):
+        def validate_content(cls, v: str) -> str:
             if not v or not v.strip():
                 raise ValueError("Content cannot be empty")
             return v.strip()
 
         @field_validator("title")
         @classmethod
-        def validate_title(cls, v):
+        def validate_title(cls, v: str | None) -> str | None:
             if v is not None:
                 return v.strip()
             return v
@@ -241,14 +249,14 @@ else:
 
         @field_validator("content")
         @classmethod
-        def validate_content(cls, v):
+        def validate_content(cls, v: str) -> str:
             if not v or not v.strip():
                 raise ValueError("Content cannot be empty")
             return v.strip()
 
         @field_validator("title")
         @classmethod
-        def validate_title(cls, v):
+        def validate_title(cls, v: str | None) -> str | None:
             if v is not None:
                 return v.strip()
             return v
@@ -302,7 +310,7 @@ class DocumentBatch(BaseModel):
 
     @field_validator("documents")
     @classmethod
-    def validate_documents(cls, v):
+    def validate_documents(cls, v: Any) -> list[str]:
         if not v:
             raise ValueError("Batch must contain at least one document")
         if len(v) > 1000:  # Reasonable batch size limit
@@ -346,7 +354,7 @@ class DocumentDeleteRequest(BaseModel):
 
     @field_validator("document_ids")
     @classmethod
-    def validate_document_ids(cls, v):
+    def validate_document_ids(cls, v: Any) -> list[str]:
         if not v:
             raise ValueError("Must specify at least one document ID")
         if len(v) > 100:  # Reasonable limit for bulk deletes

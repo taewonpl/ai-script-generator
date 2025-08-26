@@ -102,6 +102,13 @@ export default tseslint.config([
           message:
             'Do not use both spacing prop and CSS gap simultaneously. This creates conflicting spacing behavior. Choose either spacing={2} OR sx={{gap: 2}}, not both.',
         },
+        // React Query Data Access Rule
+        {
+          selector:
+            'MemberExpression[object.property.name="data"][property.name="data"]',
+          message:
+            'React Query data는 언래핑된 T입니다. `.data.data` 접근을 제거하세요.',
+        },
       ],
       // Grid Quality and Best Practice Rules
       'no-restricted-properties': [

@@ -72,7 +72,7 @@ export function GenerateDrawer({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 
   // SSE-based generation hook
-  const generation = useGeneration(project.id)
+  const generation = useGeneration()
 
   // Episodes hook for episode management
   // @ts-expect-error - Temporary workaround for missing createEpisode, isCreating properties

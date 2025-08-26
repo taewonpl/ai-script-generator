@@ -20,8 +20,8 @@ import { FormTextField, FormTextArea } from '@/shared/ui/forms/FormTextField'
 import { FormSelect } from '@/shared/ui/forms/FormSelect'
 import { FormDatePicker } from '@/shared/ui/forms/FormDatePicker'
 import { FormAutocomplete } from '@/shared/ui/forms/FormAutocomplete'
-import { ProjectCreateSchema } from '@/shared/lib/validation/schemas'
-import type { ProjectCreateFormData } from '@/shared/lib/validation/schemas'
+import { ProjectCreateSchema } from '../../../shared/lib/validation/schemas'
+import type { ProjectCreateFormData } from '../../../shared/lib/validation/schemas'
 import { useToastHelpers } from '@/shared/ui/components/toast'
 
 interface ProjectCreateFormProps {

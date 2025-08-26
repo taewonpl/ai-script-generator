@@ -8,8 +8,8 @@ from dataclasses import asdict, dataclass, field
 from enum import Enum
 from typing import Any
 
-from generation_service.workflows.agents import AgentPriority
-from generation_service.workflows.quality import QualityDimension
+from ..workflows.agents import AgentPriority
+from ..workflows.quality import QualityDimension
 
 
 class ConfigurationProfile(str, Enum):
@@ -255,7 +255,7 @@ class ConfigurationManager:
 
         return base_config
 
-    def _apply_env_overrides(self):
+    def _apply_env_overrides(self) -> None:
         """Apply environment variable overrides"""
 
         # Agent-specific overrides
@@ -310,7 +310,9 @@ class ConfigurationManager:
         """Get feedback system configuration"""
         return self.config.feedback
 
-    def update_agent_config(self, agent_name: str, config_updates: dict[str, Any]):
+    def update_agent_config(
+        self, agent_name: str, config_updates: dict[str, Any]
+    ) -> None:
         """Update configuration for a specific agent"""
 
         if agent_name not in self.config.agents:
@@ -324,7 +326,7 @@ class ConfigurationManager:
             else:
                 agent_config.custom_config[key] = value
 
-    def update_quality_weights(self, dimension_weights: dict[str, float]):
+    def update_quality_weights(self, dimension_weights: dict[str, float]) -> None:
         """Update quality dimension weights"""
 
         # Validate weights sum to approximately 1.0
@@ -337,7 +339,7 @@ class ConfigurationManager:
 
         self.config.quality.dimension_weights.update(dimension_weights)
 
-    def save_config(self, file_path: str | None = None):
+    def save_config(self, file_path: str | None = None) -> None:
         """Save current configuration to file"""
 
         save_path = file_path or self.config_file
@@ -353,11 +355,11 @@ class ConfigurationManager:
         """Export configuration as dictionary"""
         return self._config_to_dict(self.config)
 
-    def import_config(self, config_dict: dict[str, Any]):
+    def import_config(self, config_dict: dict[str, Any]) -> None:
         """Import configuration from dictionary"""
         self.config = self._dict_to_config(config_dict)
 
-    def reset_to_profile(self, profile: ConfigurationProfile):
+    def reset_to_profile(self, profile: ConfigurationProfile) -> None:
         """Reset configuration to a specific profile"""
         self.profile = profile
         self.config = self._create_profile_config(profile)

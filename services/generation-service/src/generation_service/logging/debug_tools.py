@@ -27,19 +27,19 @@ except (ImportError, RuntimeError):
     logger = logging.getLogger(__name__)
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -89,7 +89,7 @@ class DebugTools:
     - Debug logging with enhanced details
     """
 
-    def __init__(self, config: dict[str, Any] | None = None):
+    def __init__(self, config: dict[str, Any] | None = None) -> None:
         self.config = config or {}
 
         # Debug configuration
@@ -115,7 +115,7 @@ class DebugTools:
         self._original_trace_func = None
         self._trace_depth = 0
 
-    def start_debug_session(self, session_id: str = None) -> DebugSession:
+    def start_debug_session(self, session_id: str | None = None) -> DebugSession:
         """Start new debug session"""
 
         if not session_id:
@@ -148,10 +148,10 @@ class DebugTools:
         logger.info(f"Debug session stopped: {session.session_id}")
         return session
 
-    def _enable_call_tracing(self):
+    def _enable_call_tracing(self) -> None:
         """Enable function call tracing"""
 
-        def trace_calls(frame, event, arg):
+        def trace_calls(frame: Any, event: str, arg: Any) -> Callable:
             if event == "call":
                 self._trace_depth += 1
                 func_name = frame.f_code.co_name
@@ -184,13 +184,13 @@ class DebugTools:
         self._original_trace_func = sys.gettrace()
         sys.settrace(trace_calls)
 
-    def _disable_call_tracing(self):
+    def _disable_call_tracing(self) -> None:
         """Disable function call tracing"""
 
         sys.settrace(self._original_trace_func)
         self._trace_depth = 0
 
-    def add_breakpoint(self, identifier: str):
+    def add_breakpoint(self, identifier: str) -> None:
         """Add breakpoint for debugging"""
 
         if self.current_session:
@@ -199,7 +199,7 @@ class DebugTools:
 
     def hit_breakpoint(
         self, identifier: str, locals_dict: dict[str, Any] | None = None
-    ):
+    ) -> None:
         """Handle breakpoint hit"""
 
         if (
@@ -230,7 +230,7 @@ class DebugTools:
             except Exception as e:
                 logger.error(f"Breakpoint handler failed: {e}")
 
-    def watch_variable(self, var_name: str, value: Any):
+    def watch_variable(self, var_name: str, value: Any) -> None:
         """Watch variable value changes"""
 
         if not self.current_session:
@@ -254,7 +254,7 @@ class DebugTools:
     def profile_function(self, func: Callable) -> Callable:
         """Decorator for function profiling"""
 
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             start_time = time.time()
 
             try:
@@ -306,7 +306,7 @@ class DebugTools:
     def profile_async_function(self, func: Callable) -> Callable:
         """Decorator for async function profiling"""
 
-        async def async_wrapper(*args, **kwargs):
+        async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
             start_time = time.time()
 
             try:
@@ -355,7 +355,7 @@ class DebugTools:
 
         return async_wrapper
 
-    def capture_memory_snapshot(self, label: str = ""):
+    def capture_memory_snapshot(self, label: str = "") -> dict[str, Any] | None:
         """Capture current memory usage snapshot"""
 
         try:
@@ -402,7 +402,7 @@ class DebugTools:
             logger.warning("psutil not available for memory monitoring")
             return None
 
-    def debug_log(self, message: str, level: str = "DEBUG", **kwargs):
+    def debug_log(self, message: str, level: str = "DEBUG", **kwargs: Any) -> None:
         """Enhanced debug logging with context"""
 
         if not self.debug_enabled:
@@ -532,15 +532,15 @@ class DebugTools:
 
         return report
 
-    def add_breakpoint_handler(self, handler: Callable):
+    def add_breakpoint_handler(self, handler: Callable) -> None:
         """Add handler for breakpoint events"""
         self._breakpoint_handlers.append(handler)
 
-    def add_watch_handler(self, handler: Callable):
+    def add_watch_handler(self, handler: Callable) -> None:
         """Add handler for variable watch events"""
         self._watch_handlers.append(handler)
 
-    def export_debug_session(self, file_path: str):
+    def export_debug_session(self, file_path: str) -> None:
         """Export debug session data to file"""
 
         if not self.current_session:
@@ -590,18 +590,20 @@ class DebugTools:
 class DebugSection:
     """Context manager for debug sections with automatic timing"""
 
-    def __init__(self, debug_tools: DebugTools, section_name: str):
+    def __init__(self, debug_tools: DebugTools, section_name: str) -> None:
         self.debug_tools = debug_tools
         self.section_name = section_name
         self.start_time = None
 
-    def __enter__(self):
+    def __enter__(self) -> "DebugSection":
         self.start_time = time.time()
         self.debug_tools.debug_log(f"Entering debug section: {self.section_name}")
         self.debug_tools.capture_memory_snapshot(f"start_{self.section_name}")
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self, exc_type: type | None, exc_val: Exception | None, exc_tb: Any | None
+    ) -> None:
         duration = time.time() - self.start_time
         self.debug_tools.capture_memory_snapshot(f"end_{self.section_name}")
 
@@ -637,14 +639,14 @@ def initialize_debug_tools(config: dict[str, Any] | None = None) -> DebugTools:
 
 
 # Convenience functions for debugging
-def debug_breakpoint(identifier: str):
+def debug_breakpoint(identifier: str) -> None:
     """Convenience function for hitting breakpoints"""
     debug_tools = get_debug_tools()
     if debug_tools:
         debug_tools.hit_breakpoint(identifier)
 
 
-def debug_watch(var_name: str, value: Any):
+def debug_watch(var_name: str, value: Any) -> None:
     """Convenience function for watching variables"""
     debug_tools = get_debug_tools()
     if debug_tools:

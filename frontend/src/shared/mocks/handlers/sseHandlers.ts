@@ -79,15 +79,17 @@ const simulateGeneration = (
     '이것은 AI가 생성한 스크립트입니다.\n\n',
     '## 씬 2: 전개\n\n',
     '**주인공** (미소를 지으며)\n',
-    '이 스토리는 ' + request.tone + ' 톤으로 진행됩니다.\n\n',
+    '이 스토리는 ' +
+      ((request as any).tone || '일반적인') +
+      ' 톤으로 진행됩니다.\n\n',
     '**동료** (등장하며)\n',
     '정말 흥미로운 설정이군요!\n\n',
     '## 씬 3: 마무리\n\n',
     '**주인공** (결의에 찬 표정으로)\n',
     '우리의 여정은 이제 시작입니다.\n\n',
     '*- 끝 -* \n\n',
-    `총 분량: ${request.length}\n`,
-    `톤: ${request.tone}`,
+    `총 분량: ${(request as any).length || '표준'}\n`,
+    `톤: ${(request as any).tone || '일반적인'}`,
   ]
 
   let contentIndex = 0
@@ -179,7 +181,7 @@ const simulateGeneration = (
         setTimeout(() => {
           try {
             controller.close()
-          } catch (e) {
+          } catch {
             // 이미 닫힌 경우 무시
           }
           sseConnections.delete(jobId)
@@ -215,7 +217,7 @@ const simulateGeneration = (
           setTimeout(() => {
             try {
               controller.close()
-            } catch (e) {
+            } catch {
               // 이미 닫힌 경우 무시
             }
             sseConnections.delete(jobId)
@@ -282,7 +284,7 @@ export const sseHandlers = [
         clearInterval(connection.interval)
         try {
           connection.controller.close()
-        } catch (e) {
+        } catch {
           // 이미 닫힌 경우 무시
         }
         sseConnections.delete(jobId as string)

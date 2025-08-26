@@ -2,46 +2,22 @@
 Projects API Router
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+# Use service DTOs for consistency
+from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import status as http_status
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-try:
-    # Prefer Core
-    from ai_script_core import (
-        ProjectCreateDTO,
-        ProjectDTO,
-        ProjectUpdateDTO,
-        SuccessResponseDTO,
-    )
-except Exception:  # fallback
-    from typing import Any
+from ..services.project_service import ProjectCreateDTO, ProjectUpdateDTO
 
-    from pydantic import BaseModel
 
-    class ProjectDTO(BaseModel):
-        id: str
-        name: str
-        type: str
-        status: str | None = None
-        description: str | None = None
-        created_at: str | None = None
-        updated_at: str | None = None
-
-    class ProjectCreateDTO(BaseModel):
-        name: str
-        type: str
-        description: str | None = None
-
-    class ProjectUpdateDTO(BaseModel):
-        name: str | None = None
-        type: str | None = None
-        description: str | None = None
-        status: str | None = None
-
-    class SuccessResponseDTO(BaseModel):
-        success: bool = True
-        message: str = "Success"
-        data: Any = None
+class SuccessResponseDTO(BaseModel):
+    success: bool = True
+    message: str = "Success"
+    data: Any = None
+    error: str | None = None
 
 
 from ..database import get_db
@@ -59,7 +35,7 @@ async def get_projects(
     project_type: ProjectType | None = Query(None, description="프로젝트 타입"),
     status: ProjectStatus | None = Query(None, description="프로젝트 상태"),
     db: Session = Depends(get_db),
-):
+) -> SuccessResponseDTO:
     """프로젝트 목록 조회"""
     try:
         service = ProjectService(db)
@@ -78,14 +54,16 @@ async def get_projects(
         )
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
 
 @router.post(
-    "/", response_model=SuccessResponseDTO, status_code=status.HTTP_201_CREATED
+    "/", response_model=SuccessResponseDTO, status_code=http_status.HTTP_201_CREATED
 )
-async def create_project(project_data: ProjectCreateDTO, db: Session = Depends(get_db)):
+async def create_project(
+    project_data: ProjectCreateDTO, db: Session = Depends(get_db)
+) -> SuccessResponseDTO:
     """프로젝트 생성"""
     try:
         service = ProjectService(db)
@@ -95,10 +73,12 @@ async def create_project(project_data: ProjectCreateDTO, db: Session = Depends(g
             success=True, message="프로젝트가 성공적으로 생성되었습니다.", data=project
         )
     except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+        raise HTTPException(
+            status_code=http_status.HTTP_400_BAD_REQUEST, detail=e.message
+        )
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
 
@@ -107,7 +87,7 @@ async def get_project(
     project_id: str,
     include_episodes: bool = Query(False, description="에피소드 포함 여부"),
     db: Session = Depends(get_db),
-):
+) -> SuccessResponseDTO:
     """프로젝트 상세 조회"""
     try:
         service = ProjectService(db)
@@ -117,17 +97,19 @@ async def get_project(
             success=True, message="프로젝트를 성공적으로 조회했습니다.", data=project
         )
     except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND, detail=e.message
+        )
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
 
 @router.put("/{project_id}", response_model=SuccessResponseDTO)
 async def update_project(
     project_id: str, project_data: ProjectUpdateDTO, db: Session = Depends(get_db)
-):
+) -> SuccessResponseDTO:
     """프로젝트 수정"""
     try:
         service = ProjectService(db)
@@ -137,17 +119,23 @@ async def update_project(
             success=True, message="프로젝트가 성공적으로 수정되었습니다.", data=project
         )
     except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND, detail=e.message
+        )
     except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+        raise HTTPException(
+            status_code=http_status.HTTP_400_BAD_REQUEST, detail=e.message
+        )
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
 
 @router.delete("/{project_id}", response_model=SuccessResponseDTO)
-async def delete_project(project_id: str, db: Session = Depends(get_db)):
+async def delete_project(
+    project_id: str, db: Session = Depends(get_db)
+) -> SuccessResponseDTO:
     """프로젝트 삭제"""
     try:
         service = ProjectService(db)
@@ -161,14 +149,16 @@ async def delete_project(project_id: str, db: Session = Depends(get_db)):
             )
         else:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="프로젝트 삭제에 실패했습니다.",
             )
     except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND, detail=e.message
+        )
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
 
@@ -177,7 +167,7 @@ async def update_project_progress(
     project_id: str,
     progress: float = Query(..., ge=0.0, le=100.0, description="진행률 (0-100)"),
     db: Session = Depends(get_db),
-):
+) -> SuccessResponseDTO:
     """프로젝트 진행률 업데이트"""
     try:
         service = ProjectService(db)
@@ -189,17 +179,21 @@ async def update_project_progress(
             data=project,
         )
     except NotFoundError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND, detail=e.message
+        )
     except ValidationError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=e.message)
+        raise HTTPException(
+            status_code=http_status.HTTP_400_BAD_REQUEST, detail=e.message
+        )
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
 
 @router.get("/stats/summary", response_model=SuccessResponseDTO)
-async def get_project_stats(db: Session = Depends(get_db)):
+async def get_project_stats(db: Session = Depends(get_db)) -> SuccessResponseDTO:
     """프로젝트 통계 조회"""
     try:
         service = ProjectService(db)
@@ -210,7 +204,7 @@ async def get_project_stats(db: Session = Depends(get_db)):
         )
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
 
@@ -218,7 +212,7 @@ async def get_project_stats(db: Session = Depends(get_db)):
 async def get_recent_projects(
     limit: int = Query(10, ge=1, le=50, description="가져올 프로젝트 수"),
     db: Session = Depends(get_db),
-):
+) -> SuccessResponseDTO:
     """최근 프로젝트 조회"""
     try:
         service = ProjectService(db)
@@ -231,5 +225,5 @@ async def get_recent_projects(
         )
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )

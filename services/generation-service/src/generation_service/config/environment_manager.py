@@ -20,8 +20,8 @@ class Environment(str, Enum):
 class EnvironmentManager:
     """Manages environment-specific configuration loading and validation"""
 
-    def __init__(self):
-        self.logger = logging.getLogger(__name__)
+    def __init__(self) -> None:
+        self.logger = logging.getLogger(__name__)  # type: ignore[assignment]
         self.current_env = self._detect_environment()
         self.config_dir = Path(__file__).parent.parent.parent
 
@@ -118,7 +118,7 @@ class EnvironmentManager:
     def validate_data_paths(self) -> dict[str, Any]:
         """Validate and ensure data paths are properly configured"""
 
-        validation_results = {
+        validation_results: dict[str, Any] = {
             "valid": True,
             "errors": [],
             "warnings": [],

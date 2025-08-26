@@ -131,7 +131,7 @@ async def get_feedback_engine() -> FeedbackLearningEngine:
 async def analyze_content_for_agents(
     request: AgentAnalysisRequest,
     coordinator: AgentCoordinator = Depends(get_agent_coordinator),
-):
+) -> AgentRecommendationResponse:
     """
     Analyze content to determine which specialized agents should be applied
     """
@@ -182,7 +182,7 @@ async def execute_adaptive_workflow(
     coordinator: AgentCoordinator = Depends(get_agent_coordinator),
     quality_assessor: QualityAssessor = Depends(get_quality_assessor),
     generation_service: GenerationService = Depends(get_generation_service),
-):
+) -> AdaptiveWorkflowResponse:
     """
     Execute adaptive workflow with intelligent agent selection and coordination
     """
@@ -254,7 +254,7 @@ async def execute_adaptive_workflow(
 async def assess_content_quality(
     request: QualityAssessmentRequest,
     assessor: QualityAssessor = Depends(get_quality_assessor),
-):
+) -> QualityAssessmentResponse:
     """
     Perform comprehensive quality assessment of script content
     """
@@ -320,7 +320,7 @@ async def compare_content_quality(
     enhanced_content: str,
     user_id: str | None = None,
     assessor: QualityAssessor = Depends(get_quality_assessor),
-):
+) -> dict[str, Any]:
     """
     Compare quality assessments between two pieces of content
     """
@@ -348,7 +348,7 @@ async def submit_feedback(
     request: FeedbackSubmissionRequest,
     background_tasks: BackgroundTasks,
     feedback_engine: FeedbackLearningEngine = Depends(get_feedback_engine),
-):
+) -> dict[str, str]:
     """
     Submit user feedback for continuous learning and improvement
     """
@@ -376,7 +376,7 @@ async def submit_feedback(
 @router.get("/preferences/{user_id}", response_model=UserPreferencesResponse)
 async def get_user_preferences(
     user_id: str, feedback_engine: FeedbackLearningEngine = Depends(get_feedback_engine)
-):
+) -> UserPreferencesResponse:
     """
     Get learned preferences for a specific user
     """
@@ -410,7 +410,7 @@ async def personalize_config(
     user_id: str,
     base_config: dict[str, Any],
     feedback_engine: FeedbackLearningEngine = Depends(get_feedback_engine),
-):
+) -> dict[str, Any]:
     """
     Personalize generation configuration based on user preferences
     """
@@ -434,7 +434,7 @@ async def personalize_config(
 @router.get("/stats/agents")
 async def get_agent_statistics(
     coordinator: AgentCoordinator = Depends(get_agent_coordinator),
-):
+) -> dict[str, Any]:
     """
     Get statistics about agent performance and usage
     """
@@ -450,7 +450,7 @@ async def get_agent_statistics(
 @router.get("/stats/quality")
 async def get_quality_statistics(
     assessor: QualityAssessor = Depends(get_quality_assessor),
-):
+) -> dict[str, Any]:
     """
     Get statistics about quality assessment performance
     """
@@ -466,7 +466,7 @@ async def get_quality_statistics(
 @router.get("/stats/feedback")
 async def get_feedback_statistics(
     feedback_engine: FeedbackLearningEngine = Depends(get_feedback_engine),
-):
+) -> dict[str, Any]:
     """
     Get statistics about feedback system performance
     """
@@ -481,7 +481,7 @@ async def get_feedback_statistics(
 
 # Configuration and Management
 @router.get("/capabilities")
-async def get_agent_capabilities():
+async def get_agent_capabilities() -> dict[str, dict[str, Any]]:
     """
     Get available agent capabilities and their descriptions
     """
@@ -502,7 +502,7 @@ async def agent_system_health(
     coordinator: AgentCoordinator = Depends(get_agent_coordinator),
     assessor: QualityAssessor = Depends(get_quality_assessor),
     feedback_engine: FeedbackLearningEngine = Depends(get_feedback_engine),
-):
+) -> dict[str, Any]:
     """
     Check health status of the agent system
     """

@@ -4,4 +4,4 @@
 
 export { EpisodeCreateForm } from './EpisodeCreateForm'
 
-export type { EpisodeCreateFormData } from '@/shared/lib/validation/schemas'
+export type { EpisodeCreateFormData } from '../../../shared/lib/validation/schemas'

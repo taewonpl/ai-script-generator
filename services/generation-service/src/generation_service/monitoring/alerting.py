@@ -25,19 +25,19 @@ except (ImportError, RuntimeError):
     logger = logging.getLogger(__name__)
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -179,7 +179,7 @@ class AlertManager:
         self._alert_history: list[Alert] = []
 
         # Evaluation state
-        self._evaluation_tasks: dict[str, asyncio.Task] = {}
+        self._evaluation_tasks: dict[str, asyncio.Task[None]] = {}
         self._metric_buffer: dict[str, list[tuple]] = {}  # (timestamp, value)
         self._last_alert_time: dict[str, datetime] = {}
 
@@ -197,7 +197,7 @@ class AlertManager:
 
         # Monitoring state
         self._monitoring_enabled = False
-        self._cleanup_task: asyncio.Task | None = None
+        self._cleanup_task: asyncio.Task[None] | None = None
 
         # Initialize default alert rules
         self._initialize_default_rules()
@@ -205,7 +205,7 @@ class AlertManager:
         # Initialize default handlers
         self._initialize_default_handlers()
 
-    def _initialize_default_rules(self):
+    def _initialize_default_rules(self) -> None:
         """Initialize default alert rules based on performance targets"""
 
         default_rules = [
@@ -271,7 +271,7 @@ class AlertManager:
         for rule in default_rules:
             self.add_alert_rule(rule)
 
-    def _initialize_default_handlers(self):
+    def _initialize_default_handlers(self) -> None:
         """Initialize default alert handlers"""
 
         # Log handler
@@ -280,7 +280,7 @@ class AlertManager:
         # Console handler
         self.add_alert_handler(AlertChannel.CONSOLE, self._console_alert_handler)
 
-    def add_alert_rule(self, rule: AlertRule):
+    def add_alert_rule(self, rule: AlertRule) -> None:
         """Add or update an alert rule"""
 
         self._alert_rules[rule.name] = rule
@@ -313,7 +313,9 @@ class AlertManager:
 
         return False
 
-    def add_alert_handler(self, channel: AlertChannel, handler: Callable[[Alert], Any]):
+    def add_alert_handler(
+        self, channel: AlertChannel, handler: Callable[[Alert], Any]
+    ) -> None:
         """Add alert handler for specific channel"""
 
         if channel not in self._alert_handlers:
@@ -322,7 +324,7 @@ class AlertManager:
         self._alert_handlers[channel].append(handler)
         logger.debug(f"Added alert handler for channel: {channel.value}")
 
-    async def start_monitoring(self):
+    async def start_monitoring(self) -> None:
         """Start alert monitoring"""
 
         if self._monitoring_enabled:
@@ -344,7 +346,7 @@ class AlertManager:
             extra={"active_rules": len(self._evaluation_tasks)},
         )
 
-    async def stop_monitoring(self):
+    async def stop_monitoring(self) -> None:
         """Stop alert monitoring"""
 
         self._monitoring_enabled = False
@@ -373,7 +375,7 @@ class AlertManager:
 
         logger.info("AlertManager monitoring stopped")
 
-    async def _evaluate_rule(self, rule: AlertRule):
+    async def _evaluate_rule(self, rule: AlertRule) -> None:
         """Evaluate alert rule continuously"""
 
         consecutive_breaches = 0
@@ -480,7 +482,7 @@ class AlertManager:
             logger.error(f"Failed to get metric value for {metric_name}: {e}")
             return None
 
-    async def _trigger_alert(self, rule: AlertRule, current_value: float | str):
+    async def _trigger_alert(self, rule: AlertRule, current_value: float | str) -> None:
         """Trigger an alert"""
 
         # Check cooldown
@@ -525,7 +527,9 @@ class AlertManager:
             },
         )
 
-    async def _check_alert_resolution(self, rule_name: str, current_value: float | str):
+    async def _check_alert_resolution(
+        self, rule_name: str, current_value: float | str
+    ) -> None:
         """Check if active alert should be resolved"""
 
         if rule_name in self._active_alerts:
@@ -565,7 +569,7 @@ class AlertManager:
                     },
                 )
 
-    async def _send_alert(self, alert: Alert, channels: list[AlertChannel]):
+    async def _send_alert(self, alert: Alert, channels: list[AlertChannel]) -> None:
         """Send alert through specified channels"""
 
         for channel in channels:
@@ -582,7 +586,7 @@ class AlertManager:
                         f"Alert handler failed for channel {channel.value}: {e}"
                     )
 
-    async def _cleanup_worker(self):
+    async def _cleanup_worker(self) -> None:
         """Background worker for cleaning old alerts"""
 
         while self._monitoring_enabled:
@@ -615,7 +619,7 @@ class AlertManager:
                 logger.error(f"Alert cleanup worker error: {e}")
 
     # Default alert handlers
-    async def _log_alert_handler(self, alert: Alert):
+    async def _log_alert_handler(self, alert: Alert) -> None:
         """Default log alert handler"""
 
         log_level = {
@@ -637,7 +641,7 @@ class AlertManager:
             },
         )
 
-    async def _console_alert_handler(self, alert: Alert):
+    async def _console_alert_handler(self, alert: Alert) -> None:
         """Default console alert handler"""
 
         severity_colors = {
@@ -652,7 +656,7 @@ class AlertManager:
 
         print(f"{color}[{alert.severity.value.upper()}] {alert.message}{reset}")
 
-    async def _webhook_alert_handler(self, alert: Alert, webhook_url: str):
+    async def _webhook_alert_handler(self, alert: Alert, webhook_url: str) -> None:
         """Webhook alert handler"""
 
         try:
@@ -765,7 +769,7 @@ def initialize_alert_manager(config: dict[str, Any] | None = None) -> AlertManag
     return _alert_manager
 
 
-async def shutdown_alert_manager():
+async def shutdown_alert_manager() -> None:
     """Shutdown global alert manager"""
     global _alert_manager
 

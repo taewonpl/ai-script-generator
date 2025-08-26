@@ -34,9 +34,7 @@ interface FormContextValue<T extends FieldValues> {
   clearAutoSavedData: () => void
 }
 
-const FormContext = createContext<FormContextValue<any> | undefined>(
-  undefined,
-)
+const FormContext = createContext<FormContextValue<any> | undefined>(undefined)
 
 interface FormProviderProps<T extends FieldValues> {
   children: ReactNode
@@ -93,8 +91,8 @@ export function FormProvider<T extends FieldValues>({
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
 
   // Initialize form
-  // @ts-expect-error Complex generic type resolution between React Hook Form, Zod, and TypeScript strict mode
   const form = useForm<T>({
+    // @ts-expect-error - Zod schema type compatibility with RHF generics
     resolver: zodResolver(schema),
     defaultValues,
     mode: validateOnChange
@@ -262,7 +260,7 @@ export function FormProvider<T extends FieldValues>({
       console.error('Form submission error:', error)
 
       // Handle server validation errors
-      // @ts-expect-error Server error response handling  
+      // @ts-expect-error Server error response handling
       if (error?.response?.data?.errors) {
         const serverErrors = (
           error as { response?: { data?: { errors?: Record<string, string> } } }
@@ -314,10 +312,9 @@ export function FormProvider<T extends FieldValues>({
     }
   }, [autoSave, loadAutoSavedData])
 
-  // @ts-expect-error Complex generic type resolution across form context
   const contextValue: FormContextValue<T> = {
-    form,
-    control: form.control,
+    form: form as any /* RHF generic type compatibility */,
+    control: form.control as any,
     watch: form.watch,
     isSubmitting,
     isDirty,
@@ -331,14 +328,16 @@ export function FormProvider<T extends FieldValues>({
   }
 
   return (
-    // @ts-expect-error Complex generic context provider typing
-    <FormContext.Provider value={contextValue}>{children}</FormContext.Provider>
+    <FormContext.Provider value={contextValue as any}>
+      {children}
+    </FormContext.Provider>
   )
 }
 
 /**
  * Hook to access form context
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useFormContext<
   T extends FieldValues = FieldValues,
 >(): FormContextValue<T> {
@@ -354,6 +353,7 @@ export function useFormContext<
 /**
  * Hook for form field registration with enhanced features
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useFormField<T extends FieldValues = FieldValues>(
   name: keyof T,
 ) {

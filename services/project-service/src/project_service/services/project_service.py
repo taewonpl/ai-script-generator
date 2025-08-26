@@ -5,38 +5,37 @@ Project Business Logic Service
 import uuid
 from typing import Any
 
+# Use fallback DTOs - Core integration disabled for type stability
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-try:
-    # Prefer Core
-    from ai_script_core import (
-        BaseServiceException,
-        ProjectCreateDTO,
-        ProjectDTO,
-        ProjectUpdateDTO,
-    )
-except Exception:  # fallback
-    from pydantic import BaseModel
 
-    class ProjectDTO(BaseModel):
-        id: str
-        name: str
-        type: str
-        status: str | None = None
-        description: str | None = None
+class ProjectDTO(BaseModel):
+    id: str
+    name: str
+    type: str
+    status: str | None = None
+    description: str | None = None
+    created_at: str | None = None
+    updated_at: str | None = None
+    logline: str | None = None
+    deadline: str | None = None
 
-    class ProjectCreateDTO(BaseModel):
-        name: str
-        type: str
-        description: str | None = None
 
-    class ProjectUpdateDTO(BaseModel):
-        name: str | None = None
-        type: str | None = None
-        description: str | None = None
-        status: str | None = None
+class ProjectCreateDTO(BaseModel):
+    name: str
+    type: str
+    description: str | None = None
 
-    class BaseServiceException(Exception): ...
+
+class ProjectUpdateDTO(BaseModel):
+    name: str | None = None
+    type: str | None = None
+    description: str | None = None
+    status: str | None = None
+
+
+class BaseServiceException(Exception): ...
 
 
 from ..models.project import Project, ProjectStatus, ProjectType
@@ -50,20 +49,20 @@ class NotFoundError(BaseServiceException):
         resource_id: str | None = None,
         message: str | None = None,
     ):
-        msg = message or (
+        self.message = message or (
             f"{entity} not found" + (f": {resource_id}" if resource_id else "")
         )
-        super().__init__(msg)
+        super().__init__(self.message)
 
 
 class ValidationError(BaseServiceException):
     def __init__(self, field: str | None = None, message: str = "Validation error"):
-        msg = f"{field}: {message}" if field else message
-        super().__init__(msg)
+        self.message = f"{field}: {message}" if field else message
+        super().__init__(self.message)
 
 
 # Temporary utility function
-def generate_id(prefix=None):
+def generate_id(prefix: str | None = None) -> str:
     base_id = str(uuid.uuid4())
     return f"{prefix}_{base_id}" if prefix else base_id
 
@@ -81,7 +80,7 @@ class ProjectService:
         project_id = generate_id("proj")
 
         # 데이터베이스 객체 생성
-        db_data = {
+        db_data: dict[str, Any] = {
             "id": project_id,
             "name": project_data.name,
             "type": project_data.type,
@@ -196,6 +195,8 @@ class ProjectService:
             type=project.type,
             status=project.status,
             description=project.description,
-            created_at=project.created_at,
-            updated_at=project.updated_at,
+            created_at=project.created_at.isoformat() if project.created_at else None,
+            updated_at=project.updated_at.isoformat() if project.updated_at else None,
+            logline=None,  # Core module compatibility
+            deadline=None,  # Core module compatibility
         )

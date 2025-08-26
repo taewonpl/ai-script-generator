@@ -20,19 +20,19 @@ except (ImportError, RuntimeError):
     logger = logging.getLogger(__name__)
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -90,7 +90,7 @@ class GenerationWorkflow:
     4. Finalization - Result compilation
     """
 
-    def __init__(self, provider_factory, rag_service=None):
+    def __init__(self, provider_factory: Any, rag_service: Any | None = None) -> None:
         self.provider_factory = provider_factory
         self.rag_service = rag_service
 
@@ -373,7 +373,7 @@ class GenerationWorkflow:
             return state
 
     def _create_response(
-        self, final_state: GenerationState, start_time
+        self, final_state: GenerationState, start_time: Any
     ) -> GenerationResponse:
         """Create generation response from final state"""
 
@@ -441,7 +441,7 @@ class GenerationWorkflow:
         request: GenerationRequest,
         generation_id: str,
         error_message: str,
-        start_time,
+        start_time: Any,
     ) -> GenerationResponse:
         """Create error response"""
 

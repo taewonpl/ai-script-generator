@@ -167,7 +167,7 @@ export const scriptHandlers = [
   // 스크립트 생성 요청
   http.post('/api/generate-script', async ({ request }) => {
     const body = (await request.json()) as GenerationRequest
-    const { projectId, episodeNumber } = body
+    const { projectId, episodeNumber } = body as any
 
     // 프로젝트 확인
     const project = mockProjects.find(p => p.id === projectId)

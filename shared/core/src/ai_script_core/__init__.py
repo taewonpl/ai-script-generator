@@ -6,7 +6,7 @@ Provides essential DTOs, exception handling, configuration management, logging, 
 """
 
 import sys
-from typing import Any
+from typing import Any, Dict
 
 # Version information
 __version__ = "0.1.0"
@@ -93,6 +93,8 @@ from .utils import (
     safe_json_loads,
     # Text processing
     sanitize_text,
+    # Time utilities
+    utc_now,
 )
 
 # Public API - Only essential items for clean imports
@@ -143,4 +145,5 @@ __all__ = [
     "sanitize_text",
     "safe_json_loads",
     "safe_json_dumps",
+    "utc_now",
 ]

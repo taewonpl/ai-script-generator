@@ -44,7 +44,7 @@ export class ProductionSSEClient {
   private latestEvent: TypedSSEEventData | null = null
   private error: Error | null = null
   private retryCount = 0
-  private lastConnectedAt: Date | null = null
+  // private lastConnectedAt: Date | null = null  // removed: unused
   private lastEventId: string | null = null
   private connectionStats: SSEConnectionStats = {
     totalReconnects: 0,
@@ -59,7 +59,10 @@ export class ProductionSSEClient {
   private onError?: (error: Error) => void
   private onManualRetryAvailable?: () => void
 
-  constructor(private options: ProductionSSEOptions) {
+  private options: ProductionSSEOptions
+
+  constructor(options: ProductionSSEOptions) {
+    this.options = options
     const {
       maxRetries = DEFAULT_MAX_RETRIES,
       retryDelays = DEFAULT_RETRY_DELAYS,
@@ -194,7 +197,7 @@ export class ProductionSSEClient {
       console.log('✅ SSE connection opened')
       this.setConnectionState('open')
       this.retryCount = 0
-      this.lastConnectedAt = new Date()
+      // this.lastConnectedAt = new Date()  // removed: unused
 
       // Update connection stats
       if (this.connectionStats.lastReconnectAt) {
@@ -405,7 +408,7 @@ export class ProductionSSEClient {
  * Production SSE Hook with enhanced features
  */
 export function useProductionSSE(
-  options: ProductionSSEOptions,
+  _options?: ProductionSSEOptions, // removed: unused param to avoid TS6133
 ): SSEHookReturn & {
   manualRetry: () => boolean
   canManualRetry: boolean

@@ -17,10 +17,8 @@ import type {
   GenerationJobStatus,
 } from '../types/generation'
 import { SSEConnectionService } from '../services/sseConnectionService'
-import {
-  GenerationService,
-  GenerationError,
-} from '../services/generationService'
+import { GenerationService } from '../services/generationService'
+import { GenerationError } from '../types/generation'
 
 const initialState: GenerationState = {
   status: 'queued',
@@ -41,7 +39,7 @@ const initialState: GenerationState = {
   canSave: false,
 }
 
-export function useGeneration(projectId?: string): UseGenerationResult {
+export function useGeneration(): UseGenerationResult {
   const [state, setState] = useState<GenerationState>(initialState)
   const sseServiceRef = useRef<SSEConnectionService | null>(null)
   const currentRequestRef = useRef<GenerationJobRequest | null>(null)
@@ -188,18 +186,20 @@ export function useGeneration(projectId?: string): UseGenerationResult {
 
         const errorMessage =
           error instanceof GenerationError
-            ? error.message
+            ? (error as any).message
             : '생성을 시작할 수 없습니다.'
 
         const retryable =
-          error instanceof GenerationError ? error.retryable : true
+          error instanceof GenerationError ? (error as any).retryable : true
 
         setState(prev => ({
           ...prev,
           isStarting: false,
           error: {
             code:
-              error instanceof GenerationError ? error.code : 'UNKNOWN_ERROR',
+              error instanceof GenerationError
+                ? (error as any).code
+                : 'UNKNOWN_ERROR',
             message: errorMessage,
             retryable,
           },
@@ -303,7 +303,7 @@ export function useGeneration(projectId?: string): UseGenerationResult {
     }
 
     if (state.status === 'failed') {
-      return state.error?.message || '생성에 실패했습니다'
+      return (state as any).error?.message || '생성에 실패했습니다'
     }
 
     if (state.status === 'canceled') {

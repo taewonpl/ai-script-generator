@@ -23,22 +23,22 @@ except (ImportError, RuntimeError):
     CORE_AVAILABLE = False
     import logging
 
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__)  # type: ignore[assignment]
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -107,7 +107,7 @@ class Span:
     logs: list[dict[str, Any]] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
 
-    def finish(self, error: Exception | None = None):
+    def finish(self, error: Exception | None = None) -> None:
         """Finish the span"""
         self.end_time = utc_now() if CORE_AVAILABLE else datetime.now()
         self.duration = (self.end_time - self.start_time).total_seconds()
@@ -117,11 +117,11 @@ class Span:
             self.error = str(error)
             self.tags["error"] = "true"
 
-    def add_tag(self, key: str, value: str):
+    def add_tag(self, key: str, value: str) -> None:
         """Add tag to span"""
         self.tags[key] = value
 
-    def add_log(self, message: str, **kwargs):
+    def add_log(self, message: str, **kwargs: Any) -> None:
         """Add log entry to span"""
         log_entry = {
             "timestamp": (utc_now() if CORE_AVAILABLE else datetime.now()).isoformat(),
@@ -160,7 +160,7 @@ class Trace:
     end_time: datetime | None = None
     total_duration: float | None = None
 
-    def add_span(self, span: Span):
+    def add_span(self, span: Span) -> None:
         """Add span to trace"""
         self.spans[span.span_id] = span
 
@@ -211,7 +211,7 @@ class PerformanceTracer:
     - Trace sampling and filtering
     """
 
-    def __init__(self, config: dict[str, Any] | None = None):
+    def __init__(self, config: dict[str, Any] | None = None) -> None:
         self.config = config or {}
 
         # Tracing configuration
@@ -246,7 +246,7 @@ class PerformanceTracer:
         self._cleanup_task: asyncio.Task | None = None
         self._tracing_enabled = False
 
-    async def start_tracing(self):
+    async def start_tracing(self) -> None:
         """Start tracing system"""
 
         if not self.enabled or self._tracing_enabled:
@@ -257,7 +257,7 @@ class PerformanceTracer:
 
         logger.info("PerformanceTracer started")
 
-    async def stop_tracing(self):
+    async def stop_tracing(self) -> None:
         """Stop tracing system"""
 
         self._tracing_enabled = False
@@ -273,7 +273,7 @@ class PerformanceTracer:
 
     def create_trace(
         self, operation_name: str, span_type: SpanType = SpanType.WORKFLOW
-    ) -> TraceContext:
+    ) -> TraceContext | None:
         """Create new trace"""
 
         if not self.enabled or not self._should_sample():
@@ -346,7 +346,7 @@ class PerformanceTracer:
 
         return span
 
-    def finish_span(self, span: Span, error: Exception | None = None):
+    def finish_span(self, span: Span, error: Exception | None = None) -> None:
         """Finish span"""
 
         if not span:
@@ -362,7 +362,7 @@ class PerformanceTracer:
 
         logger.debug(f"Finished span: {span.span_id}, duration: {span.duration:.3f}s")
 
-    def _update_span_statistics(self, span: Span):
+    def _update_span_statistics(self, span: Span) -> None:
         """Update span statistics for analysis"""
 
         operation_key = f"{span.span_type.value}:{span.operation_name}"
@@ -383,7 +383,7 @@ class PerformanceTracer:
         if len(stats["durations"]) > 1000:
             stats["durations"] = stats["durations"][-1000:]
 
-    def set_current_context(self, context: TraceContext):
+    def set_current_context(self, context: TraceContext) -> None:
         """Set current trace context"""
         self._current_context = context
 
@@ -391,7 +391,7 @@ class PerformanceTracer:
         """Get current trace context"""
         return self._current_context
 
-    def push_context(self, context: TraceContext):
+    def push_context(self, context: TraceContext) -> None:
         """Push context to stack"""
         if self._current_context:
             self._context_stack.append(self._current_context)
@@ -414,7 +414,7 @@ class PerformanceTracer:
 
         return random.random() < self.sample_rate
 
-    async def _cleanup_worker(self):
+    async def _cleanup_worker(self) -> None:
         """Background worker for cleaning old traces"""
 
         while self._tracing_enabled:
@@ -539,7 +539,7 @@ class PerformanceTracer:
 
         return error_traces[:limit]
 
-    def export_traces(self, file_path: str, trace_ids: list[str] | None = None):
+    def export_traces(self, file_path: str, trace_ids: list[str] | None = None) -> None:
         """Export traces to JSON file"""
 
         import json
@@ -592,26 +592,30 @@ class SpanContext:
         )
         return self.span
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self, exc_type: type | None, exc_val: Exception | None, exc_tb: Any | None
+    ) -> None:
         if self.span:
             error = exc_val if exc_type else None
             self.tracer.finish_span(self.span, error)
 
 
-class TraceContext:
+class TraceContextManager:
     """Context manager for trace context"""
 
-    def __init__(self, tracer: PerformanceTracer, context: TraceContext):
+    def __init__(self, tracer: PerformanceTracer, context: TraceContext) -> None:
         self.tracer = tracer
         self.context = context
         self.previous_context = None
 
-    def __enter__(self):
+    def __enter__(self) -> "TraceContextManager":
         self.previous_context = self.tracer.get_current_context()
         self.tracer.set_current_context(self.context)
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(
+        self, exc_type: type | None, exc_val: Exception | None, exc_tb: Any | None
+    ) -> None:
         self.tracer.set_current_context(self.previous_context)
 
 
@@ -635,7 +639,7 @@ def initialize_performance_tracer(
     return _performance_tracer
 
 
-async def shutdown_performance_tracer():
+async def shutdown_performance_tracer() -> None:
     """Shutdown global performance tracer"""
     global _performance_tracer
 

@@ -60,7 +60,6 @@ export interface FailedEventData extends BaseSSEEvent {
 export interface HeartbeatEventData extends BaseSSEEvent {
   type: 'heartbeat'
   timestamp: string // ISO timestamp
-  jobId?: string // Optional
 }
 
 export type SSEEventData =
@@ -241,6 +240,29 @@ export interface UseGenerationResult {
   getEstimatedTimeString: () => string
 }
 
+// =============================================================================
+// Error Types
+// =============================================================================
+
+export class GenerationError extends Error {
+  public code: string
+  public retryable: boolean
+  public details?: Record<string, unknown>
+
+  constructor(
+    message: string,
+    code: string,
+    retryable: boolean,
+    details?: Record<string, unknown>,
+  ) {
+    super(message)
+    this.name = 'GenerationError'
+    this.code = code
+    this.retryable = retryable
+    this.details = details
+  }
+}
+
 export interface UseSSEConnectionResult {
   // Connection management
   connect: (sseUrl: string, jobId: string) => void
@@ -282,12 +304,6 @@ export interface EpisodeListUpdate {
 // =============================================================================
 // Error Types
 // =============================================================================
-
-export interface GenerationError extends Error {
-  code: string
-  retryable: boolean
-  details?: Record<string, unknown>
-}
 
 export interface SSEConnectionError extends Error {
   connectionState: SSEConnectionState

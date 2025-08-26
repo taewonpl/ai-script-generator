@@ -23,19 +23,19 @@ except (ImportError, RuntimeError):
     logger = logging.getLogger(__name__)
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -111,9 +111,9 @@ class BaseSpecialAgent(ABC):
         agent_name: str,
         capabilities: list[AgentCapability],
         priority: AgentPriority = AgentPriority.MEDIUM,
-        provider_factory=None,
+        provider_factory: Any | None = None,
         config: dict[str, Any] | None = None,
-    ):
+    ) -> None:
         self.agent_name = agent_name
         self.capabilities = capabilities
         self.priority = priority
@@ -234,7 +234,7 @@ class BaseSpecialAgent(ABC):
             # Don't fail the entire workflow - continue with original content
             return error_state
 
-    async def _initialize_provider(self):
+    async def _initialize_provider(self) -> None:
         """Initialize AI provider for the agent"""
 
         try:
@@ -247,7 +247,7 @@ class BaseSpecialAgent(ABC):
         except Exception as e:
             logger.error(f"Failed to initialize provider for {self.agent_name}: {e}")
 
-    def _validate_input_state(self, state: GenerationState):
+    def _validate_input_state(self, state: GenerationState) -> None:
         """Validate input state has required content"""
 
         # Check for required content
@@ -352,7 +352,7 @@ class BaseSpecialAgent(ABC):
 
     def _update_execution_metrics(
         self, execution_time: float, enhancement_result: dict[str, Any]
-    ):
+    ) -> None:
         """Update agent execution metrics"""
 
         self.execution_count += 1

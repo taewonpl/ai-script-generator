@@ -62,7 +62,7 @@ export const SaveProgressIndicator: React.FC<SaveProgressIndicatorProps> = ({
 
       return () => clearInterval(timer)
     }
-    
+
     return () => {} // cleanup function for when condition is not met
   }, [saveState.nextRetryAt])
 
@@ -197,6 +197,7 @@ export const SaveProgressIndicator: React.FC<SaveProgressIndicatorProps> = ({
 }
 
 // Hook for managing save state
+// eslint-disable-next-line react-refresh/only-export-components
 export const useSaveProgress = (generationId: string) => {
   const [saveState, setSaveState] = useState<SaveState>({
     status: 'saving',

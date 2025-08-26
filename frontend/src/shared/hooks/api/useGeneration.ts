@@ -72,7 +72,8 @@ export function useGeneration(
     gcTime: 1000 * 60 * 10, // 10 minutes
     refetchInterval: data => {
       // Auto-refresh if generation is in progress
-      const status = data?.data?.status
+      if (!data) return false
+      const status = (data as any)?.status
       if (status === 'pending' || status === 'in_progress') {
         return 2000 // 2 seconds
       }
@@ -257,10 +258,10 @@ export function useCreateGeneration() {
   return useMutation({
     mutationFn: (data: GenerationRequest) =>
       generationService.createGeneration(data),
-    onSuccess: (newGeneration, { project_id, episode_id }) => {
+    onSuccess: (newGeneration, { project_id }) => {
       // Add new generation to cache
       queryClient.setQueryData(
-        generationKeys.detail(newGeneration.data.id),
+        generationKeys.detail(newGeneration.id),
         newGeneration,
       )
 
@@ -379,11 +380,11 @@ export function useBatchCreateGenerations() {
       generationService.batchCreateGenerations(requests),
     onSuccess: result => {
       // Add successful generations to cache
-      result.data.generations.forEach(generation => {
-        queryClient.setQueryData(generationKeys.detail(generation.id), {
-          data: generation,
-          success: true,
-        })
+      result.generations.forEach((generation: any) => {
+        queryClient.setQueryData(
+          generationKeys.detail(generation.id),
+          generation,
+        )
       })
 
       // Invalidate relevant lists

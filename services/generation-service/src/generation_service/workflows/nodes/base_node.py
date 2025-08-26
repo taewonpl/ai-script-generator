@@ -24,19 +24,19 @@ except (ImportError, RuntimeError):
     logger = logging.getLogger(__name__)
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -112,7 +112,7 @@ class BaseNode(ABC):
     - Quality score management
     """
 
-    def __init__(self, node_name: str):
+    def __init__(self, node_name: str) -> None:
         self.node_name = node_name
         self.logger = logger
 
@@ -350,12 +350,12 @@ class ProviderNode(BaseNode):
     Extends BaseNode with AI provider specific functionality.
     """
 
-    def __init__(self, node_name: str, provider_name: str):
+    def __init__(self, node_name: str, provider_name: str) -> None:
         super().__init__(node_name)
         self.provider_name = provider_name
         self.provider = None
 
-    async def _initialize_provider(self, provider_factory):
+    async def _initialize_provider(self, provider_factory: Any) -> None:
         """Initialize the AI provider"""
 
         try:
@@ -392,7 +392,9 @@ class PromptNode(ProviderNode):
     Extends ProviderNode with prompt template functionality.
     """
 
-    def __init__(self, node_name: str, provider_name: str, prompt_template):
+    def __init__(
+        self, node_name: str, provider_name: str, prompt_template: Any
+    ) -> None:
         super().__init__(node_name, provider_name)
         self.prompt_template = prompt_template
 

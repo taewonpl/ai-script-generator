@@ -24,9 +24,9 @@ import {
 import {
   Email as EmailIcon,
   Phone as PhoneIcon,
-  Desktop as DesktopIcon,
+  Computer as DesktopIcon,
   Save as SaveIcon,
-  Test as TestIcon,
+  BugReport as TestIcon,
 } from '@mui/icons-material'
 import { useForm, Controller } from 'react-hook-form'
 
@@ -132,7 +132,7 @@ export function NotificationSettings() {
       // TODO: Implement API call to save notification settings
       console.log('Save notification settings:', data)
       showSuccess('알림 설정이 저장되었습니다.')
-    } catch (error) {
+    } catch {
       showError('알림 설정 저장에 실패했습니다.')
     }
   }

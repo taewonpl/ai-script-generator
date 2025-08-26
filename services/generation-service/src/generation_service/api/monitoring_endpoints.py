@@ -26,19 +26,19 @@ except (ImportError, RuntimeError):
     logger = logging.getLogger(__name__)
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -109,14 +109,14 @@ class MonitoringAPI:
     - WebSocket connections for live updates
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.router = APIRouter(prefix="/api/monitoring", tags=["monitoring"])
         self._setup_routes()
 
         # WebSocket connections for real-time updates
         self._websocket_connections: list[WebSocket] = []
 
-    def _setup_routes(self):
+    def _setup_routes(self) -> None:
         """Setup API routes"""
 
         # Health endpoints
@@ -214,7 +214,7 @@ class MonitoringAPI:
             logger.error(f"Health check failed: {e}")
             raise HTTPException(status_code=500, detail=f"Health check failed: {e!s}")
 
-    async def get_component_health(self, component: str):
+    async def get_component_health(self, component: str) -> dict[str, Any]:
         """Get health status of specific component"""
 
         try:
@@ -249,7 +249,7 @@ class MonitoringAPI:
                 status_code=500, detail=f"Component health check failed: {e!s}"
             )
 
-    async def trigger_health_check(self, component: str):
+    async def trigger_health_check(self, component: str) -> dict[str, Any]:
         """Trigger immediate health check for component"""
 
         try:
@@ -313,7 +313,7 @@ class MonitoringAPI:
                 status_code=500, detail=f"Metrics retrieval failed: {e!s}"
             )
 
-    async def get_current_metrics(self):
+    async def get_current_metrics(self) -> dict[str, Any]:
         """Get current performance metrics"""
 
         try:
@@ -334,7 +334,7 @@ class MonitoringAPI:
         metric_name: str,
         hours: int = Query(default=1, ge=1, le=168),
         limit: int = Query(default=1000, ge=1, le=10000),
-    ):
+    ) -> dict[str, Any]:
         """Get historical data for specific metric"""
 
         try:
@@ -377,7 +377,7 @@ class MonitoringAPI:
                 status_code=500, detail=f"Metric history retrieval failed: {e!s}"
             )
 
-    async def get_metrics_summary(self):
+    async def get_metrics_summary(self) -> dict[str, Any]:
         """Get comprehensive metrics summary"""
 
         try:
@@ -419,7 +419,7 @@ class MonitoringAPI:
                 status_code=500, detail=f"Alert retrieval failed: {e!s}"
             )
 
-    async def get_active_alerts(self):
+    async def get_active_alerts(self) -> dict[str, Any]:
         """Get currently active alerts"""
 
         try:
@@ -440,7 +440,9 @@ class MonitoringAPI:
             logger.error(f"Active alerts retrieval failed: {e}")
             return {"error": f"Active alerts retrieval failed: {e!s}"}
 
-    async def get_alert_history(self, hours: int = Query(default=24, ge=1, le=168)):
+    async def get_alert_history(
+        self, hours: int = Query(default=24, ge=1, le=168)
+    ) -> dict[str, Any]:
         """Get alert history"""
 
         try:
@@ -462,7 +464,7 @@ class MonitoringAPI:
             logger.error(f"Alert history retrieval failed: {e}")
             return {"error": f"Alert history retrieval failed: {e!s}"}
 
-    async def get_alert_rules(self):
+    async def get_alert_rules(self) -> dict[str, Any]:
         """Get configured alert rules"""
 
         try:
@@ -514,7 +516,7 @@ class MonitoringAPI:
 
     async def get_chart_data(
         self, metric_name: str, hours: int = Query(default=1, ge=1, le=24)
-    ):
+    ) -> dict[str, Any]:
         """Get chart data for specific metric"""
 
         try:
@@ -536,7 +538,7 @@ class MonitoringAPI:
                 status_code=500, detail=f"Chart data retrieval failed: {e!s}"
             )
 
-    async def get_system_status(self):
+    async def get_system_status(self) -> dict[str, Any]:
         """Get overall system status"""
 
         try:
@@ -598,7 +600,7 @@ class MonitoringAPI:
                 "error": str(e),
             }
 
-    async def get_performance_summary(self):
+    async def get_performance_summary(self) -> dict[str, Any]:
         """Get performance analysis summary"""
 
         try:
@@ -649,7 +651,7 @@ class MonitoringAPI:
             logger.error(f"Performance summary retrieval failed: {e}")
             return {"error": f"Performance summary retrieval failed: {e!s}"}
 
-    async def dashboard_websocket(self, websocket: WebSocket):
+    async def dashboard_websocket(self, websocket: WebSocket) -> None:
         """WebSocket endpoint for real-time dashboard updates"""
 
         await websocket.accept()

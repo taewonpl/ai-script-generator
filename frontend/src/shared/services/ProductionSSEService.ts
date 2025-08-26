@@ -265,7 +265,7 @@ export class ProductionSSEService {
     }
 
     // Connection error
-    this.eventSource.onerror = error => {
+    this.eventSource.onerror = _error => {
       console.warn('⚠️ [SSE] Connection error detected')
 
       if (this.isManuallyDisconnected) {
@@ -438,7 +438,7 @@ export class ProductionSSEService {
     )
 
     this.updateConnectionStatus({
-      state: 'retrying',
+      state: 'connecting',
       retryCount: this.connectionStatus.retryCount + 1,
       maxRetries: this.config.maxRetries,
       nextRetryIn: Math.ceil(delay / 1000),
@@ -463,7 +463,6 @@ export class ProductionSSEService {
         console.log('🔄 [SSE] Manual retry now available')
         this.handlers.onConnectionChange?.({
           ...this.connectionStatus,
-          canManualRetry: true,
         })
       }
     }, this.config.manualRetryTimeout)
@@ -556,9 +555,7 @@ export class ProductionSSEService {
   }
 
   private getBaseUrl(): string {
-    return process.env.NODE_ENV === 'production'
-      ? '/api/v1'
-      : 'http://localhost:8000/api/v1'
+    return import.meta.env.PROD ? '/api/v1' : 'http://localhost:8000/api/v1'
   }
 
   private clearManualRetryTimeout(): void {

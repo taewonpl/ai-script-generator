@@ -26,19 +26,7 @@ import {
   Assessment as StatsIcon,
 } from '@mui/icons-material'
 import { useQuery } from '@tanstack/react-query'
-
-interface Project {
-  id: string
-  name: string
-  description?: string
-  type: string
-  status: string
-  created_at: string
-  updated_at: string
-  episodes_count?: number
-  scripts_count?: number
-  progress_percentage?: number
-}
+import type { Project } from '@/shared/types/project'
 
 interface ProjectOverviewProps {
   project: Project

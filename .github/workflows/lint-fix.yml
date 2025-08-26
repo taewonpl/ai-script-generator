@@ -13,8 +13,8 @@ permissions:
   pull-requests: write
 
 env:
-  NODE_VERSION: '18'
-  PYTHON_VERSION: '3.10'
+  NODE_VERSION: '20'
+  PYTHON_VERSION: '3.11'
 
 jobs:
   auto-fix:
@@ -39,8 +39,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
+
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          pnpm --version
 
       - name: Install Python dependencies
         run: |
@@ -56,7 +59,7 @@ jobs:
       - name: Install frontend dependencies
         run: |
           cd frontend
-          npm ci > /dev/null 2>&1
+          pnpm i --no-frozen-lockfile > /dev/null 2>&1
 
       - name: 🔧 Fix Python formatting and linting
         run: |
@@ -86,7 +89,7 @@ jobs:
           cd frontend
 
           # Fix ESLint issues (auto-fixable ones)
-          npm run lint:fix || true
+          pnpm run lint:fix || true
 
           echo "✅ Frontend fixed"
 

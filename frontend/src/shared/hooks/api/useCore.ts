@@ -93,11 +93,11 @@ export function useUsageStats(
 
 // User Stats Hook
 interface UserStats {
-  totalProjects: number
-  totalEpisodes: number
-  totalScripts: number
-  storageUsed: number
-  [key: string]: unknown
+  total_projects: number
+  total_scripts: number
+  total_generations: number
+  usage_hours: number
+  join_date: string
 }
 
 export function useUserStats(
@@ -130,20 +130,16 @@ export function useSettings(
 
 // Notifications Hook
 interface NotificationResponse {
-  data: Array<{
+  notifications: Array<{
     id: string
-    type: string
+    title: string
     message: string
-    createdAt: string
+    type: 'info' | 'warning' | 'error' | 'success'
     read: boolean
-    [key: string]: unknown
+    created_at: string
   }>
-  pagination: {
-    page: number
-    limit: number
-    total: number
-    pages: number
-  }
+  total: number
+  unread_count: number
 }
 
 export function useNotifications(
@@ -163,11 +159,9 @@ export function useNotifications(
 // Backups Hook
 interface BackupInfo {
   id: string
-  filename: string
+  created_at: string
   size: number
-  createdAt: string
-  type: 'auto' | 'manual'
-  [key: string]: unknown
+  status: 'completed' | 'failed'
 }
 
 export function useBackups(
@@ -191,13 +185,10 @@ export function useLogin() {
       coreService.login(email, password),
     onSuccess: response => {
       // Store token
-      localStorage.setItem('authToken', response.data.token)
+      localStorage.setItem('authToken', response.token)
 
       // Cache user data
-      queryClient.setQueryData(coreKeys.userProfile(), {
-        data: response.data.user,
-        success: true,
-      })
+      queryClient.setQueryData(coreKeys.userProfile(), response.user)
 
       // Invalidate all queries to refresh with authenticated state
       queryClient.invalidateQueries()
@@ -213,13 +204,10 @@ export function useRegister() {
       coreService.register(data),
     onSuccess: response => {
       // Store token
-      localStorage.setItem('authToken', response.data.token)
+      localStorage.setItem('authToken', response.token)
 
       // Cache user data
-      queryClient.setQueryData(coreKeys.userProfile(), {
-        data: response.data.user,
-        success: true,
-      })
+      queryClient.setQueryData(coreKeys.userProfile(), response.user)
 
       // Invalidate all queries
       queryClient.invalidateQueries()
@@ -276,10 +264,7 @@ export function useUpdateUserProfile() {
       // Optimistically update
       queryClient.setQueryData(coreKeys.userProfile(), (old: any) => {
         if (!old) return old
-        return {
-          ...old,
-          data: { ...old.data, ...newProfileData },
-        }
+        return { ...old, ...newProfileData }
       })
 
       return { previousProfile }
@@ -328,10 +313,7 @@ export function useUploadAvatar() {
       // Update user profile with new avatar URL
       queryClient.setQueryData(coreKeys.userProfile(), (old: any) => {
         if (!old) return old
-        return {
-          ...old,
-          data: { ...old.data, avatar: response.data.avatar_url },
-        }
+        return { ...old, avatar: response.avatar_url }
       })
     },
   })
@@ -366,13 +348,10 @@ export function useMarkNotificationRead() {
           if (!old) return old
           return {
             ...old,
-            data: {
-              ...old.data,
-              notifications: old.data.notifications.map((notif: any) =>
-                notif.id === notificationId ? { ...notif, read: true } : notif,
-              ),
-              unread_count: Math.max(0, old.data.unread_count - 1),
-            },
+            notifications: old.notifications.map((notif: any) =>
+              notif.id === notificationId ? { ...notif, read: true } : notif,
+            ),
+            unread_count: Math.max(0, old.unread_count - 1),
           }
         },
       )
@@ -393,14 +372,11 @@ export function useMarkAllNotificationsRead() {
           if (!old) return old
           return {
             ...old,
-            data: {
-              ...old.data,
-              notifications: old.data.notifications.map((notif: any) => ({
-                ...notif,
-                read: true,
-              })),
-              unread_count: 0,
-            },
+            notifications: old.notifications.map((notif: any) => ({
+              ...notif,
+              read: true,
+            })),
+            unread_count: 0,
           }
         },
       )
@@ -422,13 +398,10 @@ export function useDeleteNotification() {
           if (!old) return old
           return {
             ...old,
-            data: {
-              ...old.data,
-              notifications: old.data.notifications.filter(
-                (notif: any) => notif.id !== notificationId,
-              ),
-              total: old.data.total - 1,
-            },
+            notifications: old.notifications.filter(
+              (notif: any) => notif.id !== notificationId,
+            ),
+            total: old.total - 1,
           }
         },
       )

@@ -1,5 +1,6 @@
 import React, { memo, useMemo, useCallback } from 'react'
 import { FixedSizeList as List, VariableSizeList } from 'react-window'
+// @ts-expect-error - react-window-infinite-loader types not available
 import InfiniteLoader from 'react-window-infinite-loader'
 import { Box, CircularProgress, Typography } from '@mui/material'
 
@@ -87,7 +88,7 @@ export const VirtualizedList = memo(function VirtualizedList<T>({
           itemCount={itemCount}
           loadMoreItems={loadNextPage}
         >
-          {({ onItemsRendered, ref }) => {
+          {({ onItemsRendered, ref }: any) => {
             if (getItemSize) {
               return (
                 <VariableSizeList
@@ -99,7 +100,7 @@ export const VirtualizedList = memo(function VirtualizedList<T>({
                   onItemsRendered={onItemsRendered}
                   overscanCount={overscanCount}
                   className={className}
-                  onScroll={onScroll}
+                  onScroll={onScroll as any}
                 >
                   {Item}
                 </VariableSizeList>
@@ -115,7 +116,7 @@ export const VirtualizedList = memo(function VirtualizedList<T>({
                   onItemsRendered={onItemsRendered}
                   overscanCount={overscanCount}
                   className={className}
-                  onScroll={onScroll}
+                  onScroll={onScroll as any}
                 >
                   {Item}
                 </List>
@@ -134,7 +135,7 @@ export const VirtualizedList = memo(function VirtualizedList<T>({
             itemSize={getItemSize}
             overscanCount={overscanCount}
             className={className}
-            onScroll={onScroll}
+            onScroll={onScroll as any /* react-window scroll props mismatch */}
           >
             {Item}
           </VariableSizeList>
@@ -148,7 +149,7 @@ export const VirtualizedList = memo(function VirtualizedList<T>({
             itemSize={itemHeight}
             overscanCount={overscanCount}
             className={className}
-            onScroll={onScroll}
+            onScroll={onScroll as any /* react-window scroll props mismatch */}
           >
             {Item}
           </List>
@@ -206,7 +207,7 @@ export const VirtualizedProjectList = memo(function VirtualizedProjectList<
   return (
     <VirtualizedList
       items={projects}
-      renderItem={renderProject}
+      renderItem={renderProject as any}
       itemHeight={180} // Estimated height for project cards
       height={height}
       hasNextPage={hasNextPage}
@@ -243,7 +244,7 @@ export const VirtualizedEpisodeList = memo(function VirtualizedEpisodeList<
   return (
     <VirtualizedList
       items={episodes}
-      renderItem={renderEpisode}
+      renderItem={renderEpisode as any}
       itemHeight={120} // Estimated height for episode rows
       height={height}
       hasNextPage={hasNextPage}
@@ -280,7 +281,7 @@ export const VirtualizedScriptList = memo(function VirtualizedScriptList<
   return (
     <VirtualizedList
       items={scripts}
-      renderItem={renderScript}
+      renderItem={renderScript as any}
       itemHeight={200} // Estimated height for script cards
       height={height}
       hasNextPage={hasNextPage}

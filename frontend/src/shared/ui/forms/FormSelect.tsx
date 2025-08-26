@@ -23,7 +23,10 @@ export interface SelectOption {
 
 export interface FormSelectProps<T extends FieldValues>
   extends BaseFormProps<T>,
-    Omit<SelectProps, 'name' | 'control' | 'value' | 'onChange' | 'label'> {
+    Omit<
+      SelectProps,
+      'name' | 'control' | 'value' | 'onChange' | 'label' | 'renderValue'
+    > {
   options: SelectOption[]
   placeholder?: string
   multiple?: boolean

@@ -4,6 +4,7 @@ Performance configuration management system
 
 import json
 import os
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -20,7 +21,7 @@ except (ImportError, RuntimeError):
     CORE_AVAILABLE = False
     import logging
 
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__)  # type: ignore[assignment]
 
 
 class Environment(str, Enum):
@@ -350,7 +351,7 @@ class PerformanceConfig:
 
         return overrides
 
-    def apply_environment_overrides(self):
+    def apply_environment_overrides(self) -> None:
         """Apply environment-specific overrides"""
 
         overrides = self.get_environment_overrides()
@@ -383,7 +384,7 @@ class ConfigManager:
     def __init__(self, config_dir: str | None = None):
         self.config_dir = Path(config_dir) if config_dir else Path("config")
         self.current_config: PerformanceConfig | None = None
-        self._config_watchers: list[callable] = []
+        self._config_watchers: list[Callable[[Any], None]] = []
 
     def load_config(
         self,
@@ -471,9 +472,11 @@ class ConfigManager:
         try:
             with open(config_path) as f:
                 if config_path.suffix.lower() == ".json":
-                    return json.load(f)
+                    result: dict[str, Any] = json.load(f)
+                    return result
                 elif config_path.suffix.lower() in [".yaml", ".yml"]:
-                    return yaml.safe_load(f) or {}
+                    yaml_result: dict[str, Any] = yaml.safe_load(f) or {}
+                    return yaml_result
                 else:
                     logger.error(f"Unsupported configuration file format: {file_path}")
                     return {}
@@ -485,7 +488,7 @@ class ConfigManager:
     def _load_from_environment_variables(self) -> dict[str, Any]:
         """Load configuration from environment variables"""
 
-        config = {}
+        config: dict[str, Any] = {}
 
         # Map environment variables to config keys
         env_mappings = {
@@ -516,6 +519,7 @@ class ConfigManager:
             if env_value is not None:
                 # Convert value to appropriate type
                 try:
+                    converted_value: bool | int | float | str
                     if value_type == bool:
                         converted_value = env_value.lower() in (
                             "true",
@@ -540,7 +544,7 @@ class ConfigManager:
 
         return config
 
-    def _set_nested_config(self, config: dict[str, Any], key: str, value: Any):
+    def _set_nested_config(self, config: dict[str, Any], key: str, value: Any) -> None:
         """Set nested configuration value using dot notation"""
 
         keys = key.split(".")
@@ -556,7 +560,7 @@ class ConfigManager:
     def _merge_configs(self, configs: list[dict[str, Any]]) -> dict[str, Any]:
         """Merge multiple configuration dictionaries"""
 
-        merged = {}
+        merged: dict[str, Any] = {}
 
         for config in configs:
             merged = self._deep_merge(merged, config)
@@ -582,7 +586,7 @@ class ConfigManager:
 
         return result
 
-    def save_config(self, config: PerformanceConfig, file_path: str):
+    def save_config(self, config: PerformanceConfig, file_path: str) -> None:
         """Save configuration to file"""
 
         config_path = Path(file_path)
@@ -605,7 +609,7 @@ class ConfigManager:
 
     def create_config_template(
         self, file_path: str, environment: Environment = Environment.DEVELOPMENT
-    ):
+    ) -> None:
         """Create configuration template file"""
 
         # Create default configuration
@@ -627,11 +631,11 @@ class ConfigManager:
         except Exception as e:
             return [f"Failed to load/parse configuration: {e}"]
 
-    def add_config_watcher(self, callback: callable):
+    def add_config_watcher(self, callback: Callable[[Any], None]) -> None:
         """Add callback for configuration changes"""
         self._config_watchers.append(callback)
 
-    def reload_config(self):
+    def reload_config(self) -> PerformanceConfig | None:
         """Reload current configuration"""
 
         if self.current_config:

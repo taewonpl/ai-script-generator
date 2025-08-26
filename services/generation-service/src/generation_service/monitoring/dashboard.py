@@ -24,19 +24,19 @@ except (ImportError, RuntimeError):
     logger = logging.getLogger(__name__)
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -113,10 +113,10 @@ class MonitoringDashboard:
 
         # Dashboard state
         self._dashboard_enabled = False
-        self._update_task: asyncio.Task | None = None
+        self._update_task: asyncio.Task[None] | None = None
 
         # WebSocket connections for real-time updates
-        self._websocket_connections: list = []
+        self._websocket_connections: list[Any] = []
 
     def _initialize_dashboard_metrics(self) -> list[DashboardMetric]:
         """Initialize dashboard metrics configuration"""
@@ -240,7 +240,7 @@ class MonitoringDashboard:
             ),
         ]
 
-    async def start_dashboard(self):
+    async def start_dashboard(self) -> None:
         """Start dashboard data updates"""
 
         if self._dashboard_enabled:
@@ -251,7 +251,7 @@ class MonitoringDashboard:
 
         logger.info("MonitoringDashboard started")
 
-    async def stop_dashboard(self):
+    async def stop_dashboard(self) -> None:
         """Stop dashboard updates"""
 
         self._dashboard_enabled = False
@@ -265,7 +265,7 @@ class MonitoringDashboard:
 
         logger.info("MonitoringDashboard stopped")
 
-    async def _update_worker(self):
+    async def _update_worker(self) -> None:
         """Background worker for dashboard data updates"""
 
         while self._dashboard_enabled:
@@ -285,7 +285,7 @@ class MonitoringDashboard:
                 logger.error(f"Dashboard update worker error: {e}")
                 await asyncio.sleep(self.refresh_interval)
 
-    async def _update_dashboard_data(self):
+    async def _update_dashboard_data(self) -> None:
         """Update dashboard data from various sources"""
 
         try:
@@ -320,7 +320,7 @@ class MonitoringDashboard:
 
     async def _update_metric_chart_data(
         self, metric_config: DashboardMetric, value: float
-    ):
+    ) -> None:
         """Update chart data for a specific metric"""
 
         metric_name = metric_config.name
@@ -435,7 +435,7 @@ class MonitoringDashboard:
 
         return options
 
-    async def _broadcast_updates(self):
+    async def _broadcast_updates(self) -> None:
         """Broadcast updates to WebSocket connections"""
 
         if not self._websocket_connections:
@@ -466,11 +466,11 @@ class MonitoringDashboard:
         except Exception as e:
             logger.error(f"Failed to broadcast dashboard updates: {e}")
 
-    def add_websocket_connection(self, websocket):
+    def add_websocket_connection(self, websocket: Any) -> None:
         """Add WebSocket connection for real-time updates"""
         self._websocket_connections.append(websocket)
 
-    def remove_websocket_connection(self, websocket):
+    def remove_websocket_connection(self, websocket: Any) -> None:
         """Remove WebSocket connection"""
         if websocket in self._websocket_connections:
             self._websocket_connections.remove(websocket)
@@ -852,7 +852,7 @@ def initialize_monitoring_dashboard(
     return _monitoring_dashboard
 
 
-async def shutdown_monitoring_dashboard():
+async def shutdown_monitoring_dashboard() -> None:
     """Shutdown global monitoring dashboard"""
     global _monitoring_dashboard
 

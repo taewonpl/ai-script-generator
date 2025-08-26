@@ -102,7 +102,7 @@ export function DataManagement() {
 
       // TODO: Implement actual export API call
       console.log('Export data with options:', exportOptions)
-    } catch (error) {
+    } catch {
       setIsExporting(false)
       showError('데이터 내보내기에 실패했습니다.')
     }
@@ -120,7 +120,7 @@ export function DataManagement() {
       showSuccess('데이터 가져오기가 완료되었습니다.')
       setShowImportDialog(false)
       setImportFile(null)
-    } catch (error) {
+    } catch {
       showError('데이터 가져오기에 실패했습니다.')
     }
   }
@@ -130,7 +130,7 @@ export function DataManagement() {
       // TODO: Implement backup API call
       console.log('Create backup')
       showSuccess('백업이 생성되었습니다.')
-    } catch (error) {
+    } catch {
       showError('백업 생성에 실패했습니다.')
     }
   }
@@ -141,7 +141,7 @@ export function DataManagement() {
       console.log('Delete all user data')
       showSuccess('모든 데이터가 삭제되었습니다.')
       setShowDeleteDialog(false)
-    } catch (error) {
+    } catch {
       showError('데이터 삭제에 실패했습니다.')
     }
   }

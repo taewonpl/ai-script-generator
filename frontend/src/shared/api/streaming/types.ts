@@ -110,6 +110,9 @@ export type TypedSSEEventData =
   | FailedEventData
   | HeartbeatEventData
 
+// 🔁 Backward-compat alias to fix TS2724 ("SSEEventData" not exported)
+export type SSEEventData = TypedSSEEventData
+
 export interface SSEOptions {
   url: string
   maxRetries?: number

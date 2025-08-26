@@ -65,19 +65,19 @@ except (ImportError, RuntimeError):
     logger = logging.getLogger(__name__)
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -113,7 +113,7 @@ class NodeType(str, Enum):
 class NodeContext:
     """Context object passed between LangGraph nodes"""
 
-    def __init__(self, generation_id: str, request: GenerationRequest):
+    def __init__(self, generation_id: str, request: GenerationRequest) -> None:
         self.generation_id = generation_id
         self.request = request
         self.results: dict[str, Any] = {}
@@ -130,7 +130,7 @@ class NodeContext:
             self.created_at = datetime.now()
             self.context_hash = str(hash(f"{generation_id}_{request!s}"))
 
-    def add_result(self, node_type: str, result: Any):
+    def add_result(self, node_type: str, result: Any) -> None:
         """Add result from a node"""
         self.results[node_type] = result
 
@@ -138,7 +138,7 @@ class NodeContext:
         """Get result from a specific node"""
         return self.results.get(node_type)
 
-    def add_error(self, error: str):
+    def add_error(self, error: str) -> None:
         """Add error to context"""
         self.errors.append(error)
 
@@ -146,7 +146,7 @@ class NodeContext:
         """Check if context has errors"""
         return len(self.errors) > 0
 
-    def set_quality_score(self, metric: str, score: float):
+    def set_quality_score(self, metric: str, score: float) -> None:
         """Set quality score for a metric"""
         self.quality_scores[metric] = max(0.0, min(1.0, score))  # Clamp to [0,1]
 
@@ -160,7 +160,7 @@ class NodeContext:
 class GenerationService:
     """LangGraph workflow-based script generation service"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._generations: dict[str, GenerationResponse] = {}
         self._metadata: dict[str, GenerationMetadata] = {}
         self._contexts: dict[str, NodeContext] = {}
@@ -356,7 +356,7 @@ class GenerationService:
 
     async def _execute_langgraph_workflow(
         self, generation_id: str, context: NodeContext
-    ):
+    ) -> None:
         """Execute the LangGraph workflow with all nodes"""
 
         generation = self._generations[generation_id]
@@ -418,7 +418,7 @@ class GenerationService:
     # LangGraph Node Implementation Functions
     # ========================================================================================
 
-    async def _execute_node(self, node_type: NodeType, context: NodeContext):
+    async def _execute_node(self, node_type: NodeType, context: NodeContext) -> None:
         """Execute a specific LangGraph node"""
 
         node_start_time = utc_now() if CORE_AVAILABLE else datetime.now()
@@ -462,7 +462,7 @@ class GenerationService:
             logger.error(error_msg, exc_info=True)
             raise
 
-    async def run_architect_generation(self, context: NodeContext):
+    async def run_architect_generation(self, context: NodeContext) -> None:
         """Architect node: Creates structural foundation and story architecture with RAG enhancement"""
 
         request = context.request
@@ -562,7 +562,7 @@ class GenerationService:
             f"Architect generation completed for {context.generation_id} with RAG enhancement"
         )
 
-    async def run_stylist_generation(self, context: NodeContext):
+    async def run_stylist_generation(self, context: NodeContext) -> None:
         """Stylist node: Enhances writing style, dialogue, and tone"""
 
         # Get architect results
@@ -617,7 +617,7 @@ class GenerationService:
 
         logger.info(f"Stylist generation completed for {context.generation_id}")
 
-    async def run_special_agent_generation(self, context: NodeContext):
+    async def run_special_agent_generation(self, context: NodeContext) -> None:
         """Special Agent node: Handles specialized requirements and domain expertise"""
 
         # Get previous results
@@ -703,7 +703,7 @@ class GenerationService:
 
         logger.info(f"Special agent generation completed for {context.generation_id}")
 
-    async def run_quality_review(self, context: NodeContext):
+    async def run_quality_review(self, context: NodeContext) -> None:
         """Quality Reviewer node: Performs comprehensive quality assessment"""
 
         # Get final content from special agent
@@ -773,7 +773,7 @@ class GenerationService:
             f"Quality review completed for {context.generation_id} with score {quality_results['overall_score']:.2f}"
         )
 
-    async def run_final_assembly(self, context: NodeContext):
+    async def run_final_assembly(self, context: NodeContext) -> None:
         """Final Assembler node: Creates final output and metadata"""
 
         # Get all results
@@ -887,7 +887,7 @@ class GenerationService:
 
     async def _finalize_generation(
         self, generation_id: str, context: NodeContext, generation_time: float
-    ):
+    ) -> None:
         """Finalize generation with results from LangGraph workflow"""
 
         generation = self._generations[generation_id]
@@ -1676,7 +1676,7 @@ ORIGINAL REQUEST CONTEXT:
 
     async def _execute_hybrid_workflow_background(
         self, workflow_id: str, request: ScriptGenerationRequest
-    ):
+    ) -> None:
         """Background execution of hybrid workflow"""
 
         workflow_response = self._workflows[workflow_id]
@@ -1716,7 +1716,7 @@ ORIGINAL REQUEST CONTEXT:
 
     async def _execute_workflow_with_tracking(
         self, request: GenerationRequest, generation_id: str, workflow_id: str
-    ):
+    ) -> GenerationResponse:
         """Execute workflow with progress tracking"""
 
         # This would integrate with the LangGraph workflow to provide progress updates
@@ -1796,7 +1796,7 @@ ORIGINAL REQUEST CONTEXT:
 
     async def _extract_node_results(
         self, workflow_id: str, workflow_metadata: dict[str, Any]
-    ):
+    ) -> None:
         """Extract individual node results from workflow metadata"""
 
         # Extract results for each node from the workflow metadata
@@ -1826,7 +1826,7 @@ ORIGINAL REQUEST CONTEXT:
 
     async def _finalize_hybrid_workflow(
         self, workflow_id: str, langgraph_response: GenerationResponse
-    ):
+    ) -> None:
         """Finalize hybrid workflow with results"""
 
         workflow_response = self._workflows[workflow_id]

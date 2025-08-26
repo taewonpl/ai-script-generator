@@ -20,19 +20,19 @@ except (ImportError, RuntimeError):
     logger = logging.getLogger(__name__)
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -112,7 +112,9 @@ class DialogueEnhancerAgent(BaseSpecialAgent):
         "weak_character_voice": ["generic response", "standard reply"],
     }
 
-    def __init__(self, provider_factory=None, config: dict[str, Any] = None):
+    def __init__(
+        self, provider_factory: Any | None = None, config: dict[str, Any] | None = None
+    ) -> None:
         default_config = {
             "humor_level": 0.7,  # How much humor to inject (0.0-1.0)
             "naturalness_boost": 0.8,  # How much to improve naturalness
@@ -397,7 +399,7 @@ class DialogueEnhancerAgent(BaseSpecialAgent):
 
     def _identify_dialogue_problems(
         self, dialogue_data: dict[str, Any]
-    ) -> dict[str, list[dict]]:
+    ) -> dict[str, list[dict[str, Any]]]:
         """Identify specific dialogue problems"""
 
         problems = {problem_type: [] for problem_type in self.DIALOGUE_PROBLEMS.keys()}
@@ -657,7 +659,7 @@ Please provide the enhanced script with dramatically improved dialogue that soun
         return results
 
     def _count_problems_fixed(
-        self, original_dialogue: dict, enhanced_dialogue: dict
+        self, original_dialogue: dict[str, Any], enhanced_dialogue: dict[str, Any]
     ) -> int:
         """Count how many dialogue problems were fixed"""
 
@@ -703,7 +705,7 @@ Please provide the enhanced script with dramatically improved dialogue that soun
         return max(0.0, enhanced_normalized - original_normalized)
 
     def _calculate_voice_improvement(
-        self, original_dialogue: dict, enhanced_dialogue: dict
+        self, original_dialogue: dict[str, Any], enhanced_dialogue: dict[str, Any]
     ) -> float:
         """Calculate improvement in character voice distinctiveness"""
 
@@ -748,7 +750,7 @@ Please provide the enhanced script with dramatically improved dialogue that soun
         return min(humor_added / 10.0, 1.0)  # Normalize
 
     def _calculate_dialogue_quality_improvement(
-        self, original_dialogue: dict, enhanced_dialogue: dict
+        self, original_dialogue: dict[str, Any], enhanced_dialogue: dict[str, Any]
     ) -> float:
         """Calculate overall dialogue quality improvement"""
 
@@ -814,7 +816,7 @@ Please provide the enhanced script with dramatically improved dialogue that soun
         return patterns
 
     def _calculate_distinctiveness_score(
-        self, character_text: str, all_character_dialogue: dict
+        self, character_text: str, all_character_dialogue: dict[str, list[str]]
     ) -> float:
         """Calculate how distinct this character's voice is"""
 

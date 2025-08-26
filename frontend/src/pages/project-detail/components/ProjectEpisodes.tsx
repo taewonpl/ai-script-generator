@@ -82,7 +82,9 @@ export function ProjectEpisodes({ project }: ProjectEpisodesProps) {
     error,
   } = useEpisodes(project.id)
 
-  const episodes = Array.isArray(episodesResponse) ? episodesResponse : episodesResponse.items || []
+  const episodes = Array.isArray(episodesResponse)
+    ? episodesResponse
+    : episodesResponse.items || []
 
   // Check URL for generation trigger
   const shouldOpenGenerate = searchParams.get('gen') === 'new'
@@ -412,7 +414,7 @@ export function ProjectEpisodes({ project }: ProjectEpisodesProps) {
         isOpen={showGenerateDrawer}
         onClose={handleCloseGenerateDrawer}
         project={project}
-        projectName={project.name || project.title}
+        projectName={project.title || project.name}
         initialEpisodeNumber={selectedEpisode?.number || getNextEpisodeNumber()}
         onEpisodeCreated={handleEpisodeCreated}
       />

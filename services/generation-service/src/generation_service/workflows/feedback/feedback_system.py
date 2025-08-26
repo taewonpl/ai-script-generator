@@ -122,7 +122,7 @@ class FeedbackLearningEngine:
     - Continuous improvement loops
     """
 
-    def __init__(self, config: dict[str, Any] = None):
+    def __init__(self, config: dict[str, Any] | None = None) -> None:
         self.config = config or {}
 
         # Storage for feedback and preferences
@@ -177,9 +177,9 @@ class FeedbackLearningEngine:
         self,
         generation_id: str,
         user_rating: float,
-        quality_feedback: dict[str, float] = None,
-        user_id: str = None,
-        comments: str = None,
+        quality_feedback: dict[str, float] | None = None,
+        user_id: str | None = None,
+        comments: str | None = None,
     ) -> None:
         """Process feedback for a completed generation"""
 
@@ -204,8 +204,8 @@ class FeedbackLearningEngine:
         self,
         generation_id: str,
         user_actions: dict[str, Any],
-        user_id: str = None,
-        session_duration: float = None,
+        user_id: str | None = None,
+        session_duration: float | None = None,
     ) -> None:
         """Process implicit feedback from user behavior"""
 
@@ -250,7 +250,7 @@ class FeedbackLearningEngine:
         return self.user_profiles.get(user_id)
 
     async def personalize_generation_config(
-        self, base_config: dict[str, Any], user_id: str = None
+        self, base_config: dict[str, Any], user_id: str | None = None
     ) -> dict[str, Any]:
         """Personalize generation configuration based on user preferences"""
 
@@ -330,7 +330,9 @@ class FeedbackLearningEngine:
 
         return calibrated_scores
 
-    async def get_improvement_suggestions(self, user_id: str = None) -> list[str]:
+    async def get_improvement_suggestions(
+        self, user_id: str | None = None
+    ) -> list[str]:
         """Get improvement suggestions based on feedback patterns"""
 
         suggestions = []
@@ -473,7 +475,7 @@ class FeedbackLearningEngine:
             return FeedbackSentiment.NEGATIVE
 
     def _calculate_satisfaction_from_actions(
-        self, user_actions: dict[str, Any], session_duration: float = None
+        self, user_actions: dict[str, Any], session_duration: float | None = None
     ) -> float:
         """Calculate satisfaction score from user actions"""
 

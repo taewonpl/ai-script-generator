@@ -27,7 +27,7 @@ import { FormAutocomplete } from '@/shared/ui/forms/FormAutocomplete'
 import {
   ProjectEditSchema,
   type ProjectEditFormData,
-} from '@/shared/lib/validation/schemas'
+} from '../../../shared/lib/validation/schemas'
 import { useToastHelpers } from '@/shared/ui/components/toast'
 
 interface ProjectEditFormProps {
