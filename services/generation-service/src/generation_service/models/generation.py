@@ -53,7 +53,7 @@ if CORE_AVAILABLE:
 
         @model_validator(mode="before")
         @classmethod
-        def set_defaults(cls, values):
+        def set_defaults(cls, values: Any) -> Any:
             # Set default purpose based on script_type
             if not values.get("purpose") and values.get("script_type"):
                 script_type = values["script_type"]
@@ -92,7 +92,7 @@ if CORE_AVAILABLE:
 
         @model_validator(mode="before")
         @classmethod
-        def sync_and_calculate(cls, values):
+        def sync_and_calculate(cls, values: Any) -> Any:
             # Sync generated_script with content field
             if (
                 "content" in values
@@ -171,7 +171,7 @@ else:
 
         @field_validator("description")
         @classmethod
-        def validate_description(cls, v):
+        def validate_description(cls, v: Any) -> str:
             if len(v.strip()) < 10:
                 raise ValueError("Description must be at least 10 characters long")
             return v.strip()

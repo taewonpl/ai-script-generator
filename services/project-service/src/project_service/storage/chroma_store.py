@@ -7,14 +7,18 @@ import os
 import threading
 import time
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Dict, List, Optional, Protocol, TYPE_CHECKING
 from uuid import uuid4
+
+# Simplified type aliases - always use Any for external library compatibility
+ChromaClient = Any
+ChromaCollection = Any  
+ChromaEmbeddingFunction = Any
 
 try:
     import chromadb
     from chromadb.config import Settings
     from chromadb.utils import embedding_functions
-
     CHROMADB_AVAILABLE = True
 except ImportError:
     CHROMADB_AVAILABLE = False
@@ -32,28 +36,31 @@ class EpisodeChromaStore:
     """ChromaDB store for Episodes with automatic number assignment"""
 
     def __init__(
-        self, db_path: str = "./data/chroma", embedding_function: Any | None = None
-    ):
+        self, db_path: str = "./data/chroma", embedding_function: Optional[Any] = None
+    ) -> None:
         if not CHROMADB_AVAILABLE:
             raise ChromaStoreError(
                 "ChromaDB is not available. Install with: pip install chromadb"
             )
 
         self.db_path = db_path
-        self._client = None
-        self._episodes_collection = None
-        self._projects_collection = None
+        self._client: Optional[Any] = None
+        self._episodes_collection: Optional[Any] = None
+        self._projects_collection: Optional[Any] = None
         self._lock = threading.Lock()  # For concurrency control
 
         # Initialize embedding function
-        self.embedding_function = (
-            embedding_function or embedding_functions.DefaultEmbeddingFunction()
-        )
+        if CHROMADB_AVAILABLE:
+            self.embedding_function: Any = (
+                embedding_function or embedding_functions.DefaultEmbeddingFunction()
+            )
+        else:
+            self.embedding_function = None  # type: ignore[unreachable]
 
         # Initialize client
         self._initialize_client()
 
-    def _initialize_client(self):
+    def _initialize_client(self) -> None:
         """Initialize ChromaDB client and collections"""
         try:
             # Ensure directory exists
@@ -66,6 +73,7 @@ class EpisodeChromaStore:
             )
 
             # Get or create Episodes collection
+            assert self._client is not None  # Initialized above
             self._episodes_collection = self._client.get_or_create_collection(
                 name="episodes",
                 embedding_function=self.embedding_function,
@@ -79,6 +87,8 @@ class EpisodeChromaStore:
                 metadata={"created_by": "project_service", "type": "projects"},
             )
 
+            assert self._episodes_collection is not None
+            assert self._projects_collection is not None
             logger.info(
                 f"ChromaDB initialized - Episodes: {self._episodes_collection.count()}, Projects: {self._projects_collection.count()}"
             )
@@ -93,7 +103,8 @@ class EpisodeChromaStore:
         with self._lock:
             try:
                 # Get all episodes for this project
-                existing_episodes = self._episodes_collection.get(
+                assert self._episodes_collection is not None
+                existing_episodes: Dict[str, Any] = self._episodes_collection.get(
                     where={"project_id": project_id}, include=["metadatas"]
                 )
 
@@ -102,8 +113,9 @@ class EpisodeChromaStore:
 
                 # Find maximum episode number
                 max_number = 0
-                for metadata in existing_episodes["metadatas"]:
-                    episode_number = metadata.get("number", 0)
+                metadatas: List[Dict[str, Any]] = existing_episodes["metadatas"]
+                for metadata in metadatas:
+                    episode_number: int = metadata.get("number", 0)
                     if episode_number > max_number:
                         max_number = episode_number
 
@@ -116,11 +128,11 @@ class EpisodeChromaStore:
     def create_episode(
         self,
         project_id: str,
-        title: str | None = None,
+        title: Optional[str] = None,
         script_markdown: str = "",
         tokens: int = 0,
         prompt_snapshot: str = "",
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Create episode with automatic number assignment"""
 
         # Retry logic for concurrency handling
@@ -137,7 +149,7 @@ class EpisodeChromaStore:
                     title = f"{project_name} - Ep. {episode_number}"
 
                 # Create episode metadata
-                metadata = {
+                metadata: Dict[str, Any] = {
                     "project_id": project_id,
                     "number": episode_number,
                     "title": title,
@@ -147,6 +159,7 @@ class EpisodeChromaStore:
                 }
 
                 # Add to ChromaDB
+                assert self._episodes_collection is not None
                 self._episodes_collection.add(
                     documents=[script_markdown or f"Episode {episode_number}: {title}"],
                     metadatas=[metadata],
@@ -160,7 +173,7 @@ class EpisodeChromaStore:
                     f"Created episode {episode_id} for project {project_id} with number {episode_number}"
                 )
 
-                return {
+                result: Dict[str, Any] = {
                     "episode_id": episode_id,
                     "project_id": project_id,
                     "number": episode_number,
@@ -168,6 +181,7 @@ class EpisodeChromaStore:
                     "tokens": tokens,
                     "created_at": metadata["created_at"],
                 }
+                return result
 
             except Exception as e:
                 if attempt < max_retries - 1:
@@ -182,18 +196,23 @@ class EpisodeChromaStore:
                         f"Failed to create episode after {max_retries} attempts: {e!s}"
                     )
                     raise ChromaStoreError(f"Failed to create episode: {e!s}")
+        
+        # This should never be reached, but MyPy needs it
+        raise ChromaStoreError("Failed to create episode: Maximum retries exceeded")
 
-    def get_episodes_by_project(self, project_id: str) -> list[dict[str, Any]]:
+    def get_episodes_by_project(self, project_id: str) -> List[Dict[str, Any]]:
         """Get all episodes for a project, sorted by number"""
         try:
-            results = self._episodes_collection.get(
+            assert self._episodes_collection is not None
+            results: Dict[str, Any] = self._episodes_collection.get(
                 where={"project_id": project_id}, include=["documents", "metadatas"]
             )
 
-            episodes = []
+            episodes: List[Dict[str, Any]] = []
             if results["metadatas"]:
-                for i, metadata in enumerate(results["metadatas"]):
-                    episode = {
+                metadatas: List[Dict[str, Any]] = results["metadatas"]
+                for i, metadata in enumerate(metadatas):
+                    episode: Dict[str, Any] = {
                         "episode_id": results["ids"][i],
                         "project_id": metadata["project_id"],
                         "number": metadata["number"],
@@ -217,18 +236,19 @@ class EpisodeChromaStore:
             logger.error(f"Failed to get episodes for project {project_id}: {e!s}")
             raise ChromaStoreError(f"Failed to get episodes: {e!s}")
 
-    def get_episode(self, episode_id: str) -> dict[str, Any] | None:
+    def get_episode(self, episode_id: str) -> Optional[Dict[str, Any]]:
         """Get a single episode by ID"""
         try:
-            results = self._episodes_collection.get(
+            assert self._episodes_collection is not None
+            results: Dict[str, Any] = self._episodes_collection.get(
                 ids=[episode_id], include=["documents", "metadatas"]
             )
 
             if not results["metadatas"]:
                 return None
 
-            metadata = results["metadatas"][0]
-            return {
+            metadata: Dict[str, Any] = results["metadatas"][0]
+            result: Dict[str, Any] = {
                 "episode_id": episode_id,
                 "project_id": metadata["project_id"],
                 "number": metadata["number"],
@@ -240,6 +260,7 @@ class EpisodeChromaStore:
                 "created_at": metadata["created_at"],
                 "prompt_snapshot": metadata.get("prompt_snapshot", ""),
             }
+            return result
 
         except Exception as e:
             logger.error(f"Failed to get episode {episode_id}: {e!s}")
@@ -248,14 +269,15 @@ class EpisodeChromaStore:
     def update_episode(
         self,
         episode_id: str,
-        script_markdown: str | None = None,
-        tokens: int | None = None,
-        prompt_snapshot: str | None = None,
+        script_markdown: Optional[str] = None,
+        tokens: Optional[int] = None,
+        prompt_snapshot: Optional[str] = None,
     ) -> bool:
         """Update episode content"""
         try:
             # Get current metadata
-            current = self._episodes_collection.get(
+            assert self._episodes_collection is not None
+            current: Dict[str, Any] = self._episodes_collection.get(
                 ids=[episode_id], include=["documents", "metadatas"]
             )
 
@@ -263,7 +285,7 @@ class EpisodeChromaStore:
                 return False
 
             # Prepare updates
-            metadata = current["metadatas"][0].copy()
+            metadata: Dict[str, Any] = current["metadatas"][0].copy()
             metadata["updated_at"] = datetime.now(timezone.utc).isoformat()
 
             if tokens is not None:
@@ -271,13 +293,14 @@ class EpisodeChromaStore:
             if prompt_snapshot is not None:
                 metadata["prompt_snapshot"] = prompt_snapshot
 
-            document = (
+            document: str = (
                 script_markdown
                 if script_markdown is not None
                 else current["documents"][0]
             )
 
             # Update in ChromaDB
+            assert self._episodes_collection is not None
             self._episodes_collection.update(
                 ids=[episode_id], documents=[document], metadatas=[metadata]
             )
@@ -293,13 +316,14 @@ class EpisodeChromaStore:
         """Delete an episode"""
         try:
             # Get episode info before deletion for project count update
-            episode = self.get_episode(episode_id)
+            episode: Optional[Dict[str, Any]] = self.get_episode(episode_id)
             if not episode:
                 return False
 
-            project_id = episode["project_id"]
+            project_id: str = episode["project_id"]
 
             # Delete from ChromaDB
+            assert self._episodes_collection is not None
             self._episodes_collection.delete(ids=[episode_id])
 
             # Update project episode count
@@ -315,35 +339,41 @@ class EpisodeChromaStore:
     def _get_project_name(self, project_id: str) -> str:
         """Get project name from Projects collection"""
         try:
-            results = self._projects_collection.get(
+            assert self._projects_collection is not None
+            results: Dict[str, Any] = self._projects_collection.get(
                 ids=[project_id], include=["metadatas"]
             )
 
-            if results["metadatas"]:
-                return results["metadatas"][0].get("name", f"Project {project_id[:8]}")
+            metadatas: List[Dict[str, Any]] = results["metadatas"]
+            if metadatas:
+                name: str = metadatas[0].get("name", f"Project {project_id[:8]}")
+                return name
             else:
                 return f"Project {project_id[:8]}"
 
         except Exception:
             return f"Project {project_id[:8]}"
 
-    def _update_project_episode_count(self, project_id: str):
+    def _update_project_episode_count(self, project_id: str) -> None:
         """Update episode count for a project"""
         try:
             # Count episodes for this project
-            episodes = self._episodes_collection.get(
+            assert self._episodes_collection is not None
+            episodes: Dict[str, Any] = self._episodes_collection.get(
                 where={"project_id": project_id}, include=["metadatas"]
             )
-            episode_count = len(episodes["metadatas"]) if episodes["metadatas"] else 0
+            episode_count: int = len(episodes["metadatas"]) if episodes["metadatas"] else 0
 
             # Check if project exists in Projects collection
-            existing = self._projects_collection.get(
+            assert self._projects_collection is not None
+            existing: Dict[str, Any] = self._projects_collection.get(
                 ids=[project_id], include=["metadatas"]
             )
 
-            if existing["metadatas"]:
+            existing_metadatas: List[Dict[str, Any]] = existing["metadatas"]
+            if existing_metadatas:
                 # Update existing project
-                metadata = existing["metadatas"][0].copy()
+                metadata: Dict[str, Any] = existing_metadatas[0].copy()
                 metadata["episode_count"] = episode_count
                 metadata["updated_at"] = datetime.now(timezone.utc).isoformat()
 
@@ -374,13 +404,15 @@ class EpisodeChromaStore:
         """Register a project in the Projects collection"""
         try:
             # Check if project already exists
-            existing = self._projects_collection.get(
+            assert self._projects_collection is not None
+            existing: Dict[str, Any] = self._projects_collection.get(
                 ids=[project_id], include=["metadatas"]
             )
 
-            if existing["metadatas"]:
+            existing_metadatas: List[Dict[str, Any]] = existing["metadatas"]
+            if existing_metadatas:
                 # Update existing project name
-                metadata = existing["metadatas"][0].copy()
+                metadata: Dict[str, Any] = existing_metadatas[0].copy()
                 metadata["name"] = project_name
                 metadata["updated_at"] = datetime.now(timezone.utc).isoformat()
 
@@ -407,11 +439,13 @@ class EpisodeChromaStore:
             logger.error(f"Failed to register project {project_id}: {e!s}")
             raise ChromaStoreError(f"Failed to register project: {e!s}")
 
-    def get_collection_stats(self) -> dict[str, Any]:
+    def get_collection_stats(self) -> Dict[str, Any]:
         """Get collection statistics"""
         try:
-            episodes_count = self._episodes_collection.count()
-            projects_count = self._projects_collection.count()
+            assert self._episodes_collection is not None
+            assert self._projects_collection is not None
+            episodes_count: int = self._episodes_collection.count()
+            projects_count: int = self._projects_collection.count()
 
             return {
                 "episodes_count": episodes_count,

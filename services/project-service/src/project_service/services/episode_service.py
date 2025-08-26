@@ -3,37 +3,30 @@ Episode Business Logic Service
 """
 
 import uuid
+from typing import Any
 
 from sqlalchemy.orm import Session
 
-try:
-    # Prefer Core
-    from ai_script_core import (
-        BaseServiceException,
-        EpisodeCreateDTO,
-        EpisodeDTO,
-        EpisodeUpdateDTO,
-    )
-except Exception:  # fallback
-    from pydantic import BaseModel
+# Use fallback DTOs - Core integration disabled for type stability
+from pydantic import BaseModel
 
-    class EpisodeDTO(BaseModel):
-        id: str
-        title: str
-        project_id: str
-        order: int
-        status: str | None = None
-        description: str | None = None
+class EpisodeDTO(BaseModel):
+    id: str
+    title: str
+    project_id: str
+    order: int
+    status: str | None = None
+    description: str | None = None
 
-    class EpisodeCreateDTO(BaseModel):
-        title: str
-        description: str | None = None
+class EpisodeCreateDTO(BaseModel):
+    title: str
+    description: str | None = None
 
-    class EpisodeUpdateDTO(BaseModel):
-        title: str | None = None
-        description: str | None = None
+class EpisodeUpdateDTO(BaseModel):
+    title: str | None = None
+    description: str | None = None
 
-    class BaseServiceException(Exception): ...
+class BaseServiceException(Exception): ...
 
 
 from ..database.transaction import ConcurrencyError, atomic_transaction
@@ -45,6 +38,14 @@ from ..monitoring.episode_metrics import (
 from ..repositories.episode import EpisodeRepository
 from ..repositories.project import ProjectRepository
 
+# Setup logging
+try:
+    from ai_script_core import get_service_logger
+    logger = get_service_logger("project-service.episode-service")
+except ImportError:
+    import logging
+    logger = logging.getLogger(__name__)  # type: ignore[assignment]
+
 
 class NotFoundError(BaseServiceException):
     def __init__(
@@ -53,20 +54,20 @@ class NotFoundError(BaseServiceException):
         resource_id: str | None = None,
         message: str | None = None,
     ):
-        msg = message or (
+        self.message = message or (
             f"{entity} not found" + (f": {resource_id}" if resource_id else "")
         )
-        super().__init__(msg)
+        super().__init__(self.message)
 
 
 class ValidationError(BaseServiceException):
     def __init__(self, field: str | None = None, message: str = "Validation error"):
-        msg = f"{field}: {message}" if field else message
-        super().__init__(msg)
+        self.message = f"{field}: {message}" if field else message
+        super().__init__(self.message)
 
 
 # Temporary utility function
-def generate_id(prefix=None):
+def generate_id(prefix: str | None = None) -> str:
     base_id = str(uuid.uuid4())
     return f"{prefix}_{base_id}" if prefix else base_id
 
@@ -81,7 +82,7 @@ class EpisodeService:
 
     def create_episode(
         self, project_id: str, title: str, description: str | None = None
-    ) -> dict:
+    ) -> dict[str, Any]:
         """에피소드 생성 - 원자적 카운터 방식으로 번호 자동 할당"""
         # 프로젝트 존재 확인
         if not self.project_repository.exists(project_id):
@@ -141,7 +142,7 @@ class EpisodeService:
                         # 비동기적으로 무결성 검사 실행
                         import threading
 
-                        def check_integrity():
+                        def check_integrity() -> None:
                             try:
                                 integrity_result = (
                                     integrity_checker.check_project_integrity(
@@ -211,7 +212,7 @@ class EpisodeService:
 
             raise ValidationError(message=f"Failed to create episode: {e!s}")
 
-    def get_episode(self, episode_id: str) -> dict:
+    def get_episode(self, episode_id: str) -> dict[str, Any]:
         """에피소드 조회"""
         episode = self.repository.get(episode_id)
         if not episode:
@@ -221,7 +222,7 @@ class EpisodeService:
 
     def get_episodes_by_project(
         self, project_id: str, published_only: bool = False
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         """프로젝트별 에피소드 목록 조회"""
         if published_only:
             episodes = self.repository.get_published_episodes(project_id)
@@ -230,7 +231,7 @@ class EpisodeService:
 
         return [episode.to_dict() for episode in episodes]
 
-    def update_episode(self, episode_id: str, update_data: dict) -> dict:
+    def update_episode(self, episode_id: str, update_data: dict[str, Any]) -> dict[str, Any]:
         """에피소드 수정"""
         # 에피소드 존재 확인
         if not self.repository.exists(episode_id):
@@ -252,7 +253,7 @@ class EpisodeService:
 
         return self.repository.delete(episode_id)
 
-    def publish_episode(self, episode_id: str) -> dict:
+    def publish_episode(self, episode_id: str) -> dict[str, Any]:
         """에피소드 공개"""
         episode = self.repository.publish_episode(episode_id)
         if not episode:
@@ -260,7 +261,7 @@ class EpisodeService:
 
         return episode.to_dict()
 
-    def unpublish_episode(self, episode_id: str) -> dict:
+    def unpublish_episode(self, episode_id: str) -> dict[str, Any]:
         """에피소드 비공개"""
         episode = self.repository.unpublish_episode(episode_id)
         if not episode:
@@ -268,7 +269,7 @@ class EpisodeService:
 
         return episode.to_dict()
 
-    def reorder_episodes(self, project_id: str, episode_orders: list[dict]) -> bool:
+    def reorder_episodes(self, project_id: str, episode_orders: list[dict[str, Any]]) -> bool:
         """에피소드 순서 재정렬"""
         # 프로젝트 존재 확인
         if not self.project_repository.exists(project_id):

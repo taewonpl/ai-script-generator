@@ -18,7 +18,7 @@ try:
 except ImportError:
     import logging
 
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__)  # type: ignore[assignment]
 
 
 class EpisodeMetricType(str, Enum):
@@ -44,7 +44,7 @@ class EpisodeMetric:
     timestamp: datetime | None = None
     labels: dict[str, str] | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.timestamp is None:
             self.timestamp = datetime.utcnow()
         if self.labels is None:
@@ -72,7 +72,7 @@ class EpisodeMetricsCollector:
         self.db = db
         self.metrics_buffer: list[EpisodeMetric] = []
 
-    def record_metric(self, metric: EpisodeMetric):
+    def record_metric(self, metric: EpisodeMetric) -> None:
         """Record a single metric"""
         self.metrics_buffer.append(metric)
         logger.debug(f"Recorded metric: {metric.metric_type} = {metric.value}")
@@ -83,7 +83,7 @@ class EpisodeMetricsCollector:
         project_id: str,
         episode_id: str,
         success: bool = True,
-    ):
+    ) -> None:
         """Record episode creation duration"""
         self.record_metric(
             EpisodeMetric(
@@ -117,7 +117,7 @@ class EpisodeMetricsCollector:
 
     def record_concurrency_conflict(
         self, project_id: str, episode_id: str | None = None
-    ):
+    ) -> None:
         """Record a concurrency conflict event"""
         self.record_metric(
             EpisodeMetric(
@@ -128,7 +128,7 @@ class EpisodeMetricsCollector:
             )
         )
 
-    def record_retry_attempt(self, project_id: str, episode_id: str | None = None):
+    def record_retry_attempt(self, project_id: str, episode_id: str | None = None) -> None:
         """Record a retry attempt"""
         self.record_metric(
             EpisodeMetric(
@@ -139,7 +139,7 @@ class EpisodeMetricsCollector:
             )
         )
 
-    def record_gaps_detected(self, project_id: str, gap_count: int):
+    def record_gaps_detected(self, project_id: str, gap_count: int) -> None:
         """Record episode number gaps detected"""
         self.record_metric(
             EpisodeMetric(
@@ -149,7 +149,7 @@ class EpisodeMetricsCollector:
             )
         )
 
-    def record_duplicates_detected(self, project_id: str, duplicate_count: int):
+    def record_duplicates_detected(self, project_id: str, duplicate_count: int) -> None:
         """Record episode number duplicates detected"""
         self.record_metric(
             EpisodeMetric(
@@ -185,8 +185,8 @@ class EpisodeIntegrityChecker:
             """
             )
 
-            result = self.db.execute(query, {"project_id": project_id})
-            episodes = result.fetchall()
+            db_result = self.db.execute(query, {"project_id": project_id})
+            episodes = db_result.fetchall()
 
             if not episodes:
                 return IntegrityCheckResult(
@@ -319,7 +319,7 @@ class EpisodeIntegrityChecker:
 class EpisodePerformanceTracker:
     """Tracks episode creation performance metrics"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.active_operations: dict[str, float] = {}
 
     def start_operation(self, operation_id: str) -> str:
@@ -347,14 +347,14 @@ class EpisodePerformanceTracker:
 
         # Record metrics
         collector = EpisodeMetricsCollector(db)
-        collector.record_creation_duration(duration, project_id, episode_id, success)
+        collector.record_creation_duration(duration, project_id, episode_id or "unknown", success)
 
         if retry_count > 0:
             for _ in range(retry_count):
-                collector.record_retry_attempt(project_id, episode_id)
+                collector.record_retry_attempt(project_id, episode_id or "unknown")
 
         if had_conflict:
-            collector.record_concurrency_conflict(project_id, episode_id)
+            collector.record_concurrency_conflict(project_id, episode_id or "unknown")
 
         # Flush metrics (in a real implementation, this would send to monitoring system)
         metrics = collector.flush_metrics()

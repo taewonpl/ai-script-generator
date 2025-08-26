@@ -3,6 +3,7 @@ Startup initialization for retry queue system
 """
 
 from contextlib import asynccontextmanager
+from typing import AsyncGenerator, Any
 
 from ..services.retry_queue import start_retry_worker, stop_retry_worker
 from ..services.save_processors import register_save_processors
@@ -17,7 +18,7 @@ except ImportError:
     logger = logging.getLogger(__name__)
 
 
-async def initialize_retry_system():
+async def initialize_retry_system() -> None:
     """Initialize the retry queue system"""
     try:
         # Register processors
@@ -34,7 +35,7 @@ async def initialize_retry_system():
         raise
 
 
-async def shutdown_retry_system():
+async def shutdown_retry_system() -> None:
     """Shutdown the retry queue system"""
     try:
         await stop_retry_worker()
@@ -45,7 +46,7 @@ async def shutdown_retry_system():
 
 
 @asynccontextmanager
-async def retry_system_lifespan():
+async def retry_system_lifespan() -> AsyncGenerator[None, None]:
     """Lifespan context manager for retry system"""
     try:
         await initialize_retry_system()
@@ -55,11 +56,11 @@ async def retry_system_lifespan():
 
 
 # For FastAPI lifespan integration
-async def startup_event():
+async def startup_event() -> None:
     """FastAPI startup event handler"""
     await initialize_retry_system()
 
 
-async def shutdown_event():
+async def shutdown_event() -> None:
     """FastAPI shutdown event handler"""
     await shutdown_retry_system()

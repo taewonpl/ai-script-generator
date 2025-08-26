@@ -24,19 +24,19 @@ except (ImportError, RuntimeError):
     logger = logging.getLogger(__name__)
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -100,11 +100,11 @@ class PerformanceAPI:
     - Performance analytics
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.router = APIRouter(prefix="/api/performance", tags=["performance"])
         self._setup_routes()
 
-    def _setup_routes(self):
+    def _setup_routes(self) -> None:
         """Setup API routes"""
 
         # Status and monitoring
@@ -278,7 +278,7 @@ class PerformanceAPI:
                 status_code=500, detail=f"Resource usage retrieval failed: {e!s}"
             )
 
-    async def get_system_load(self):
+    async def get_system_load(self) -> dict[str, Any]:
         """Get current system load"""
 
         try:
@@ -437,7 +437,7 @@ class PerformanceAPI:
 
         return await cache_manager.optimize_cache()
 
-    async def get_async_status(self):
+    async def get_async_status(self) -> dict[str, Any]:
         """Get async task system status"""
 
         try:
@@ -463,7 +463,7 @@ class PerformanceAPI:
             logger.error(f"Async status retrieval failed: {e}")
             return {"error": f"Async status retrieval failed: {e!s}"}
 
-    async def get_running_tasks(self):
+    async def get_running_tasks(self) -> dict[str, Any]:
         """Get currently running tasks"""
 
         try:
@@ -501,7 +501,7 @@ class PerformanceAPI:
             logger.error(f"Running tasks retrieval failed: {e}")
             return {"error": f"Running tasks retrieval failed: {e!s}"}
 
-    async def get_task_pools(self):
+    async def get_task_pools(self) -> dict[str, Any]:
         """Get task pool information"""
 
         try:
@@ -525,7 +525,7 @@ class PerformanceAPI:
             logger.error(f"Task pools retrieval failed: {e}")
             return {"error": f"Task pools retrieval failed: {e!s}"}
 
-    async def get_memory_details(self):
+    async def get_memory_details(self) -> dict[str, Any]:
         """Get detailed memory information"""
 
         try:
@@ -548,7 +548,7 @@ class PerformanceAPI:
             logger.error(f"Memory details retrieval failed: {e}")
             return {"error": f"Memory details retrieval failed: {e!s}"}
 
-    async def get_connection_status(self):
+    async def get_connection_status(self) -> dict[str, Any]:
         """Get connection pool status"""
 
         try:
@@ -571,7 +571,7 @@ class PerformanceAPI:
             logger.error(f"Connection status retrieval failed: {e}")
             return {"error": f"Connection status retrieval failed: {e!s}"}
 
-    async def trigger_cleanup(self):
+    async def trigger_cleanup(self) -> dict[str, Any]:
         """Trigger manual resource cleanup"""
 
         try:
@@ -615,7 +615,7 @@ class PerformanceAPI:
 
         return cleanup_results
 
-    async def get_performance_analytics(self):
+    async def get_performance_analytics(self) -> dict[str, Any]:
         """Get performance analytics and insights"""
 
         try:
@@ -666,7 +666,7 @@ class PerformanceAPI:
             logger.error(f"Performance analytics retrieval failed: {e}")
             return {"error": f"Performance analytics retrieval failed: {e!s}"}
 
-    async def identify_bottlenecks(self):
+    async def identify_bottlenecks(self) -> dict[str, Any]:
         """Identify performance bottlenecks"""
 
         try:
@@ -764,7 +764,7 @@ class PerformanceAPI:
             logger.error(f"Bottleneck identification failed: {e}")
             return {"error": f"Bottleneck identification failed: {e!s}"}
 
-    async def get_optimization_recommendations(self):
+    async def get_optimization_recommendations(self) -> dict[str, Any]:
         """Get optimization recommendations"""
 
         try:
@@ -840,7 +840,7 @@ class PerformanceAPI:
 
         return opportunities
 
-    async def get_performance_config(self):
+    async def get_performance_config(self) -> dict[str, Any]:
         """Get current performance configuration"""
 
         try:
@@ -862,7 +862,7 @@ class PerformanceAPI:
             logger.error(f"Performance config retrieval failed: {e}")
             return {"error": f"Performance config retrieval failed: {e!s}"}
 
-    async def get_performance_targets(self):
+    async def get_performance_targets(self) -> dict[str, Any]:
         """Get performance targets and current status"""
 
         try:

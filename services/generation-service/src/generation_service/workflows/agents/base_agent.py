@@ -5,7 +5,7 @@ Base class for specialized AI agents
 from abc import ABC, abstractmethod
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional, Dict, Union
 
 # Import Core Module components
 try:
@@ -23,19 +23,19 @@ except (ImportError, RuntimeError):
     logger = logging.getLogger(__name__)
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -111,9 +111,9 @@ class BaseSpecialAgent(ABC):
         agent_name: str,
         capabilities: list[AgentCapability],
         priority: AgentPriority = AgentPriority.MEDIUM,
-        provider_factory=None,
-        config: dict[str, Any] | None = None,
-    ):
+        provider_factory: Optional[Any] = None,
+        config: Optional[Dict[str, Any]] = None,
+    ) -> None:
         self.agent_name = agent_name
         self.capabilities = capabilities
         self.priority = priority
@@ -234,7 +234,7 @@ class BaseSpecialAgent(ABC):
             # Don't fail the entire workflow - continue with original content
             return error_state
 
-    async def _initialize_provider(self):
+    async def _initialize_provider(self) -> None:
         """Initialize AI provider for the agent"""
 
         try:
@@ -247,7 +247,7 @@ class BaseSpecialAgent(ABC):
         except Exception as e:
             logger.error(f"Failed to initialize provider for {self.agent_name}: {e}")
 
-    def _validate_input_state(self, state: GenerationState):
+    def _validate_input_state(self, state: GenerationState) -> None:
         """Validate input state has required content"""
 
         # Check for required content
@@ -293,8 +293,8 @@ class BaseSpecialAgent(ABC):
     def _update_state_with_enhancement(
         self,
         state: GenerationState,
-        enhancement_result: dict[str, Any],
-        analysis: dict[str, Any],
+        enhancement_result: Dict[str, Any],
+        analysis: Dict[str, Any],
     ) -> GenerationState:
         """Update state with enhancement results"""
 
@@ -351,8 +351,8 @@ class BaseSpecialAgent(ABC):
         return enhanced_state
 
     def _update_execution_metrics(
-        self, execution_time: float, enhancement_result: dict[str, Any]
-    ):
+        self, execution_time: float, enhancement_result: Dict[str, Any]
+    ) -> None:
         """Update agent execution metrics"""
 
         self.execution_count += 1
@@ -397,7 +397,7 @@ Please provide the enhanced version of the script.
 
     async def execute_ai_enhancement(
         self, prompt: str, max_tokens: int = 3000
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         """Execute AI enhancement using the provider"""
 
         if not self.provider:

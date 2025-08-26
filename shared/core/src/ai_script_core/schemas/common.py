@@ -6,7 +6,7 @@ Common Response Schemas for AI Script Generator v3.0
 
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional, Dict
 
 from pydantic import Field
 
@@ -102,23 +102,23 @@ class ErrorResponseDTO(BaseSchema):
     error: bool = Field(True, description="에러 여부")
     error_code: ErrorCode = Field(..., description="에러 코드")
     message: str = Field(..., description="에러 메시지")
-    details: dict[str, Any] | None = Field(None, description="에러 상세 정보")
+    details: Optional[Dict[str, Any]] = Field(None, description="에러 상세 정보")
     timestamp: datetime = Field(
         default_factory=datetime.now, description="에러 발생 시간"
     )
 
     # 디버깅 정보 (개발 환경에서만 포함)
-    trace_id: str | None = Field(None, description="추적 ID")
-    request_id: str | None = Field(None, description="요청 ID")
+    trace_id: Optional[str] = Field(None, description="추적 ID")
+    request_id: Optional[str] = Field(None, description="요청 ID")
 
     @classmethod
     def create(
         cls,
         error_code: ErrorCode,
         message: str,
-        details: dict[str, Any] | None = None,
-        trace_id: str | None = None,
-        request_id: str | None = None,
+        details: Optional[Dict[str, Any]] = None,
+        trace_id: Optional[str] = None,
+        request_id: Optional[str] = None,
     ) -> "ErrorResponseDTO":
         """에러 응답 생성"""
         return cls(
@@ -151,22 +151,22 @@ class ServiceStatusDTO(BaseSchema):
     uptime_seconds: int = Field(..., description="가동 시간(초)")
 
     # 성능 지표
-    cpu_usage_percent: float | None = Field(None, description="CPU 사용률")
-    memory_usage_percent: float | None = Field(None, description="메모리 사용률")
-    disk_usage_percent: float | None = Field(None, description="디스크 사용률")
+    cpu_usage_percent: Optional[float] = Field(None, description="CPU 사용률")
+    memory_usage_percent: Optional[float] = Field(None, description="메모리 사용률")
+    disk_usage_percent: Optional[float] = Field(None, description="디스크 사용률")
 
     # 연결 상태
     database_connected: bool = Field(..., description="데이터베이스 연결 상태")
-    external_services: dict[str, bool] = Field(
+    external_services: Dict[str, bool] = Field(
         default_factory=dict, description="외부 서비스 연결 상태"
     )
 
     # 처리 통계
-    requests_per_minute: int | None = Field(None, description="분당 요청 수")
-    average_response_time_ms: float | None = Field(
+    requests_per_minute: Optional[int] = Field(None, description="분당 요청 수")
+    average_response_time_ms: Optional[float] = Field(
         None, description="평균 응답 시간(밀리초)"
     )
-    error_rate_percent: float | None = Field(None, description="에러율")
+    error_rate_percent: Optional[float] = Field(None, description="에러율")
 
     # 추가 정보
     environment: str = Field(default="production", description="실행 환경")
@@ -176,7 +176,7 @@ class ServiceStatusDTO(BaseSchema):
     )
 
     # 상세 정보 (디버깅용)
-    details: dict[str, Any] = Field(default_factory=dict, description="상세 상태 정보")
+    details: Dict[str, Any] = Field(default_factory=dict, description="상세 상태 정보")
 
 
 class CommonResponseDTO(BaseResponseSchema[Any]):

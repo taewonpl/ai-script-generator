@@ -31,19 +31,19 @@ except (ImportError, RuntimeError):
     logger = logging.getLogger(__name__)
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -87,7 +87,7 @@ class DocumentAddRequest:
     project_id: str | None = None
     document_type: str = "general"
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if CORE_AVAILABLE and not hasattr(self, "request_id"):
             self.request_id = generate_uuid()
 
@@ -106,7 +106,7 @@ class RAGSearchRequest:
     include_metadata: bool = True
     document_type_filter: str | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if CORE_AVAILABLE and not hasattr(self, "request_id"):
             self.request_id = generate_uuid()
 
@@ -123,15 +123,18 @@ class RAGResponse:
     total_time: float
     request_id: str | None = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if CORE_AVAILABLE and self.request_id is None:
             self.request_id = generate_uuid()
 
 
 class RAGServiceError(Exception):
     """Base exception for RAG service operations"""
-
-    pass
+    
+    def __init__(self, message: str, operation: str = "rag_operation", **kwargs: Any):
+        super().__init__(message)
+        self.operation = operation
+        self.kwargs = kwargs
 
 
 if CORE_AVAILABLE:

@@ -6,7 +6,7 @@ import logging
 import os
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 
 class Environment(str, Enum):
@@ -20,8 +20,8 @@ class Environment(str, Enum):
 class EnvironmentManager:
     """Manages environment-specific configuration loading and validation"""
 
-    def __init__(self):
-        self.logger = logging.getLogger(__name__)
+    def __init__(self) -> None:
+        self.logger = logging.getLogger(__name__)  # type: ignore[assignment]
         self.current_env = self._detect_environment()
         self.config_dir = Path(__file__).parent.parent.parent
 
@@ -51,7 +51,7 @@ class EnvironmentManager:
         # Default to development
         return Environment.DEVELOPMENT
 
-    def load_environment_file(self) -> dict[str, str]:
+    def load_environment_file(self) -> Dict[str, str]:
         """Load environment-specific configuration file"""
 
         env_files = [
@@ -78,7 +78,7 @@ class EnvironmentManager:
         self.logger.info(f"Environment detected: {self.current_env.value}")
         return loaded_vars
 
-    def _parse_env_file(self, file_path: Path) -> dict[str, str]:
+    def _parse_env_file(self, file_path: Path) -> Dict[str, str]:
         """Parse environment file and return key-value pairs"""
 
         env_vars = {}
@@ -115,10 +115,10 @@ class EnvironmentManager:
 
         return env_vars
 
-    def validate_data_paths(self) -> dict[str, Any]:
+    def validate_data_paths(self) -> Dict[str, Any]:
         """Validate and ensure data paths are properly configured"""
 
-        validation_results = {
+        validation_results: Dict[str, Any] = {
             "valid": True,
             "errors": [],
             "warnings": [],
@@ -178,7 +178,7 @@ class EnvironmentManager:
 
         return validation_results
 
-    def get_environment_info(self) -> dict[str, Any]:
+    def get_environment_info(self) -> Dict[str, Any]:
         """Get comprehensive environment information"""
 
         return {
@@ -199,7 +199,7 @@ class EnvironmentManager:
             },
         }
 
-    def validate_critical_settings(self) -> dict[str, Any]:
+    def validate_critical_settings(self) -> Dict[str, Any]:
         """Validate critical settings for the current environment"""
 
         validation_results = {"valid": True, "errors": [], "warnings": []}
@@ -252,12 +252,12 @@ def get_environment_manager() -> EnvironmentManager:
     return env_manager
 
 
-def load_environment() -> dict[str, str]:
+def load_environment() -> Dict[str, str]:
     """Load environment configuration (convenience function)"""
     return env_manager.load_environment_file()
 
 
-def validate_environment() -> dict[str, Any]:
+def validate_environment() -> Dict[str, Any]:
     """Validate environment configuration (convenience function)"""
     path_validation = env_manager.validate_data_paths()
     settings_validation = env_manager.validate_critical_settings()

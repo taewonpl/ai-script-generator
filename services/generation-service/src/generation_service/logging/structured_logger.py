@@ -12,7 +12,7 @@ from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional, Dict, List, Union
 
 # Import Core Module components
 try:
@@ -27,22 +27,22 @@ except (ImportError, RuntimeError):
     CORE_AVAILABLE = False
     import logging
 
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__)  # type: ignore[assignment]
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -140,7 +140,7 @@ class StructuredLogger:
     - Debug mode with enhanced details
     """
 
-    def __init__(self, config: dict[str, Any] | None = None):
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         self.config = config or {}
 
         # Logger configuration
@@ -172,11 +172,11 @@ class StructuredLogger:
         self._setup_loggers()
 
         # Log buffer for async processing
-        self._log_queue: asyncio.Queue = asyncio.Queue()
-        self._log_processor_task: asyncio.Task | None = None
+        self._log_queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue()
+        self._log_processor_task: asyncio.Task[None] | None = None
         self._logging_enabled = False
 
-    def _setup_loggers(self):
+    def _setup_loggers(self) -> None:
         """Setup underlying loggers"""
 
         # Create structured logger
@@ -201,11 +201,11 @@ class StructuredLogger:
         # Prevent duplicate logs
         self.logger.propagate = False
 
-    def _get_json_formatter(self):
+    def _get_json_formatter(self) -> logging.Formatter:
         """Get JSON formatter for structured logging"""
 
         class JSONFormatter(logging.Formatter):
-            def format(self, record):
+            def format(self, record: logging.LogRecord) -> str:
                 # Extract structured data if available
                 log_data = {
                     "timestamp": datetime.fromtimestamp(record.created).isoformat(),
@@ -226,7 +226,7 @@ class StructuredLogger:
 
         return JSONFormatter()
 
-    async def start_logging(self):
+    async def start_logging(self) -> None:
         """Start async log processing"""
 
         if self._logging_enabled:
@@ -235,9 +235,9 @@ class StructuredLogger:
         self._logging_enabled = True
         self._log_processor_task = asyncio.create_task(self._log_processor())
 
-        base_logger.info("StructuredLogger started")
+        logger.info("StructuredLogger started")
 
-    async def stop_logging(self):
+    async def stop_logging(self) -> None:
         """Stop async log processing"""
 
         self._logging_enabled = False
@@ -249,9 +249,9 @@ class StructuredLogger:
             except asyncio.CancelledError:
                 pass
 
-        base_logger.info("StructuredLogger stopped")
+        logger.info("StructuredLogger stopped")
 
-    async def _log_processor(self):
+    async def _log_processor(self) -> None:
         """Background processor for log entries"""
 
         while self._logging_enabled:
@@ -266,9 +266,9 @@ class StructuredLogger:
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                base_logger.error(f"Log processor error: {e}")
+                logger.error(f"Log processor error: {e}")
 
-    async def _process_log_entry(self, entry: LogEntry):
+    async def _process_log_entry(self, entry: LogEntry) -> None:
         """Process individual log entry"""
 
         # Store in memory
@@ -286,7 +286,7 @@ class StructuredLogger:
                 else:
                     handler(entry)
             except Exception as e:
-                base_logger.error(f"Log handler failed: {e}")
+                logger.error(f"Log handler failed: {e}")
 
         # Log to underlying logger
         log_data = entry.to_dict()
@@ -294,41 +294,41 @@ class StructuredLogger:
         log_level = getattr(self.logger, entry.level.value)
         log_level(entry.message, extra={"extra_data": log_data})
 
-    def set_context(self, context: LogContext):
+    def set_context(self, context: LogContext) -> None:
         """Set current logging context"""
         self._current_context = context
 
-    def update_context(self, **kwargs):
+    def update_context(self, **kwargs: Any) -> None:
         """Update current context with new values"""
         for key, value in kwargs.items():
             if hasattr(self._current_context, key):
                 setattr(self._current_context, key, value)
 
-    def clear_context(self):
+    def clear_context(self) -> None:
         """Clear current logging context"""
         self._current_context = LogContext()
 
-    def debug(self, message: str, **kwargs):
+    def debug(self, message: str, **kwargs: Any) -> None:
         """Log debug message"""
         self._log(LogLevel.DEBUG, message, **kwargs)
 
-    def info(self, message: str, **kwargs):
+    def info(self, message: str, **kwargs: Any) -> None:
         """Log info message"""
         self._log(LogLevel.INFO, message, **kwargs)
 
-    def warning(self, message: str, **kwargs):
+    def warning(self, message: str, **kwargs: Any) -> None:
         """Log warning message"""
         self._log(LogLevel.WARNING, message, **kwargs)
 
-    def error(self, message: str, **kwargs):
+    def error(self, message: str, **kwargs: Any) -> None:
         """Log error message"""
         self._log(LogLevel.ERROR, message, **kwargs)
 
-    def critical(self, message: str, **kwargs):
+    def critical(self, message: str, **kwargs: Any) -> None:
         """Log critical message"""
         self._log(LogLevel.CRITICAL, message, **kwargs)
 
-    def _log(self, level: LogLevel, message: str, **kwargs):
+    def _log(self, level: LogLevel, message: str, **kwargs: Any) -> None:
         """Internal logging method"""
 
         # Skip if level too low
@@ -421,7 +421,7 @@ class StructuredLogger:
 
         return duration
 
-    def log_workflow_start(self, workflow_id: str, workflow_type: str = None):
+    def log_workflow_start(self, workflow_id: str, workflow_type: Optional[str] = None) -> None:
         """Log workflow start"""
 
         self.update_context(workflow_id=workflow_id)
@@ -433,8 +433,8 @@ class StructuredLogger:
         )
 
     def log_workflow_end(
-        self, workflow_id: str, success: bool = True, error: str = None
-    ):
+        self, workflow_id: str, success: bool = True, error: Optional[str] = None
+    ) -> None:
         """Log workflow completion"""
 
         if success:
@@ -456,9 +456,9 @@ class StructuredLogger:
         node_id: str,
         node_type: str,
         success: bool = True,
-        duration: float = None,
-        error: str = None,
-    ):
+        duration: Optional[float] = None,
+        error: Optional[str] = None,
+    ) -> None:
         """Log workflow node execution"""
 
         self.update_context(node_id=node_id)
@@ -484,11 +484,11 @@ class StructuredLogger:
         self,
         provider: str,
         model: str,
-        tokens_used: int = None,
+        tokens_used: Optional[int] = None,
         success: bool = True,
-        duration: float = None,
-        error: str = None,
-    ):
+        duration: Optional[float] = None,
+        error: Optional[str] = None,
+    ) -> None:
         """Log AI API call"""
 
         log_data = {
@@ -513,8 +513,8 @@ class StructuredLogger:
             self.error(f"AI API call failed: {provider}/{model}", **log_data)
 
     def log_cache_operation(
-        self, operation: str, cache_key: str, hit: bool = None, duration: float = None
-    ):
+        self, operation: str, cache_key: str, hit: Optional[bool] = None, duration: Optional[float] = None
+    ) -> None:
         """Log cache operation"""
 
         log_data = {
@@ -531,13 +531,13 @@ class StructuredLogger:
 
         self.debug(f"Cache {operation}: {cache_key}", **log_data)
 
-    def add_log_handler(self, handler: Callable[[LogEntry], None]):
+    def add_log_handler(self, handler: Callable[[LogEntry], None]) -> None:
         """Add custom log handler"""
         self._log_handlers.append(handler)
 
     def get_recent_logs(
-        self, count: int = 100, level: LogLevel = None
-    ) -> list[LogEntry]:
+        self, count: int = 100, level: Optional[LogLevel] = None
+    ) -> List[LogEntry]:
         """Get recent log entries"""
 
         logs = self._log_entries
@@ -547,7 +547,7 @@ class StructuredLogger:
 
         return logs[-count:]
 
-    def search_logs(self, query: str, max_results: int = 100) -> list[LogEntry]:
+    def search_logs(self, query: str, max_results: int = 100) -> List[LogEntry]:
         """Search log entries by message content"""
 
         results = []
@@ -565,7 +565,7 @@ class StructuredLogger:
 
         return results
 
-    def get_logs_by_context(self, **context_filters) -> list[LogEntry]:
+    def get_logs_by_context(self, **context_filters: Any) -> List[LogEntry]:
         """Get logs filtered by context"""
 
         results = []
@@ -584,7 +584,7 @@ class StructuredLogger:
 
         return results
 
-    def get_performance_summary(self) -> dict[str, Any]:
+    def get_performance_summary(self) -> Dict[str, Any]:
         """Get performance metrics from logs"""
 
         operations = {}
@@ -628,7 +628,7 @@ class StructuredLogger:
 
         return operations
 
-    def export_logs(self, file_path: str, format_type: str = "json"):
+    def export_logs(self, file_path: str, format_type: str = "json") -> None:
         """Export logs to file"""
 
         if format_type == "json":
@@ -661,17 +661,17 @@ class StructuredLogger:
 class LogContextManager:
     """Context manager for temporary logging context"""
 
-    def __init__(self, logger: StructuredLogger, context: LogContext):
+    def __init__(self, logger: StructuredLogger, context: LogContext) -> None:
         self.logger = logger
         self.new_context = context
         self.previous_context = None
 
-    def __enter__(self):
+    def __enter__(self) -> "LogContextManager":
         self.previous_context = self.logger._current_context
         self.logger.set_context(self.new_context)
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Optional[type], exc_val: Optional[Exception], exc_tb: Optional[Any]) -> None:
         self.logger.set_context(self.previous_context)
 
 
@@ -679,16 +679,16 @@ class LogContextManager:
 class PerformanceTimer:
     """Context manager for automatic performance timing"""
 
-    def __init__(self, logger: StructuredLogger, operation_name: str):
+    def __init__(self, logger: StructuredLogger, operation_name: str) -> None:
         self.logger = logger
         self.operation_name = operation_name
         self.timer_id = None
 
-    def __enter__(self):
+    def __enter__(self) -> "PerformanceTimer":
         self.timer_id = self.logger.start_timer(self.operation_name)
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Optional[type], exc_val: Optional[Exception], exc_tb: Optional[Any]) -> None:
         if self.timer_id:
             self.logger.end_timer(self.timer_id, self.operation_name)
 
@@ -697,14 +697,14 @@ class PerformanceTimer:
 _structured_logger: StructuredLogger | None = None
 
 
-def get_structured_logger() -> StructuredLogger | None:
+def get_structured_logger() -> Optional[StructuredLogger]:
     """Get global structured logger instance"""
     global _structured_logger
     return _structured_logger
 
 
 def initialize_structured_logger(
-    config: dict[str, Any] | None = None,
+    config: Optional[Dict[str, Any]] = None,
 ) -> StructuredLogger:
     """Initialize global structured logger"""
     global _structured_logger
@@ -713,7 +713,7 @@ def initialize_structured_logger(
     return _structured_logger
 
 
-async def shutdown_structured_logger():
+async def shutdown_structured_logger() -> None:
     """Shutdown global structured logger"""
     global _structured_logger
 

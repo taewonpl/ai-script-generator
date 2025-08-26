@@ -1,12 +1,17 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy import Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base, TimestampMixin
+
+if TYPE_CHECKING:
+    from .episode import Episode
+    from .metadata import ProjectMetadata
 
 
 class ProjectType(str, Enum):
@@ -46,10 +51,10 @@ class Project(Base, TimestampMixin):
     progress_percentage: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     next_episode_number: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
 
-    episodes: Mapped[list[Episode]] = relationship(
+    episodes: Mapped["list[Episode]"] = relationship(
         "Episode", back_populates="project", cascade="all, delete-orphan"
     )
-    project_metadata: Mapped[list[ProjectMetadata]] = relationship(
+    project_metadata: Mapped["list[ProjectMetadata]"] = relationship(
         "ProjectMetadata", back_populates="project", cascade="all, delete-orphan"
     )
 

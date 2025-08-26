@@ -93,21 +93,11 @@ class ProviderFactory:
                     ) from import_err
 
             elif provider_type == ProviderType.HUGGINGFACE:
-                # Lazy import for HuggingFace provider
-                try:
-                    from .huggingface_provider import HuggingFaceProvider
-
-                    return HuggingFaceProvider(provider_config)
-                except ImportError as import_err:
-                    error_msg = f"HuggingFace provider unavailable: {import_err}"
-                    self._import_failures[ProviderType.HUGGINGFACE] = error_msg
-                    logger.error(f"Failed to import HuggingFace provider: {import_err}")
-                    logger.info(
-                        "This usually means HuggingFace dependencies are not installed"
-                    )
-                    raise ImportError(
-                        f"{error_msg}. Install HuggingFace dependencies with: pip install transformers torch"
-                    ) from import_err
+                # HuggingFace provider not implemented yet
+                error_msg = "HuggingFace provider not implemented"
+                self._import_failures[ProviderType.HUGGINGFACE] = error_msg
+                logger.error("HuggingFace provider not implemented")
+                raise ImportError(f"{error_msg}. Use OpenAI, Anthropic, or Local providers instead")
 
             else:
                 raise ValueError(f"Unknown provider type: {provider_type}")

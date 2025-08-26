@@ -8,7 +8,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
+from typing import Any, Dict, List, Optional, Union, Tuple
 
 # Import Core Module components
 try:
@@ -26,19 +26,19 @@ except (ImportError, RuntimeError):
     logger = logging.getLogger(__name__)
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -147,7 +147,7 @@ class HealthMonitor:
 
         # Monitoring state
         self._monitoring_enabled = False
-        self._monitoring_tasks: dict[str, asyncio.Task] = {}
+        self._monitoring_tasks: Dict[str, asyncio.Task[None]] = {}
         self._health_history: list[dict[str, Any]] = []
 
         # Configuration
@@ -174,7 +174,7 @@ class HealthMonitor:
         # Initialize default health checks
         self._initialize_default_checks()
 
-    def _initialize_default_checks(self):
+    def _initialize_default_checks(self) -> None:
         """Initialize default system health checks"""
 
         # Cache health check
@@ -217,12 +217,12 @@ class HealthMonitor:
         self,
         name: str,
         component_type: ComponentType,
-        check_function: Callable,
+        check_function: Callable[[], Any],
         timeout: float = 30.0,
         interval: float = 60.0,
         critical: bool = False,
         metadata: dict[str, Any] | None = None,
-    ):
+    ) -> None:
         """Register a new health check"""
 
         health_check = HealthCheck(
@@ -248,7 +248,7 @@ class HealthMonitor:
 
         logger.info(f"Registered health check: {name} ({component_type.value})")
 
-    def add_dependency(self, component: str, depends_on: str):
+    def add_dependency(self, component: str, depends_on: str) -> None:
         """Add dependency relationship between components"""
 
         if component not in self._dependencies:
@@ -257,7 +257,7 @@ class HealthMonitor:
         self._dependencies[component].add(depends_on)
         logger.debug(f"Added dependency: {component} depends on {depends_on}")
 
-    async def start_monitoring(self):
+    async def start_monitoring(self) -> None:
         """Start health monitoring"""
 
         if self._monitoring_enabled:
@@ -279,7 +279,7 @@ class HealthMonitor:
             },
         )
 
-    async def stop_monitoring(self):
+    async def stop_monitoring(self) -> None:
         """Stop health monitoring"""
 
         self._monitoring_enabled = False
@@ -299,7 +299,7 @@ class HealthMonitor:
         self._monitoring_tasks.clear()
         logger.info("HealthMonitor stopped")
 
-    async def _monitor_component(self, health_check: HealthCheck):
+    async def _monitor_component(self, health_check: HealthCheck) -> None:
         """Monitor a specific component"""
 
         while self._monitoring_enabled:
@@ -392,7 +392,7 @@ class HealthMonitor:
                 error=str(e),
             )
 
-    async def _update_component_health(self, component_name: str, result: HealthResult):
+    async def _update_component_health(self, component_name: str, result: HealthResult) -> None:
         """Update component health status"""
 
         component = self._component_health[component_name]
@@ -428,7 +428,7 @@ class HealthMonitor:
         # Update overall health history
         await self._update_health_history()
 
-    async def _update_health_history(self):
+    async def _update_health_history(self) -> None:
         """Update overall system health history"""
 
         overall_status = self.get_overall_health_status()
@@ -509,8 +509,8 @@ class HealthMonitor:
         overall_status = self.get_overall_health_status()
 
         # Calculate component statistics
-        status_counts = {}
-        total_response_time = 0
+        status_counts: Dict[str, int] = {}
+        total_response_time = 0.0
         healthy_components = 0
 
         for comp in self._component_health.values():
@@ -551,7 +551,7 @@ class HealthMonitor:
 
     def add_status_change_callback(
         self, callback: Callable[[str, HealthStatus, HealthStatus], None]
-    ):
+    ) -> None:
         """Add callback for health status changes"""
         self._status_change_callbacks.append(callback)
 
@@ -734,7 +734,7 @@ def initialize_health_monitor(config: dict[str, Any] | None = None) -> HealthMon
     return _health_monitor
 
 
-async def shutdown_health_monitor():
+async def shutdown_health_monitor() -> None:
     """Shutdown global health monitor"""
     global _health_monitor
 

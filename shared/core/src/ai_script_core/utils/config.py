@@ -6,7 +6,7 @@ pydantic BaseSettings를 사용한 고급 설정 관리 시스템을 제공합�
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, Dict, List, Union
 
 # Import pydantic v2 components
 from pydantic import Field, field_validator, model_validator
@@ -33,7 +33,7 @@ class BaseServiceSettings(BaseSettings):
         """설정 검증 로직"""
         pass
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         """설정을 딕셔너리로 변환"""
         return self.model_dump()
 
@@ -71,7 +71,7 @@ class DatabaseSettings(BaseServiceSettings):
     echo_pool: bool = Field(default=False, description="커넥션 풀 로깅 여부")
 
     # 성능 최적화
-    isolation_level: str | None = Field(default=None, description="트랜잭션 격리 수준")
+    isolation_level: Optional[str] = Field(default=None, description="트랜쟭션 격리 수준")
 
     @field_validator("database_url")
     @classmethod
@@ -104,7 +104,7 @@ class APISettings(BaseServiceSettings):
     workers: int = Field(default=1, ge=1, le=32, description="워커 프로세스 수")
 
     # 보안 설정
-    allowed_hosts: list[str] = Field(default=["*"], description="허용된 호스트 목록")
+    allowed_hosts: List[str] = Field(default=["*"], description="허용된 호스트 목록")
 
     # 요청 제한
     max_request_size: int = Field(
@@ -120,7 +120,7 @@ class APISettings(BaseServiceSettings):
 
     @field_validator("allowed_hosts", mode="before")
     @classmethod
-    def parse_allowed_hosts(cls, v: str | list[str]) -> list[str]:
+    def parse_allowed_hosts(cls, v: Union[str, List[str]]) -> List[str]:
         if isinstance(v, str):
             return [host.strip() for host in v.split(",") if host.strip()]
         return v
@@ -145,7 +145,7 @@ class LoggingSettings(BaseServiceSettings):
 
     # 파일 로그 설정
     file_enabled: bool = Field(default=False, description="파일 로깅 활성화")
-    file_path: str | None = Field(
+    file_path: Optional[str] = Field(
         default="logs/ai_script_generator.log",
         description="로그 파일 경로",
     )
@@ -205,12 +205,12 @@ class SecuritySettings(BaseServiceSettings):
     )
 
     # CORS 설정
-    cors_origins: list[str] = Field(default=["*"], description="CORS 허용 오리진")
-    cors_methods: list[str] = Field(
+    cors_origins: List[str] = Field(default=["*"], description="CORS 허용 오리진")
+    cors_methods: List[str] = Field(
         default=["GET", "POST", "PUT", "DELETE", "PATCH"],
         description="CORS 허용 메서드",
     )
-    cors_headers: list[str] = Field(default=["*"], description="CORS 허용 헤더")
+    cors_headers: List[str] = Field(default=["*"], description="CORS 허용 헤더")
     cors_credentials: bool = Field(default=True, description="CORS 자격 증명 허용")
 
     # 레이트 리미팅
@@ -228,7 +228,7 @@ class SecuritySettings(BaseServiceSettings):
 
     @field_validator("cors_origins", "cors_methods", "cors_headers", mode="before")
     @classmethod
-    def parse_cors_lists(cls, v: str | list[str]) -> list[str]:
+    def parse_cors_lists(cls, v: Union[str, List[str]]) -> List[str]:
         if isinstance(v, str):
             return [item.strip() for item in v.split(",") if item.strip()]
         return v
@@ -257,11 +257,11 @@ class AIServiceSettings(BaseServiceSettings):
     """AI 서비스 설정"""
 
     # OpenAI 설정
-    openai_api_key: str | None = Field(default=None, description="OpenAI API 키")
-    openai_organization: str | None = Field(default=None, description="OpenAI 조직 ID")
+    openai_api_key: Optional[str] = Field(default=None, description="OpenAI API 키")
+    openai_organization: Optional[str] = Field(default=None, description="OpenAI 조직 ID")
 
     # Claude 설정 (Anthropic)
-    anthropic_api_key: str | None = Field(default=None, description="Anthropic API 키")
+    anthropic_api_key: Optional[str] = Field(default=None, description="Anthropic API 키")
 
     # 기본 모델 설정
     default_model: str = Field(default="gpt-3.5-turbo", description="기본 AI 모델")
@@ -308,7 +308,7 @@ class Settings(BaseServiceSettings):
 
     @model_validator(mode="before")
     @classmethod
-    def validate_environment_consistency(cls, values: dict[str, Any]) -> dict[str, Any]:
+    def validate_environment_consistency(cls, values: Dict[str, Any]) -> Dict[str, Any]:
         """환경별 설정 일관성 검증"""
         env = values.get("environment", "development")
 
@@ -340,7 +340,7 @@ def get_settings() -> Settings:
 
 
 def create_service_settings(
-    service_name: str, additional_settings: dict[str, Any] | None = None
+    service_name: str, additional_settings: Optional[Dict[str, Any]] = None
 ) -> BaseServiceSettings:
     """서비스별 설정 생성"""
 
@@ -359,7 +359,7 @@ def create_service_settings(
     return ServiceSpecificSettings()
 
 
-def validate_all_settings() -> dict[str, bool]:
+def validate_all_settings() -> Dict[str, bool]:
     """모든 설정 검증 결과 반환"""
     validation_results = {}
 

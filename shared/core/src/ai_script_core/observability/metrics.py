@@ -7,7 +7,7 @@ from collections import defaultdict, deque
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from threading import Lock
-from typing import Any
+from typing import Any, Optional, Dict, List, Union
 
 from pydantic import BaseModel, Field
 
@@ -24,8 +24,8 @@ class RequestMetrics(BaseModel):
     timestamp: datetime = Field(
         default_factory=datetime.utcnow, description="Request timestamp"
     )
-    trace_id: str | None = Field(default=None, description="Request trace ID")
-    user_id: str | None = Field(default=None, description="User ID if available")
+    trace_id: Optional[str] = Field(default=None, description="Request trace ID")
+    user_id: Optional[str] = Field(default=None, description="User ID if available")
 
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat() + "Z"}
@@ -43,7 +43,7 @@ class ErrorMetrics(BaseModel):
     timestamp: datetime = Field(
         default_factory=datetime.utcnow, description="Error timestamp"
     )
-    trace_id: str | None = Field(default=None, description="Request trace ID")
+    trace_id: Optional[str] = Field(default=None, description="Request trace ID")
 
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat() + "Z"}
@@ -173,8 +173,8 @@ class MetricsCollector:
         method: str,
         status_code: int,
         response_time_ms: int,
-        trace_context: TraceContext | None = None,
-        user_id: str | None = None,
+        trace_context: Optional[TraceContext] = None,
+        user_id: Optional[str] = None,
     ) -> None:
         """Track an API request."""
         operation = f"{method} {endpoint}"
@@ -208,7 +208,7 @@ class MetricsCollector:
         error_code: str,
         error_type: str,
         message: str,
-        trace_context: TraceContext | None = None,
+        trace_context: Optional[TraceContext] = None,
     ) -> None:
         """Track an API error."""
         error_metric = ErrorMetrics(
@@ -233,7 +233,7 @@ class MetricsCollector:
         operation: str,
         duration_ms: int,
         success: bool = True,
-        metadata: dict[str, Any] | None = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Track performance of a custom operation."""
         with self._lock:
@@ -244,7 +244,7 @@ class MetricsCollector:
 
             self.operations[operation].record_request(duration_ms, success)
 
-    def get_operation_metrics(self, operation: str) -> PerformanceMetrics | None:
+    def get_operation_metrics(self, operation: str) -> Optional[PerformanceMetrics]:
         """Get performance metrics for a specific operation."""
         with self._lock:
             if operation not in self.operations:
@@ -259,7 +259,7 @@ class MetricsCollector:
                 stats.to_performance_metrics() for stats in self.operations.values()
             ]
 
-    def get_recent_requests(self, limit: int | None = None) -> list[RequestMetrics]:
+    def get_recent_requests(self, limit: Optional[int] = None) -> List[RequestMetrics]:
         """Get recent request metrics."""
         with self._lock:
             requests = list(self.recent_requests)
@@ -267,7 +267,7 @@ class MetricsCollector:
                 requests = requests[-limit:]
             return requests
 
-    def get_recent_errors(self, limit: int | None = None) -> list[ErrorMetrics]:
+    def get_recent_errors(self, limit: Optional[int] = None) -> List[ErrorMetrics]:
         """Get recent error metrics."""
         with self._lock:
             errors = list(self.recent_errors)
@@ -380,10 +380,10 @@ class MetricsCollector:
 
 
 # Global metrics collector instance
-_global_collector: MetricsCollector | None = None
+_global_collector: Optional[MetricsCollector] = None
 
 
-def get_metrics_collector(service_name: str | None = None) -> MetricsCollector:
+def get_metrics_collector(service_name: Optional[str] = None) -> MetricsCollector:
     """Get global metrics collector instance."""
     global _global_collector
     if _global_collector is None:
@@ -400,8 +400,8 @@ def track_request(
     method: str,
     status_code: int,
     response_time_ms: int,
-    trace_context: TraceContext | None = None,
-    user_id: str | None = None,
+    trace_context: Optional[TraceContext] = None,
+    user_id: Optional[str] = None,
 ) -> None:
     """Track request using global collector."""
     collector = get_metrics_collector()
@@ -415,7 +415,7 @@ def track_error(
     error_code: str,
     error_type: str,
     message: str,
-    trace_context: TraceContext | None = None,
+    trace_context: Optional[TraceContext] = None,
 ) -> None:
     """Track error using global collector."""
     collector = get_metrics_collector()
@@ -426,7 +426,7 @@ def track_performance(
     operation: str,
     duration_ms: int,
     success: bool = True,
-    metadata: dict[str, Any] | None = None,
+    metadata: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Track performance using global collector."""
     collector = get_metrics_collector()
@@ -486,7 +486,7 @@ class PerformanceTracker:
     def __init__(self, operation: str, auto_track: bool = True):
         self.operation = operation
         self.auto_track = auto_track
-        self.start_time: float | None = None
+        self.start_time: Optional[float] = None
         self.success = True
 
     def __enter__(self) -> "PerformanceTracker":

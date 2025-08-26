@@ -12,7 +12,7 @@ from sqlalchemy.orm import declarative_base
 
 from generation_service.config_loader import settings
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)  # type: ignore[assignment]
 
 # Database engine
 engine = None

@@ -2,7 +2,7 @@
 Flaw Generator Agent - Adds realistic character flaws and weaknesses for depth
 """
 
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 # Import Core Module components
 try:
@@ -20,19 +20,19 @@ except (ImportError, RuntimeError):
     logger = logging.getLogger(__name__)
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -116,7 +116,7 @@ class FlawGeneratorAgent(BaseSpecialAgent):
         },
     }
 
-    def __init__(self, provider_factory=None, config: dict[str, Any] = None):
+    def __init__(self, provider_factory: Optional[Any] = None, config: Optional[Dict[str, Any]] = None) -> None:
         default_config = {
             "max_flaws_per_character": 2,  # Maximum flaws to add per character
             "flaw_intensity": 0.6,  # How prominent flaws should be (0.1-1.0)
@@ -137,7 +137,7 @@ class FlawGeneratorAgent(BaseSpecialAgent):
             config=default_config,
         )
 
-    async def analyze_content(self, state: GenerationState) -> dict[str, Any]:
+    async def analyze_content(self, state: GenerationState) -> Dict[str, Any]:
         """
         Analyze characters to determine if flaws would enhance the story
         """
@@ -181,7 +181,7 @@ class FlawGeneratorAgent(BaseSpecialAgent):
 
         return analysis
 
-    async def enhance_content(self, state: GenerationState) -> dict[str, Any]:
+    async def enhance_content(self, state: GenerationState) -> Dict[str, Any]:
         """
         Add character flaws to enhance depth and relatability
         """
@@ -243,7 +243,7 @@ class FlawGeneratorAgent(BaseSpecialAgent):
 
         return max(total_improvement, 0.0)
 
-    def _extract_characters(self, content: str) -> dict[str, dict[str, Any]]:
+    def _extract_characters(self, content: str) -> Dict[str, Dict[str, Any]]:
         """Extract characters and their information from the script"""
 
         characters = {}
@@ -323,7 +323,7 @@ class FlawGeneratorAgent(BaseSpecialAgent):
 
         return analysis
 
-    def _calculate_character_depth(self, char_data: dict[str, Any]) -> float:
+    def _calculate_character_depth(self, char_data: Dict[str, Any]) -> float:
         """Calculate character depth score (0.0 = flat, 1.0 = very deep)"""
 
         dialogue_lines = char_data.get("dialogue_lines", [])
@@ -342,7 +342,7 @@ class FlawGeneratorAgent(BaseSpecialAgent):
 
         return min(sum(depth_factors), 1.0)
 
-    def _identify_existing_flaws(self, character_lines: list[str]) -> list[str]:
+    def _identify_existing_flaws(self, character_lines: List[str]) -> List[str]:
         """Identify existing character flaws in the text"""
 
         existing_flaws = []
@@ -363,7 +363,7 @@ class FlawGeneratorAgent(BaseSpecialAgent):
 
         return existing_flaws
 
-    def _extract_personality_traits(self, dialogue_lines: list[str]) -> list[str]:
+    def _extract_personality_traits(self, dialogue_lines: List[str]) -> List[str]:
         """Extract personality traits from dialogue"""
 
         traits = []
@@ -387,7 +387,7 @@ class FlawGeneratorAgent(BaseSpecialAgent):
         traits.sort(key=lambda x: x[1], reverse=True)
         return [trait[0] for trait in traits[:3]]
 
-    def _extract_behavioral_patterns(self, action_lines: list[str]) -> list[str]:
+    def _extract_behavioral_patterns(self, action_lines: List[str]) -> List[str]:
         """Extract behavioral patterns from action descriptions"""
 
         patterns = []
@@ -406,7 +406,7 @@ class FlawGeneratorAgent(BaseSpecialAgent):
 
         return patterns
 
-    def _assess_flaw_potential(self, char_data: dict[str, Any]) -> float:
+    def _assess_flaw_potential(self, char_data: Dict[str, Any]) -> float:
         """Assess how much potential there is for adding flaws"""
 
         factors = [
@@ -420,7 +420,7 @@ class FlawGeneratorAgent(BaseSpecialAgent):
 
         return min(sum(factors), 1.0)
 
-    def _recommend_flaw_categories(self, char_data: dict[str, Any]) -> list[str]:
+    def _recommend_flaw_categories(self, char_data: Dict[str, Any]) -> List[str]:
         """Recommend flaw categories for a character"""
 
         personality_traits = char_data.get("personality_traits", [])
@@ -444,7 +444,7 @@ class FlawGeneratorAgent(BaseSpecialAgent):
 
         return recommendations
 
-    def _determine_enhancement_need(self, character_analysis: dict[str, Any]) -> bool:
+    def _determine_enhancement_need(self, character_analysis: Dict[str, Any]) -> bool:
         """Determine if character flaw enhancement is needed"""
 
         # Check if any characters are too perfect or flat
@@ -458,7 +458,7 @@ class FlawGeneratorAgent(BaseSpecialAgent):
 
         return False
 
-    def _calculate_average_depth(self, character_analysis: dict[str, Any]) -> float:
+    def _calculate_average_depth(self, character_analysis: Dict[str, Any]) -> float:
         """Calculate average character depth across all characters"""
 
         if not character_analysis:
@@ -653,7 +653,7 @@ Please provide the enhanced script with realistic character flaws seamlessly int
 
         return results
 
-    def _count_added_flaws(self, original_chars: dict, enhanced_chars: dict) -> int:
+    def _count_added_flaws(self, original_chars: Dict[str, Any], enhanced_chars: Dict[str, Any]) -> int:
         """Count how many new flaws were added"""
 
         original_flaw_count = 0
@@ -687,7 +687,7 @@ Please provide the enhanced script with realistic character flaws seamlessly int
 
         return max(0.0, enhanced_depth - original_depth)
 
-    def _calculate_overall_character_depth(self, characters: dict) -> float:
+    def _calculate_overall_character_depth(self, characters: Dict[str, Any]) -> float:
         """Calculate overall character depth for all characters"""
 
         if not characters:
@@ -736,7 +736,7 @@ Please provide the enhanced script with realistic character flaws seamlessly int
 
         return preservation_ratio >= 0.8
 
-    def _calculate_dialogue_variety(self, dialogue_lines: list[str]) -> float:
+    def _calculate_dialogue_variety(self, dialogue_lines: List[str]) -> float:
         """Calculate variety in dialogue patterns"""
 
         if not dialogue_lines:
@@ -752,7 +752,7 @@ Please provide the enhanced script with realistic character flaws seamlessly int
 
         return min(variety, 1.0)
 
-    def _calculate_emotional_range(self, character_lines: list[str]) -> float:
+    def _calculate_emotional_range(self, character_lines: List[str]) -> float:
         """Calculate emotional range in character expressions"""
 
         emotions = [
@@ -769,7 +769,7 @@ Please provide the enhanced script with realistic character flaws seamlessly int
         emotion_count = sum(1 for emotion in emotions if emotion in combined_text)
         return min(emotion_count / len(emotions), 1.0)
 
-    def _calculate_complexity_indicators(self, character_lines: list[str]) -> float:
+    def _calculate_complexity_indicators(self, character_lines: List[str]) -> float:
         """Calculate complexity indicators in character content"""
 
         complexity_words = [

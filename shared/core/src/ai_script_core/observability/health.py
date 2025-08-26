@@ -7,7 +7,7 @@ import time
 from collections.abc import Awaitable, Callable
 from datetime import datetime
 from enum import Enum
-from typing import Any, Union
+from typing import Any, Union, Optional, List, Dict
 
 import aiohttp
 import requests
@@ -27,10 +27,10 @@ class DependencyHealth(BaseModel):
 
     name: str = Field(..., description="Dependency name")
     status: HealthStatus = Field(..., description="Health status")
-    response_time: int | None = Field(
+    response_time: Optional[int] = Field(
         default=None, description="Response time in milliseconds"
     )
-    message: str | None = Field(
+    message: Optional[str] = Field(
         default=None, description="Status message or error details"
     )
     last_check: datetime = Field(
@@ -53,7 +53,7 @@ class ServiceHealth(BaseModel):
     dependencies: list[DependencyHealth] = Field(
         default_factory=list, description="Dependency health checks"
     )
-    uptime: int | None = Field(default=None, description="Service uptime in seconds")
+    uptime: Optional[int] = Field(default=None, description="Service uptime in seconds")
     metadata: dict[str, Any] = Field(
         default_factory=dict, description="Additional health metadata"
     )
@@ -81,7 +81,7 @@ class HealthCheckRegistry:
         name: str,
         checker: HealthChecker,
         timeout: float = 5.0,
-        description: str | None = None,
+        description: Optional[str] = None,
     ) -> None:
         """Register a health check function."""
         self.checks[name] = checker
@@ -106,7 +106,7 @@ class HealthCheckManager:
         self,
         service_name: str,
         version: str = "1.0.0",
-        start_time: datetime | None = None,
+        start_time: Optional[datetime] = None,
     ) -> None:
         self.service_name = service_name
         self.version = version
@@ -135,10 +135,10 @@ class HealthCheckManager:
     async def check_dependency_health(
         self,
         name: str,
-        url: str | None = None,
+        url: Optional[str] = None,
         timeout: float = 5.0,
         expected_status: int = 200,
-        custom_checker: HealthChecker | None = None,
+        custom_checker: Optional[HealthChecker] = None,
     ) -> DependencyHealth:
         """Check health of a dependency."""
         start_time = time.time()
@@ -256,7 +256,7 @@ class HealthCheckManager:
     def check_dependency_health_sync(
         self,
         name: str,
-        url: str | None = None,
+        url: Optional[str] = None,
         timeout: float = 5.0,
         expected_status: int = 200,
     ) -> DependencyHealth:
@@ -332,7 +332,7 @@ class HealthCheckManager:
             )
 
     async def get_overall_health(
-        self, dependency_configs: list[dict[str, Any]] | None = None
+        self, dependency_configs: Optional[List[Dict[str, Any]]] = None
     ) -> ServiceHealth:
         """Get overall service health including dependencies."""
         dependencies = []
@@ -376,7 +376,7 @@ class HealthCheckManager:
         )
 
     def get_overall_health_sync(
-        self, dependency_configs: list[dict[str, Any]] | None = None
+        self, dependency_configs: Optional[List[Dict[str, Any]]] = None
     ) -> ServiceHealth:
         """Synchronous version of get_overall_health."""
         dependencies = []
@@ -443,7 +443,7 @@ class HealthCheckManager:
         name: str,
         checker: HealthChecker,
         timeout: float = 5.0,
-        description: str | None = None,
+        description: Optional[str] = None,
     ) -> None:
         """Register a custom health check."""
         self.registry.register(name, checker, timeout, description)
@@ -457,7 +457,7 @@ class HealthCheckManager:
 def create_health_response(
     service_name: str,
     version: str = "1.0.0",
-    dependencies: list[DependencyHealth] | None = None,
+    dependencies: Optional[List[DependencyHealth]] = None,
 ) -> ServiceHealth:
     """Create a health response."""
     deps = dependencies or []

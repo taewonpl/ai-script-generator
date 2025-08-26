@@ -4,7 +4,7 @@ Standardized error handling and response format for all services.
 
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional, Dict, Union
 
 from pydantic import BaseModel, Field
 
@@ -96,10 +96,10 @@ class ErrorDetail(BaseModel):
 
     code: ErrorCode = Field(..., description="Standardized error code")
     message: str = Field(..., description="Human-readable error message")
-    details: dict[str, Any] | None = Field(
+    details: Optional[Dict[str, Any]] = Field(
         default=None, description="Additional error context and debugging information"
     )
-    trace_id: str | None = Field(
+    trace_id: Optional[str] = Field(
         default=None, description="Unique trace ID for request tracking"
     )
     timestamp: datetime = Field(
@@ -121,11 +121,11 @@ class StandardSuccessResponse(BaseModel):
     """Standardized success response format."""
 
     success: bool = Field(default=True, description="Always true for success responses")
-    data: Any | None = Field(default=None, description="Response data payload")
-    message: str | None = Field(default=None, description="Optional success message")
+    data: Optional[Any] = Field(default=None, description="Response data payload")
+    message: Optional[str] = Field(default=None, description="Optional success message")
 
     # Response metadata
-    trace_id: str | None = Field(default=None, description="Request trace ID")
+    trace_id: Optional[str] = Field(default=None, description="Request trace ID")
     timestamp: datetime = Field(
         default_factory=datetime.utcnow, description="Response timestamp"
     )
@@ -137,9 +137,9 @@ class StandardSuccessResponse(BaseModel):
 def create_error_response(
     code: ErrorCode,
     message: str,
-    details: dict[str, Any] | None = None,
-    trace_id: str | None = None,
-    timestamp: datetime | None = None,
+    details: Optional[Dict[str, Any]] = None,
+    trace_id: Optional[str] = None,
+    timestamp: Optional[datetime] = None,
 ) -> StandardErrorResponse:
     """Create a standardized error response."""
 
@@ -156,9 +156,9 @@ def create_error_response(
 
 def create_success_response(
     data: Any = None,
-    message: str | None = None,
-    trace_id: str | None = None,
-    timestamp: datetime | None = None,
+    message: Optional[str] = None,
+    trace_id: Optional[str] = None,
+    timestamp: Optional[datetime] = None,
 ) -> StandardSuccessResponse:
     """Create a standardized success response."""
 
@@ -186,7 +186,7 @@ COMMON_ERROR_MESSAGES = {
 }
 
 
-def get_error_message(code: ErrorCode, custom_message: str | None = None) -> str:
+def get_error_message(code: ErrorCode, custom_message: Optional[str] = None) -> str:
     """Get localized error message for error code."""
     return custom_message or COMMON_ERROR_MESSAGES.get(
         code, "알 수 없는 오류가 발생했습니다."

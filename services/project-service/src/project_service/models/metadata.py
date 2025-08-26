@@ -2,12 +2,17 @@
 Project Metadata SQLAlchemy Model for Project Service
 """
 
-from typing import Any
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import JSON, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .base import Base, TimestampMixin
+
+if TYPE_CHECKING:
+    from .project import Project
 
 
 class ProjectMetadata(Base, TimestampMixin):

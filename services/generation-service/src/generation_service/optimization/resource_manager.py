@@ -31,22 +31,22 @@ except (ImportError, RuntimeError):
     CORE_AVAILABLE = False
     import logging
 
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__)  # type: ignore[assignment]
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -294,7 +294,7 @@ class MemoryMonitor:
         memory_increase = current_mb - self.last_gc_memory
         return memory_increase > self.gc_threshold
 
-    def _trigger_garbage_collection(self):
+    def _trigger_garbage_collection(self) -> None:
         """Trigger garbage collection and update tracking"""
 
         before_mb = self.get_current_memory().get("process_rss_mb", 0)
@@ -374,11 +374,11 @@ class MemoryMonitor:
 
         return {"direction": "stable", "rate_mb_per_minute": 0.0}
 
-    def add_alert_callback(self, callback: Callable[[ResourceAlert], None]):
+    def add_alert_callback(self, callback: Callable[[ResourceAlert], None]) -> None:
         """Add callback for memory alerts"""
         self.alert_callbacks.append(callback)
 
-    def _send_alerts(self, alerts: list[ResourceAlert]):
+    def _send_alerts(self, alerts: list[ResourceAlert]) -> None:
         """Send alerts to registered callbacks"""
 
         for alert in alerts:
@@ -436,7 +436,7 @@ class ResourceManager:
         self.cleanup_interval = self.config.get("cleanup_interval", 300.0)  # 5 minutes
         self.cleanup_task: asyncio.Task | None = None
 
-    async def start_monitoring(self):
+    async def start_monitoring(self) -> None:
         """Start resource monitoring"""
 
         if self.monitoring_enabled:
@@ -456,7 +456,7 @@ class ResourceManager:
             },
         )
 
-    async def stop_monitoring(self):
+    async def stop_monitoring(self) -> None:
         """Stop resource monitoring"""
 
         self.monitoring_enabled = False
@@ -599,7 +599,7 @@ class ResourceManager:
 
         return alerts
 
-    async def _monitoring_worker(self):
+    async def _monitoring_worker(self) -> None:
         """Background worker for resource monitoring"""
 
         while self.monitoring_enabled:
@@ -631,7 +631,7 @@ class ResourceManager:
                 logger.error(f"Monitoring worker error: {e}")
                 await asyncio.sleep(self.monitoring_interval)
 
-    async def _cleanup_worker(self):
+    async def _cleanup_worker(self) -> None:
         """Background worker for resource cleanup"""
 
         while self.monitoring_enabled:
@@ -694,7 +694,7 @@ class ResourceManager:
 
         return optimization_results
 
-    async def _send_alerts(self, alerts: list[ResourceAlert]):
+    async def _send_alerts(self, alerts: list[ResourceAlert]) -> None:
         """Send alerts to registered callbacks"""
 
         for alert in alerts:
@@ -707,7 +707,7 @@ class ResourceManager:
                 except Exception as e:
                     logger.error(f"Alert callback failed: {e}")
 
-    def add_alert_callback(self, callback: Callable[[ResourceAlert], None]):
+    def add_alert_callback(self, callback: Callable[[ResourceAlert], None]) -> None:
         """Add callback for resource alerts"""
         self.alert_callbacks.append(callback)
 
@@ -805,7 +805,7 @@ def initialize_resource_manager(
     return _resource_manager
 
 
-async def shutdown_resource_manager():
+async def shutdown_resource_manager() -> None:
     """Shutdown global resource manager"""
     global _resource_manager
 

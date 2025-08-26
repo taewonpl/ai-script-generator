@@ -8,7 +8,7 @@ import functools
 import logging
 import sys
 from collections.abc import Awaitable, Callable
-from typing import Any, TypeVar
+from typing import Any, TypeVar, Optional, Dict, Union, List
 
 from .base import BaseServiceException, ErrorCategory, ErrorSeverity
 from .service_errors import *
@@ -38,7 +38,7 @@ class ExceptionLogger:
     def log_exception(
         self,
         exception: BaseServiceException,
-        context: dict[str, Any] | None = None,
+        context: Optional[Dict[str, Any]] = None,
         include_traceback: bool = True,
     ) -> None:
         """예외 로그 기록"""
@@ -82,9 +82,9 @@ _exception_logger = ExceptionLogger()
 
 def log_exception(
     exception: BaseServiceException,
-    context: dict[str, Any] | None = None,
+    context: Optional[Dict[str, Any]] = None,
     include_traceback: bool = True,
-    logger: ExceptionLogger | None = None,
+    logger: Optional[ExceptionLogger] = None,
 ) -> None:
     """예외 로그 기록 함수"""
     if logger is None:
@@ -98,7 +98,7 @@ def exception_handler(
     default_exception_type: type[BaseServiceException] = BaseServiceException,
     log_exceptions: bool = True,
     include_traceback: bool = True,
-    context_extractor: Callable[..., dict[str, Any]] | None = None,
+    context_extractor: Optional[Callable[..., Dict[str, Any]]] = None,
     suppress_exceptions: bool = False,
     fallback_return: Any = None,
 ) -> Callable[[F], F]:
@@ -190,7 +190,7 @@ def async_exception_handler(
     default_exception_type: type[BaseServiceException] = BaseServiceException,
     log_exceptions: bool = True,
     include_traceback: bool = True,
-    context_extractor: Callable[..., dict[str, Any]] | None = None,
+    context_extractor: Optional[Callable[..., Dict[str, Any]]] = None,
     suppress_exceptions: bool = False,
     fallback_return: Any = None,
 ) -> Callable[[Callable[..., Awaitable[Any]]], Callable[..., Awaitable[Any]]]:
@@ -265,7 +265,7 @@ def error_response_formatter(
     exception: BaseServiceException,
     include_debug_info: bool = False,
     include_context: bool = False,
-) -> dict[str, Any]:
+) -> Dict[str, Any]:
     """
     예외를 API 응답용 딕셔너리로 포맷
 
@@ -299,7 +299,7 @@ def error_response_formatter(
 
     # 디버그 정보 (개발 환경에서만)
     if include_debug_info:
-        debug_info: dict[str, Any] = {
+        debug_info: Dict[str, Any] = {
             "exception_type": exception.__class__.__name__,
             "internal_message": exception.message,
             "traceback": exception.traceback_str,
@@ -318,10 +318,10 @@ def error_response_formatter(
 
 
 def format_error_for_api(
-    exception: BaseServiceException | Exception,
+    exception: Union[BaseServiceException, Exception],
     include_debug_info: bool = False,
     include_context: bool = False,
-) -> dict[str, Any]:
+) -> Dict[str, Any]:
     """
     일반 예외를 포함하여 API 응답용으로 포맷
     """
@@ -343,10 +343,10 @@ class ExceptionAnalyzer:
     """예외 분석 및 통계 수집기"""
 
     def __init__(self) -> None:
-        self.exception_stats: dict[str, int] = {}
-        self.severity_stats: dict[str, int] = {}
-        self.category_stats: dict[str, int] = {}
-        self.hourly_stats: dict[str, int] = {}
+        self.exception_stats: Dict[str, int] = {}
+        self.severity_stats: Dict[str, int] = {}
+        self.category_stats: Dict[str, int] = {}
+        self.hourly_stats: Dict[str, int] = {}
 
     def record_exception(self, exception: BaseServiceException) -> None:
         """예외 통계 기록"""
@@ -368,7 +368,7 @@ class ExceptionAnalyzer:
         hour_key = exception.timestamp.strftime("%Y-%m-%d_%H")
         self.hourly_stats[hour_key] = self.hourly_stats.get(hour_key, 0) + 1
 
-    def get_statistics(self) -> dict[str, Any]:
+    def get_statistics(self) -> Dict[str, Any]:
         """예외 통계 반환"""
         return {
             "exception_types": dict(
@@ -380,7 +380,7 @@ class ExceptionAnalyzer:
             "total_exceptions": sum(self.exception_stats.values()),
         }
 
-    def get_top_exceptions(self, limit: int = 10) -> list[dict[str, Any]]:
+    def get_top_exceptions(self, limit: int = 10) -> List[Dict[str, Any]]:
         """가장 빈번한 예외 반환"""
         sorted_exceptions = sorted(
             self.exception_stats.items(), key=lambda x: x[1], reverse=True
@@ -401,7 +401,7 @@ def record_exception_stats(exception: BaseServiceException) -> None:
     _exception_analyzer.record_exception(exception)
 
 
-def get_exception_statistics() -> dict[str, Any]:
+def get_exception_statistics() -> Dict[str, Any]:
     """전역 예외 통계 반환"""
     return _exception_analyzer.get_statistics()
 

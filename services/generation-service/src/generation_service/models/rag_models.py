@@ -28,19 +28,19 @@ except (ImportError, RuntimeError):
     logger = logging.getLogger(__name__)
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -208,7 +208,7 @@ if CORE_AVAILABLE:
 
         @field_validator("query")
         @classmethod
-        def validate_query(cls, v):
+        def validate_query(cls, v: Any) -> str:
             if not v or not v.strip():
                 raise ValueError("Query cannot be empty")
             return v.strip()
@@ -315,7 +315,7 @@ if CORE_AVAILABLE:
 
         @field_validator("search_results")
         @classmethod
-        def validate_search_results(cls, v):
+        def validate_search_results(cls, v: Any) -> Any:
             if not v:
                 raise ValueError("Must provide at least one search result")
             return v
@@ -445,7 +445,7 @@ else:
 
         @field_validator("query")
         @classmethod
-        def validate_query(cls, v):
+        def validate_query(cls, v: Any) -> str:
             if not v or not v.strip():
                 raise ValueError("Query cannot be empty")
             return v.strip()
@@ -556,7 +556,7 @@ else:
 
         @field_validator("search_results")
         @classmethod
-        def validate_search_results(cls, v):
+        def validate_search_results(cls, v: Any) -> Any:
             if not v:
                 raise ValueError("Must provide at least one search result")
             return v
@@ -647,7 +647,7 @@ class RAGBulkOperationDTO(BaseModel):
 
     @field_validator("operation_type")
     @classmethod
-    def validate_operation_type(cls, v):
+    def validate_operation_type(cls, v: Any) -> str:
         allowed_operations = ["add", "update", "delete", "reindex", "migrate"]
         if v not in allowed_operations:
             raise ValueError(f"Operation type must be one of: {allowed_operations}")

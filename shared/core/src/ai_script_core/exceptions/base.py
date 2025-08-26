@@ -7,7 +7,7 @@ Base Exception Classes for AI Script Generator v3.0
 import traceback
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional, Dict, Union
 
 
 class ErrorSeverity(str, Enum):
@@ -39,13 +39,13 @@ class BaseServiceException(Exception):
     def __init__(
         self,
         message: str,
-        error_code: str | None = None,
-        details: dict[str, Any] | None = None,
-        cause: Exception | None = None,
+        error_code: Optional[str] = None,
+        details: Optional[Dict[str, Any]] = None,
+        cause: Optional[Exception] = None,
         severity: ErrorSeverity = ErrorSeverity.MEDIUM,
         category: ErrorCategory = ErrorCategory.SYSTEM,
-        user_message: str | None = None,
-        context: dict[str, Any] | None = None,
+        user_message: Optional[str] = None,
+        context: Optional[Dict[str, Any]] = None,
     ):
         self.message = message
         self.error_code = error_code or self.__class__.__name__.upper()
@@ -66,7 +66,7 @@ class BaseServiceException(Exception):
         """사용자에게 보여줄 기본 메시지"""
         return "처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self) -> Dict[str, Any]:
         """예외를 딕셔너리로 변환"""
         result = {
             "error_type": self.__class__.__name__,
@@ -119,9 +119,9 @@ class ValidationException(BaseServiceException):
     def __init__(
         self,
         message: str,
-        field: str | None = None,
+        field: Optional[str] = None,
         value: Any = None,
-        validation_rule: str | None = None,
+        validation_rule: Optional[str] = None,
         **kwargs: Any,
     ) -> None:
         self.field = field
@@ -154,8 +154,8 @@ class NotFoundError(BaseServiceException):
     def __init__(
         self,
         resource_type: str,
-        identifier: str | int | dict[str, Any],
-        message: str | None = None,
+        identifier: Union[str, int, Dict[str, Any]],
+        message: Optional[str] = None,
         **kwargs: Any,
     ) -> None:
         self.resource_type = resource_type
@@ -194,8 +194,8 @@ class ServiceUnavailableError(BaseServiceException):
     def __init__(
         self,
         service_name: str,
-        reason: str | None = None,
-        retry_after: int | None = None,
+        reason: Optional[str] = None,
+        retry_after: Optional[int] = None,
         **kwargs: Any,
     ) -> None:
         self.service_name = service_name
@@ -233,7 +233,7 @@ class AuthenticationError(BaseServiceException):
     def __init__(
         self,
         message: str = "Authentication failed",
-        auth_method: str | None = None,
+        auth_method: Optional[str] = None,
         **kwargs: Any,
     ) -> None:
         self.auth_method = auth_method
@@ -258,8 +258,8 @@ class AuthorizationError(BaseServiceException):
     def __init__(
         self,
         action: str,
-        resource: str | None = None,
-        required_permission: str | None = None,
+        resource: Optional[str] = None,
+        required_permission: Optional[str] = None,
         **kwargs: Any,
     ) -> None:
         self.action = action
@@ -294,7 +294,7 @@ class BusinessLogicError(BaseServiceException):
     """비즈니스 로직 오류 예외"""
 
     def __init__(
-        self, message: str, business_rule: str | None = None, **kwargs: Any
+        self, message: str, business_rule: Optional[str] = None, **kwargs: Any
     ) -> None:
         self.business_rule = business_rule
 
@@ -319,8 +319,8 @@ class ExternalServiceError(BaseServiceException):
         self,
         service_name: str,
         operation: str,
-        status_code: int | None = None,
-        response_body: str | None = None,
+        status_code: Optional[int] = None,
+        response_body: Optional[str] = None,
         **kwargs: Any,
     ) -> None:
         self.service_name = service_name
@@ -360,8 +360,8 @@ class ConfigurationError(BaseServiceException):
     def __init__(
         self,
         config_key: str,
-        message: str | None = None,
-        expected_type: str | None = None,
+        message: Optional[str] = None,
+        expected_type: Optional[str] = None,
         actual_value: Any = None,
         **kwargs: Any,
     ) -> None:

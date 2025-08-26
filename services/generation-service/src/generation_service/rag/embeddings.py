@@ -42,22 +42,45 @@ except (ImportError, RuntimeError):
     CORE_AVAILABLE = False
     import logging
 
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__)  # type: ignore[assignment]
 
-    # Fallback utility functions
-    def utc_now():
+    # Fallback utility functions  
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
+    
+    def calculate_hash(data: str) -> str:
+        """Fallback hash calculation"""
+        import hashlib
+        return hashlib.md5(data.encode()).hexdigest()
+    
+    def safe_json_dumps(data: Any) -> str:
+        """Fallback JSON serialization"""
+        import json
+        return json.dumps(data, default=str)
+    
+    # Fallback exception classes
+    class BaseServiceException(Exception):
+        """Fallback base service exception"""
+        pass
+    
+    class ExternalServiceError(BaseServiceException):
+        """Fallback external service error"""
+        pass
+        
+    class ValidationException(BaseServiceException):
+        """Fallback validation exception"""
+        pass
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -89,7 +112,7 @@ class EmbeddingRequest:
     request_id: str | None = None
     chunk_size: int = 100
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if CORE_AVAILABLE and self.request_id is None:
             self.request_id = generate_uuid()
 
@@ -104,25 +127,28 @@ class EmbeddingResponse:
     request_id: str | None = None
     processing_time: float = 0.0
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if CORE_AVAILABLE and self.request_id is None:
             self.request_id = generate_uuid()
 
 
 class EmbeddingError(Exception):
     """Base exception for embedding operations"""
-
-    pass
+    
+    def __init__(self, message: str, operation: str = "embedding_generation", **kwargs: Any) -> None:
+        super().__init__(message)
+        self.operation = operation
+        self.kwargs = kwargs
 
 
 if CORE_AVAILABLE:
-
-    class EmbeddingError(ExternalServiceError):
+    # Override the fallback EmbeddingError with Core-based version
+    class EmbeddingError(ExternalServiceError):  # type: ignore[misc]
         """Embedding error using Core exception"""
 
         def __init__(
-            self, message: str, operation: str = "embedding_generation", **kwargs
-        ):
+            self, message: str, operation: str = "embedding_generation", **kwargs: Any
+        ) -> None:
             super().__init__(
                 service_name="openai_embeddings",
                 operation=operation,

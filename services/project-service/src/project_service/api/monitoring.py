@@ -3,9 +3,18 @@ Episode numbering system monitoring API endpoints
 """
 
 from datetime import datetime
+from typing import Any, Dict
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import status as http_status
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
+
+class SuccessResponseDTO(BaseModel):
+    success: bool = True
+    message: str = "Success"
+    data: Any = None
+    error: str | None = None
 
 from ..database import get_db
 from ..monitoring.episode_alerting import get_alert_manager
@@ -13,52 +22,43 @@ from ..monitoring.episode_metrics import get_integrity_checker, get_performance_
 from ..monitoring.integrity_jobs import IntegrityAutoFixer, get_integrity_job
 
 try:
-    from ai_script_core import SuccessResponseDTO, get_service_logger
-
+    from ai_script_core import get_service_logger
+    # Use local SuccessResponseDTO to avoid import conflicts
     logger = get_service_logger("project-service.monitoring-api")
     CORE_AVAILABLE = True
 except ImportError:
     import logging
 
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__)  # type: ignore[assignment]
     CORE_AVAILABLE = False
-
-    class SuccessResponseDTO:
-        def __init__(self, success=True, message="Success", data=None):
-            self.success = success
-            self.message = message
-            self.data = data
 
 
 router = APIRouter(prefix="/monitoring/episodes", tags=["Episode Monitoring"])
 
 
 @router.get("/integrity/summary")
-async def get_integrity_summary(db: Session = Depends(get_db)):
+async def get_integrity_summary(db: Session = Depends(get_db)) -> SuccessResponseDTO:
     """Get overall episode numbering integrity summary"""
     try:
         checker = get_integrity_checker(db)
         summary = checker.get_integrity_summary()
 
-        if CORE_AVAILABLE:
-            return SuccessResponseDTO(
-                success=True,
-                message="Integrity summary retrieved successfully",
-                data=summary,
-            )
-        else:
-            return {"success": True, "data": summary}
+        return SuccessResponseDTO(
+            success=True,
+            message="Integrity summary retrieved successfully",
+            data=summary,
+        )
 
     except Exception as e:
         logger.error(f"Failed to get integrity summary: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve integrity summary",
         )
 
 
 @router.get("/integrity/project/{project_id}")
-async def get_project_integrity(project_id: str, db: Session = Depends(get_db)):
+async def get_project_integrity(project_id: str, db: Session = Depends(get_db)) -> SuccessResponseDTO:
     """Get integrity status for a specific project"""
     try:
         checker = get_integrity_checker(db)
@@ -90,19 +90,16 @@ async def get_project_integrity(project_id: str, db: Session = Depends(get_db)):
             "actual_numbers": result.actual_numbers,
         }
 
-        if CORE_AVAILABLE:
-            return SuccessResponseDTO(
-                success=True,
-                message=f"Project integrity check completed for {project_id}",
-                data=integrity_data,
-            )
-        else:
-            return {"success": True, "data": integrity_data}
+        return SuccessResponseDTO(
+            success=True,
+            message=f"Project integrity check completed for {project_id}",
+            data=integrity_data,
+        )
 
     except Exception as e:
         logger.error(f"Failed to check project integrity: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to check integrity for project {project_id}",
         )
 
@@ -111,7 +108,7 @@ async def get_project_integrity(project_id: str, db: Session = Depends(get_db)):
 async def get_performance_stats(
     project_id: str | None = Query(None, description="Filter by project ID"),
     db: Session = Depends(get_db),
-):
+) -> SuccessResponseDTO:
     """Get episode creation performance statistics"""
     try:
         tracker = get_performance_tracker()
@@ -130,29 +127,29 @@ async def get_performance_stats(
 
         # Add project-specific stats if requested
         if project_id:
-            stats["project_id"] = project_id
-            stats["project_operations_today"] = 45  # Placeholder
-            stats["project_success_rate"] = 97.8  # Placeholder
+            # Use separate dict for project metadata to avoid type conflicts
+            project_stats = {
+                "project_operations_today": 45,  # Placeholder
+                "project_success_rate": 97.8,  # Placeholder
+            }
+            stats.update(project_stats)
 
-        if CORE_AVAILABLE:
-            return SuccessResponseDTO(
-                success=True,
-                message="Performance statistics retrieved successfully",
-                data=stats,
-            )
-        else:
-            return {"success": True, "data": stats}
+        return SuccessResponseDTO(
+            success=True,
+            message="Performance statistics retrieved successfully",
+            data=stats,
+        )
 
     except Exception as e:
         logger.error(f"Failed to get performance stats: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve performance statistics",
         )
 
 
 @router.get("/alerts/active")
-async def get_active_alerts(db: Session = Depends(get_db)):
+async def get_active_alerts(db: Session = Depends(get_db)) -> SuccessResponseDTO:
     """Get currently active alerts"""
     try:
         alert_manager = get_alert_manager(db)
@@ -163,19 +160,16 @@ async def get_active_alerts(db: Session = Depends(get_db)):
 
         response_data = {"active_alerts": alerts_data, "summary": summary}
 
-        if CORE_AVAILABLE:
-            return SuccessResponseDTO(
-                success=True,
-                message=f"Retrieved {len(active_alerts)} active alerts",
-                data=response_data,
-            )
-        else:
-            return {"success": True, "data": response_data}
+        return SuccessResponseDTO(
+            success=True,
+            message=f"Retrieved {len(active_alerts)} active alerts",
+            data=response_data,
+        )
 
     except Exception as e:
         logger.error(f"Failed to get active alerts: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve active alerts",
         )
 
@@ -184,52 +178,43 @@ async def get_active_alerts(db: Session = Depends(get_db)):
 async def trigger_alert_checks(
     project_id: str | None = Query(None, description="Check specific project"),
     db: Session = Depends(get_db),
-):
+) -> SuccessResponseDTO:
     """Manually trigger alert checks"""
     try:
         alert_manager = get_alert_manager(db)
         triggered_alerts = alert_manager.run_all_checks(project_id)
 
-        if CORE_AVAILABLE:
-            return SuccessResponseDTO(
-                success=True,
-                message=f"Alert checks completed, {len(triggered_alerts)} alerts triggered",
-                data={
-                    "triggered_alerts": len(triggered_alerts),
-                    "alerts": [alert.to_dict() for alert in triggered_alerts],
-                },
-            )
-        else:
-            return {
-                "success": True,
-                "data": {"triggered_alerts": len(triggered_alerts)},
-            }
+        return SuccessResponseDTO(
+            success=True,
+            message=f"Alert checks completed, {len(triggered_alerts)} alerts triggered",
+            data={
+                "triggered_alerts": len(triggered_alerts),
+                "alerts": [alert.to_dict() for alert in triggered_alerts],
+            },
+        )
 
     except Exception as e:
         logger.error(f"Failed to trigger alert checks: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to trigger alert checks",
         )
 
 
 @router.post("/alerts/{alert_key}/resolve")
-async def resolve_alert(alert_key: str, db: Session = Depends(get_db)):
+async def resolve_alert(alert_key: str, db: Session = Depends(get_db)) -> SuccessResponseDTO:
     """Resolve a specific alert"""
     try:
         alert_manager = get_alert_manager(db)
         resolved = alert_manager.resolve_alert(alert_key)
 
         if resolved:
-            if CORE_AVAILABLE:
-                return SuccessResponseDTO(
-                    success=True, message=f"Alert {alert_key} resolved successfully"
-                )
-            else:
-                return {"success": True, "message": "Alert resolved"}
+            return SuccessResponseDTO(
+                success=True, message=f"Alert {alert_key} resolved successfully"
+            )
         else:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail=f"Alert {alert_key} not found",
             )
 
@@ -238,31 +223,28 @@ async def resolve_alert(alert_key: str, db: Session = Depends(get_db)):
     except Exception as e:
         logger.error(f"Failed to resolve alert: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to resolve alert",
         )
 
 
 @router.get("/jobs/integrity/status")
-async def get_integrity_job_status(db: Session = Depends(get_db)):
+async def get_integrity_job_status(db: Session = Depends(get_db)) -> SuccessResponseDTO:
     """Get status of integrity monitoring job"""
     try:
         job = get_integrity_job(db)
         stats = job.get_stats()
 
-        if CORE_AVAILABLE:
-            return SuccessResponseDTO(
-                success=True,
-                message="Integrity job status retrieved successfully",
-                data=stats,
-            )
-        else:
-            return {"success": True, "data": stats}
+        return SuccessResponseDTO(
+            success=True,
+            message="Integrity job status retrieved successfully",
+            data=stats,
+        )
 
     except Exception as e:
         logger.error(f"Failed to get integrity job status: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve integrity job status",
         )
 
@@ -271,7 +253,7 @@ async def get_integrity_job_status(db: Session = Depends(get_db)):
 async def run_integrity_check(
     deep_check: bool = Query(False, description="Run deep integrity check"),
     db: Session = Depends(get_db),
-):
+) -> SuccessResponseDTO:
     """Manually run integrity check"""
     try:
         job = get_integrity_job(db)
@@ -281,19 +263,16 @@ async def run_integrity_check(
         else:
             result = await job.run_basic_check()
 
-        if CORE_AVAILABLE:
-            return SuccessResponseDTO(
-                success=True,
-                message=f"{'Deep' if deep_check else 'Basic'} integrity check completed",
-                data=result,
-            )
-        else:
-            return {"success": True, "data": result}
+        return SuccessResponseDTO(
+            success=True,
+            message=f"{'Deep' if deep_check else 'Basic'} integrity check completed",
+            data=result,
+        )
 
     except Exception as e:
         logger.error(f"Failed to run integrity check: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to run integrity check",
         )
 
@@ -303,25 +282,22 @@ async def fix_project_gaps(
     project_id: str,
     dry_run: bool = Query(True, description="Perform dry run without making changes"),
     db: Session = Depends(get_db),
-):
+) -> SuccessResponseDTO:
     """Fix episode number gaps for a project (use with caution)"""
     try:
         fixer = IntegrityAutoFixer(db)
         result = await fixer.fix_gaps(project_id, dry_run)
 
-        if CORE_AVAILABLE:
-            return SuccessResponseDTO(
-                success=True,
-                message=f"Gap fixing {'simulation' if dry_run else 'operation'} completed for project {project_id}",
-                data=result,
-            )
-        else:
-            return {"success": True, "data": result}
+        return SuccessResponseDTO(
+            success=True,
+            message=f"Gap fixing {'simulation' if dry_run else 'operation'} completed for project {project_id}",
+            data=result,
+        )
 
     except Exception as e:
         logger.error(f"Failed to fix gaps for project {project_id}: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fix gaps for project {project_id}",
         )
 
@@ -331,7 +307,7 @@ async def export_metrics(
     format: str = Query("json", description="Export format: json, prometheus"),
     project_id: str | None = Query(None, description="Filter by project"),
     db: Session = Depends(get_db),
-):
+) -> SuccessResponseDTO | Dict[str, Any]:
     """Export episode monitoring metrics"""
     try:
         # Collect all metrics
@@ -361,16 +337,13 @@ async def export_metrics(
             return {"format": "prometheus", "data": prometheus_output}
         else:
             # Return JSON format
-            if CORE_AVAILABLE:
-                return SuccessResponseDTO(
-                    success=True, message="Metrics exported successfully", data=metrics
-                )
-            else:
-                return {"success": True, "data": metrics}
+            return SuccessResponseDTO(
+                success=True, message="Metrics exported successfully", data=metrics
+            )
 
     except Exception as e:
         logger.error(f"Failed to export metrics: {e}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to export metrics",
         )

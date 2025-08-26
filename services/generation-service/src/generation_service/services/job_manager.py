@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 class JobManager:
     """Manages generation jobs and SSE events with Redis persistence"""
 
-    def __init__(self, redis_url: str | None = None):
+    def __init__(self, redis_url: str | None = None) -> None:
         self.jobs: dict[str, GenerationJob] = {}
         self.active_connections: dict[str, int] = {}  # jobId -> connection count
         self.event_history: dict[str, list[str]] = {}  # jobId -> [event_id, ...]
@@ -42,7 +42,7 @@ class JobManager:
         # Start background tasks
         self._start_background_tasks()
 
-    def _setup_redis(self, redis_url: str | None):
+    def _setup_redis(self, redis_url: str | None) -> None:
         """Setup Redis connection for distributed job storage"""
         try:
             if redis_url:
@@ -63,7 +63,7 @@ class JobManager:
             )
             self.redis_client = None
 
-    def _persist_job(self, job: GenerationJob):
+    def _persist_job(self, job: GenerationJob) -> None:
         """Persist job to Redis if available"""
         if self.redis_client:
             try:
@@ -100,7 +100,7 @@ class JobManager:
 
         return self.event_history.get(job_id, [])
 
-    def _store_event_id(self, job_id: str, event_id: str):
+    def _store_event_id(self, job_id: str, event_id: str) -> None:
         """Store event ID for Last-Event-ID support"""
         if self.redis_client:
             try:
@@ -119,12 +119,12 @@ class JobManager:
             # Keep last 100 events
             self.event_history[job_id] = self.event_history[job_id][-100:]
 
-    def _start_background_tasks(self):
+    def _start_background_tasks(self) -> None:
         """Start background tasks for heartbeat and cleanup"""
         asyncio.create_task(self._heartbeat_task())
         asyncio.create_task(self._cleanup_task())
 
-    async def _heartbeat_task(self):
+    async def _heartbeat_task(self) -> None:
         """Send periodic heartbeat events to all active connections"""
         while True:
             try:
@@ -147,7 +147,7 @@ class JobManager:
             except Exception as e:
                 logger.error(f"Error in heartbeat task: {e}")
 
-    async def _cleanup_task(self):
+    async def _cleanup_task(self) -> None:
         """Clean up finished jobs periodically"""
         while True:
             try:
@@ -287,7 +287,7 @@ class JobManager:
         logger.info(f"Started streaming job {job_id}")
         return True
 
-    def add_connection(self, job_id: str):
+    def add_connection(self, job_id: str) -> None:
         """Add SSE connection for a job"""
         with self.lock:
             self.active_connections[job_id] = self.active_connections.get(job_id, 0) + 1
@@ -295,7 +295,7 @@ class JobManager:
             f"Added connection for job {job_id}, total: {self.active_connections[job_id]}"
         )
 
-    def remove_connection(self, job_id: str):
+    def remove_connection(self, job_id: str) -> None:
         """Remove SSE connection for a job"""
         with self.lock:
             if job_id in self.active_connections:

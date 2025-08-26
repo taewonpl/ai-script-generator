@@ -13,7 +13,7 @@ from collections.abc import MutableMapping
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, Dict, Union
 
 from .config import LoggingSettings, get_settings
 
@@ -102,7 +102,7 @@ class TextFormatter(logging.Formatter):
 class ContextualLoggerAdapter(logging.LoggerAdapter[logging.Logger]):
     """컨텍스트 정보를 자동으로 추가하는 로거 어댑터"""
 
-    def __init__(self, logger: logging.Logger, extra: dict[str, Any] | None = None):
+    def __init__(self, logger: logging.Logger, extra: Optional[Dict[str, Any]] = None):
         super().__init__(logger, extra or {})
 
     def process(
@@ -131,9 +131,9 @@ class ContextualLoggerAdapter(logging.LoggerAdapter[logging.Logger]):
 class LoggerManager:
     """로거 관리자 클래스"""
 
-    def __init__(self, settings: LoggingSettings | None = None):
+    def __init__(self, settings: Optional[LoggingSettings] = None):
         self.settings = settings or get_settings().logging
-        self._loggers: dict[str, logging.Logger] = {}
+        self._loggers: Dict[str, logging.Logger] = {}
         self._setup_root_logger()
 
     def _setup_root_logger(self) -> None:
@@ -149,7 +149,7 @@ class LoggerManager:
         """콘솔 핸들러 생성"""
         handler = logging.StreamHandler(sys.stdout)
 
-        formatter: StructuredFormatter | TextFormatter
+        formatter: Union[StructuredFormatter, TextFormatter]
         if self.settings.format == "json":
             formatter = StructuredFormatter(
                 service_name=self.settings.service_name,
@@ -164,7 +164,7 @@ class LoggerManager:
 
         return handler
 
-    def _create_file_handler(self) -> logging.Handler | None:
+    def _create_file_handler(self) -> Optional[logging.Handler]:
         """파일 핸들러 생성"""
         if not self.settings.file_enabled or not self.settings.file_path:
             return None
@@ -205,7 +205,7 @@ class LoggerManager:
         name: str,
         add_console: bool = True,
         add_file: bool = True,
-        context: dict[str, Any] | None = None,
+        context: Optional[Dict[str, Any]] = None,
     ) -> ContextualLoggerAdapter:
         """서비스별 로거 생성 및 반환"""
 
@@ -238,7 +238,7 @@ class LoggerManager:
         # 컨텍스트 로거 어댑터로 감싸서 반환
         return ContextualLoggerAdapter(logger, context or {})
 
-    def set_level(self, name: str, level: str | int) -> None:
+    def set_level(self, name: str, level: Union[str, int]) -> None:
         """특정 로거의 레벨 동적 조정"""
         if isinstance(level, str):
             level = getattr(logging, level.upper())
@@ -250,7 +250,7 @@ class LoggerManager:
             for handler in self._loggers[name].handlers:
                 handler.setLevel(level)
 
-    def get_all_loggers(self) -> dict[str, logging.Logger]:
+    def get_all_loggers(self) -> Dict[str, logging.Logger]:
         """모든 등록된 로거 반환"""
         return self._loggers.copy()
 
@@ -270,7 +270,7 @@ def get_logger_manager() -> LoggerManager:
 
 def get_service_logger(
     service_name: str,
-    context: dict[str, Any] | None = None,
+    context: Optional[Dict[str, Any]] = None,
     add_console: bool = True,
     add_file: bool = False,
 ) -> ContextualLoggerAdapter:
@@ -286,7 +286,7 @@ def get_logger(name: str) -> ContextualLoggerAdapter:
     return get_service_logger(name)
 
 
-def set_log_level(logger_name: str, level: str | int) -> None:
+def set_log_level(logger_name: str, level: Union[str, int]) -> None:
     """로그 레벨 동적 조정"""
     manager = get_logger_manager()
     manager.set_level(logger_name, level)
@@ -297,7 +297,7 @@ def configure_logging(
     format_type: str = "json",
     service_name: str = "ai-script-generator",
     enable_file: bool = True,
-    log_file: str | None = None,
+    log_file: Optional[str] = None,
 ) -> None:
     """전역 로깅 설정"""
     settings = LoggingSettings(
@@ -316,7 +316,7 @@ def log_exception(
     logger: ContextualLoggerAdapter,
     exception: Exception,
     message: str = "An exception occurred",
-    extra_context: dict[str, Any] | None = None,
+    extra_context: Optional[Dict[str, Any]] = None,
 ) -> None:
     """예외 정보와 함께 로그 기록"""
     context = {"exception_type": type(exception).__name__}
@@ -330,8 +330,8 @@ def log_exception(
 def create_request_logger(
     service_name: str,
     request_id: str,
-    user_id: str | None = None,
-    correlation_id: str | None = None,
+    user_id: Optional[str] = None,
+    correlation_id: Optional[str] = None,
 ) -> ContextualLoggerAdapter:
     """요청별 컨텍스트 로거 생성"""
     context = {"request_id": request_id}
@@ -344,7 +344,7 @@ def create_request_logger(
     return get_service_logger(service_name, context=context)
 
 
-def health_check_logs() -> dict[str, Any]:
+def health_check_logs() -> Dict[str, Any]:
     """로깅 시스템 상태 확인"""
     manager = get_logger_manager()
 

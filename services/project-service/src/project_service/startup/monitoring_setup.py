@@ -3,6 +3,7 @@ Startup configuration for episode monitoring system
 """
 
 from contextlib import asynccontextmanager
+from typing import AsyncIterator, Any
 
 from ..database.connection import get_session
 from ..monitoring.episode_alerting import setup_alert_handlers
@@ -14,15 +15,15 @@ from ..monitoring.integrity_jobs import (
 
 try:
     from ai_script_core import get_service_logger
-
+    
     logger = get_service_logger("project-service.monitoring-setup")
 except ImportError:
     import logging
 
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__)  # type: ignore[assignment]
 
 
-async def initialize_episode_monitoring():
+async def initialize_episode_monitoring() -> None:
     """Initialize the episode monitoring system"""
     try:
         logger.info("Initializing episode monitoring system...")
@@ -62,7 +63,7 @@ async def initialize_episode_monitoring():
         raise
 
 
-async def shutdown_episode_monitoring():
+async def shutdown_episode_monitoring() -> None:
     """Shutdown the episode monitoring system"""
     try:
         logger.info("Shutting down episode monitoring system...")
@@ -79,7 +80,7 @@ async def shutdown_episode_monitoring():
 
 
 @asynccontextmanager
-async def monitoring_lifespan():
+async def monitoring_lifespan() -> AsyncIterator[None]:
     """Lifespan context manager for monitoring system"""
     try:
         await initialize_episode_monitoring()
@@ -89,17 +90,17 @@ async def monitoring_lifespan():
 
 
 # For FastAPI lifespan integration
-async def monitoring_startup_event():
+async def monitoring_startup_event() -> None:
     """FastAPI startup event handler"""
     await initialize_episode_monitoring()
 
 
-async def monitoring_shutdown_event():
+async def monitoring_shutdown_event() -> None:
     """FastAPI shutdown event handler"""
     await shutdown_episode_monitoring()
 
 
-def register_monitoring_routes(app):
+def register_monitoring_routes(app: Any) -> None:
     """Register monitoring routes with FastAPI app"""
     from ..api.monitoring import router as monitoring_router
 

@@ -23,12 +23,12 @@ class ConfigurationError(Exception):
 class ConfigValidator:
     """Comprehensive configuration validator"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.errors: list[str] = []
         self.warnings: list[str] = []
         self.validated_keys: list[str] = []
 
-    def validate_all(self, settings) -> tuple[bool, list[str], list[str]]:
+    def validate_all(self, settings: Any) -> tuple[bool, list[str], list[str]]:
         """
         Validate all configuration aspects
 
@@ -79,7 +79,7 @@ class ConfigValidator:
 
         return is_valid, self.errors.copy(), self.warnings.copy()
 
-    def _validate_env_file_loading(self):
+    def _validate_env_file_loading(self) -> None:
         """Validate .env file loading"""
         env_files = [".env", ".env.local", ".env.production"]
         found_env_file = False
@@ -121,7 +121,7 @@ class ConfigValidator:
                 "No .env file found - using defaults and environment variables"
             )
 
-    def _validate_required_variables(self, settings):
+    def _validate_required_variables(self, settings: Any) -> None:
         """Validate required environment variables"""
         required_vars = [
             "SERVICE_NAME",
@@ -154,7 +154,7 @@ class ConfigValidator:
             else:
                 self.validated_keys.append(f"optional_var:{var}")
 
-    def _validate_api_keys(self, settings):
+    def _validate_api_keys(self, settings: Any) -> None:
         """Validate API key formats and patterns"""
         api_key_configs = [
             ("OPENAI_API_KEY", r"^sk-[A-Za-z0-9]{20,}$", "OpenAI API key"),
@@ -185,7 +185,7 @@ class ConfigValidator:
                     f"{description} not configured or using placeholder"
                 )
 
-    def _validate_database_config(self, settings):
+    def _validate_database_config(self, settings: Any) -> None:
         """Validate database configuration"""
         database_url = getattr(settings, "DATABASE_URL", "")
 
@@ -217,7 +217,7 @@ class ConfigValidator:
         except Exception as e:
             self.errors.append(f"Invalid DATABASE_URL format: {e}")
 
-    def _validate_chroma_config(self, settings):
+    def _validate_chroma_config(self, settings: Any) -> None:
         """Validate ChromaDB configuration"""
         chroma_path = getattr(settings, "CHROMA_DB_PATH", "")
 
@@ -265,7 +265,7 @@ class ConfigValidator:
         except Exception as e:
             self.errors.append(f"Invalid ChromaDB path: {e}")
 
-    def _validate_ai_model_configs(self, settings):
+    def _validate_ai_model_configs(self, settings: Any) -> None:
         """Validate AI model configurations"""
         try:
             ai_configs = getattr(settings, "AI_MODEL_CONFIGS", {})
@@ -303,7 +303,7 @@ class ConfigValidator:
         except Exception as e:
             self.errors.append(f"Error validating AI model configs: {e}")
 
-    def _validate_openai_config(self, provider: str, config: dict[str, Any]):
+    def _validate_openai_config(self, provider: str, config: dict[str, Any]) -> None:
         """Validate OpenAI-specific configuration"""
         model = config.get("model", "")
         valid_models = [
@@ -330,7 +330,7 @@ class ConfigValidator:
             if tpm <= 0:
                 self.warnings.append(f"Invalid tokens_per_minute in {provider}: {tpm}")
 
-    def _validate_anthropic_config(self, provider: str, config: dict[str, Any]):
+    def _validate_anthropic_config(self, provider: str, config: dict[str, Any]) -> None:
         """Validate Anthropic-specific configuration"""
         model = config.get("model", "")
         valid_models = [
@@ -342,7 +342,7 @@ class ConfigValidator:
         if model and not any(valid in model for valid in ["claude-3", "claude-2"]):
             self.warnings.append(f"Unknown Anthropic model in {provider}: {model}")
 
-    def _validate_local_model_config(self, provider: str, config: dict[str, Any]):
+    def _validate_local_model_config(self, provider: str, config: dict[str, Any]) -> None:
         """Validate local model configuration"""
         endpoint_url = config.get("endpoint_url", "")
 
@@ -362,7 +362,7 @@ class ConfigValidator:
             except Exception as e:
                 self.errors.append(f"Invalid endpoint URL format in {provider}: {e}")
 
-    def _validate_service_dependencies(self, settings):
+    def _validate_service_dependencies(self, settings: Any) -> None:
         """Validate external service dependencies"""
         project_service_url = getattr(settings, "PROJECT_SERVICE_URL", "")
 
@@ -378,7 +378,7 @@ class ConfigValidator:
             except Exception as e:
                 self.errors.append(f"Invalid PROJECT_SERVICE_URL format: {e}")
 
-    def _validate_performance_settings(self, settings):
+    def _validate_performance_settings(self, settings: Any) -> None:
         """Validate performance-related settings"""
         # Validate numeric settings
         numeric_settings = [
@@ -422,7 +422,7 @@ class ConfigValidator:
                 )
 
 
-async def validate_external_connections(settings) -> tuple[bool, list[str], list[str]]:
+async def validate_external_connections(settings: Any) -> tuple[bool, list[str], list[str]]:
     """
     Validate external service connections
 
@@ -461,7 +461,7 @@ async def validate_external_connections(settings) -> tuple[bool, list[str], list
     return all_healthy, errors, warnings
 
 
-def validate_environment_compatibility():
+def validate_environment_compatibility() -> tuple[bool, list[str]]:
     """Validate environment compatibility"""
     import platform
     import sys
@@ -486,10 +486,10 @@ def validate_environment_compatibility():
     return issues
 
 
-def get_config_summary(settings) -> dict[str, Any]:
+def get_config_summary(settings: Any) -> dict[str, Any]:
     """Get configuration summary for debugging"""
 
-    def safe_get(attr, default="<not set>"):
+    def safe_get(attr: str, default: str = "<not set>") -> str:
         value = getattr(settings, attr, default)
         # Mask sensitive information
         if "key" in attr.lower() or "password" in attr.lower():

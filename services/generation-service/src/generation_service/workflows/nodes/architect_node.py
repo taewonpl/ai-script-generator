@@ -18,19 +18,19 @@ except (ImportError, RuntimeError):
     logger = logging.getLogger(__name__)
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -53,6 +53,8 @@ except (ImportError, RuntimeError):
         pass
 
 
+from typing import Any, Optional
+
 from generation_service.ai.prompts import ArchitectPrompts, PromptContext, ScriptType
 from generation_service.ai.providers.base_provider import ProviderGenerationRequest
 from generation_service.workflows.nodes.base_node import PromptNode
@@ -70,7 +72,7 @@ class ArchitectNode(PromptNode):
     - 논리적 완성도에만 집중 (스타일 적용 금지)
     """
 
-    def __init__(self, provider_factory, rag_service=None):
+    def __init__(self, provider_factory: Any, rag_service: Optional[Any] = None) -> None:
         super().__init__(
             node_name="architect",
             provider_name="anthropic",  # Use Claude for architectural work

@@ -4,7 +4,7 @@ Base node class for LangGraph workflow nodes
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any
+from typing import Any, Dict, Optional, Union
 
 # Import Core Module components
 try:
@@ -24,19 +24,19 @@ except (ImportError, RuntimeError):
     logger = logging.getLogger(__name__)
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -112,7 +112,7 @@ class BaseNode(ABC):
     - Quality score management
     """
 
-    def __init__(self, node_name: str):
+    def __init__(self, node_name: str) -> None:
         self.node_name = node_name
         self.logger = logger
 
@@ -297,7 +297,7 @@ class BaseNode(ABC):
 
         return error_message
 
-    def _get_execution_metadata(self, state: GenerationState) -> dict[str, Any]:
+    def _get_execution_metadata(self, state: GenerationState) -> Dict[str, Any]:
         """
         Get execution metadata for logging
 
@@ -309,7 +309,7 @@ class BaseNode(ABC):
             "quality_score": state.get("current_quality_score", 0.0),
         }
 
-    def _calculate_quality_score(self, state: GenerationState) -> float | None:
+    def _calculate_quality_score(self, state: GenerationState) -> Optional[float]:
         """
         Calculate quality score for this node's output
 
@@ -333,7 +333,7 @@ class BaseNode(ABC):
         else:
             return "architecting"
 
-    def get_node_info(self) -> dict[str, Any]:
+    def get_node_info(self) -> Dict[str, Any]:
         """Get information about this node"""
 
         return {
@@ -350,12 +350,12 @@ class ProviderNode(BaseNode):
     Extends BaseNode with AI provider specific functionality.
     """
 
-    def __init__(self, node_name: str, provider_name: str):
+    def __init__(self, node_name: str, provider_name: str) -> None:
         super().__init__(node_name)
         self.provider_name = provider_name
         self.provider = None
 
-    async def _initialize_provider(self, provider_factory):
+    async def _initialize_provider(self, provider_factory: Any) -> None:
         """Initialize the AI provider"""
 
         try:
@@ -371,7 +371,7 @@ class ProviderNode(BaseNode):
             self.logger.error(error_msg)
             raise NodeExecutionError(error_msg, self.node_name, e)
 
-    def _get_execution_metadata(self, state: GenerationState) -> dict[str, Any]:
+    def _get_execution_metadata(self, state: GenerationState) -> Dict[str, Any]:
         """Add provider-specific metadata"""
 
         base_metadata = super()._get_execution_metadata(state)
@@ -392,11 +392,11 @@ class PromptNode(ProviderNode):
     Extends ProviderNode with prompt template functionality.
     """
 
-    def __init__(self, node_name: str, provider_name: str, prompt_template):
+    def __init__(self, node_name: str, provider_name: str, prompt_template: Any) -> None:
         super().__init__(node_name, provider_name)
         self.prompt_template = prompt_template
 
-    def _get_execution_metadata(self, state: GenerationState) -> dict[str, Any]:
+    def _get_execution_metadata(self, state: GenerationState) -> Dict[str, Any]:
         """Add prompt-specific metadata"""
 
         base_metadata = super()._get_execution_metadata(state)

@@ -2,6 +2,8 @@
 Middleware setup for generation service
 """
 
+from typing import Any, Dict, Set
+
 from fastapi import FastAPI
 
 from ..api.idempotency_middleware import IdempotencyMiddleware
@@ -16,7 +18,7 @@ except ImportError:
     logger = logging.getLogger(__name__)
 
 
-def setup_idempotency_middleware(app: FastAPI):
+def setup_idempotency_middleware(app: FastAPI) -> None:
     """Setup idempotency middleware for the FastAPI app"""
     try:
         middleware = IdempotencyMiddleware(
@@ -54,7 +56,7 @@ def setup_idempotency_middleware(app: FastAPI):
         raise
 
 
-def setup_all_middleware(app: FastAPI):
+def setup_all_middleware(app: FastAPI) -> None:
     """Setup all middleware for the generation service"""
     setup_idempotency_middleware(app)
     # Add other middleware setup here as needed

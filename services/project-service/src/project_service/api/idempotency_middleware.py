@@ -4,59 +4,47 @@ FastAPI middleware for handling idempotency keys in project service
 
 import json
 from collections.abc import Callable
+from typing import Any
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
-try:
-    from ai_script_core.observability.idempotency import (
-        IdempotencyConflictError,
-        check_idempotency,
-        get_idempotency_manager,
-        store_idempotent_response,
-    )
+# Always use fallback implementation for type stability
+from datetime import datetime
 
-    CORE_AVAILABLE = True
-except ImportError:
-    CORE_AVAILABLE = False
-    # Fallback to in-memory implementation
-    from datetime import datetime
+CORE_AVAILABLE = False
 
-    class LocalIdempotencyConflictError(Exception):
-        pass
+class IdempotencyConflictError(Exception):
+    """Idempotency key conflict error"""
+    pass
 
-    # Use different name to avoid conflict
-    IdempotencyConflictError = LocalIdempotencyConflictError
+class InMemoryIdempotencyManager:
+    def __init__(self) -> None:
+        self._responses: dict[str, dict[str, Any]] = {}
 
-    class InMemoryIdempotencyManager:
-        def __init__(self) -> None:
-            self._responses = {}
+    def check_idempotency(self, key: str, request_data: dict[str, Any] | None = None) -> dict[str, Any] | None:
+        return self._responses.get(key)
 
-        def check_idempotency(self, key, request_data=None):
-            return self._responses.get(key)
+    def store_response(
+        self, key: str, status_code: int, response_data: dict[str, Any], headers: dict[str, str] | None = None, ttl_seconds: int | None = None
+    ) -> None:
+        self._responses[key] = {
+            "status_code": status_code,
+            "response_data": response_data,
+            "headers": headers or {},
+            "created_at": datetime.utcnow(),
+        }
 
-        def store_response(
-            self, key, status_code, response_data, headers=None, ttl_seconds=None
-        ):
-            self._responses[key] = {
-                "status_code": status_code,
-                "response_data": response_data,
-                "headers": headers or {},
-                "created_at": datetime.utcnow(),
-            }
+_fallback_manager = InMemoryIdempotencyManager()
 
-    _fallback_manager = InMemoryIdempotencyManager()
+def check_idempotency(key: str, request_data: dict[str, Any] | None = None) -> dict[str, Any] | None:
+    return _fallback_manager.check_idempotency(key, request_data)
 
-    def check_idempotency(key, request_data=None):
-        return _fallback_manager.check_idempotency(key, request_data)
-
-    def store_idempotent_response(
-        key, status_code, response_data, headers=None, ttl_seconds=None
-    ):
-        return _fallback_manager.store_response(
-            key, status_code, response_data, headers, ttl_seconds
-        )
+def store_idempotent_response(
+    key: str, status_code: int, response_data: dict[str, Any], headers: dict[str, str] | None = None, ttl_seconds: int | None = None
+) -> None:
+    _fallback_manager.store_response(key, status_code, response_data, headers, ttl_seconds)
 
 
 class IdempotencyMiddleware(BaseHTTPMiddleware):
@@ -64,19 +52,19 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
 
     def __init__(
         self,
-        app,
+        app: Any,
         header_name: str = "Idempotency-Key",
         ttl_seconds: int = 24 * 3600,  # 24 hours
-        methods: set = None,
-        enabled_paths: set = None,
-    ):
+        methods: set[str] | None = None,
+        enabled_paths: set[str] | None = None,
+    ) -> None:
         super().__init__(app)
         self.header_name = header_name
         self.ttl_seconds = ttl_seconds
         self.methods = methods or {"POST", "PUT", "PATCH"}
         self.enabled_paths = enabled_paths or {"/projects", "/episodes"}
 
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+    async def dispatch(self, request: Request, call_next: Callable[[Request], Any]) -> Any:
         """Handle idempotency for applicable requests"""
 
         # Only process applicable methods and paths
@@ -111,28 +99,17 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
 
             if existing_response:
                 # Return cached response with 200 status instead of 201
-                if CORE_AVAILABLE:
-                    status_code = (
-                        200
-                        if existing_response.status_code == 201
-                        else existing_response.status_code
-                    )
-                    response = JSONResponse(
-                        status_code=status_code, content=existing_response.response_data
-                    )
-                    # Add headers from cached response
-                    for key, value in existing_response.headers.items():
-                        response.headers[key] = value
-                else:
-                    status_code = (
-                        200
-                        if existing_response.get("status_code") == 201
-                        else existing_response.get("status_code", 200)
-                    )
-                    response = JSONResponse(
-                        status_code=status_code,
-                        content=existing_response.get("response_data", {}),
-                    )
+                # existing_response is always a dict in our fallback implementation
+                response_dict: dict[str, Any] = existing_response
+                status_code = (
+                    200
+                    if response_dict.get("status_code") == 201
+                    else response_dict.get("status_code", 200)
+                )
+                response = JSONResponse(
+                    status_code=status_code,
+                    content=response_dict.get("response_data", {}),
+                )
 
                 # Add idempotency headers
                 response.headers["Idempotency-Key"] = idempotency_key
@@ -189,23 +166,25 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
             and key.replace("-", "").replace("_", "").isalnum()
         )
 
-    async def _get_request_body(self, request: Request) -> dict:
+    async def _get_request_body(self, request: Request) -> dict[str, Any]:
         """Get request body for idempotency comparison"""
         try:
             body = await request.body()
             if body:
-                return json.loads(body.decode())
+                result: dict[str, Any] = json.loads(body.decode())
+                return result
             return {}
         except Exception:
             return {}
 
-    async def _get_response_body(self, response: Response) -> dict:
+    async def _get_response_body(self, response: Response) -> dict[str, Any]:
         """Get response body for caching"""
         try:
             if hasattr(response, "body"):
                 body = response.body
                 if isinstance(body, bytes):
-                    return json.loads(body.decode())
+                    result: dict[str, Any] = json.loads(body.decode())
+                    return result
             return {}
         except Exception:
             return {}

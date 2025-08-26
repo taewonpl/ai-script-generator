@@ -128,7 +128,7 @@ class RetryQueue:
         # Job processors registry
         self.processors: dict[JobType, Callable] = {}
 
-    def register_processor(self, job_type: JobType, processor: Callable):
+    def register_processor(self, job_type: JobType, processor: Callable) -> None:
         """Register a job processor function"""
         self.processors[job_type] = processor
         logger.info(f"Registered processor for job type: {job_type}")
@@ -238,7 +238,7 @@ class RetryQueue:
             await self._handle_job_failure(job, str(e))
             return False
 
-    async def _handle_job_failure(self, job: RetryJob, error_message: str):
+    async def _handle_job_failure(self, job: RetryJob, error_message: str) -> None:
         """Handle job processing failure"""
         job_key = f"job:{job.id}"
 
@@ -279,7 +279,7 @@ class RetryQueue:
         except RedisError as e:
             logger.error(f"Failed to handle job failure: {e}")
 
-    async def _move_to_dlq(self, job: RetryJob):
+    async def _move_to_dlq(self, job: RetryJob) -> None:
         """Move job to dead letter queue"""
         job.status = JobStatus.DEAD
 
@@ -342,7 +342,7 @@ class RetryQueue:
             return 0
 
     # Redis async wrapper methods (for compatibility)
-    async def _redis_hset(self, key: str, data: dict[str, Any]):
+    async def _redis_hset(self, key: str, data: dict[str, Any]) -> int:
         """Async wrapper for Redis HSET"""
         return self.redis.hset(key, mapping=data)
 
@@ -360,15 +360,15 @@ class RetryQueue:
         """Async wrapper for Redis ZRANGEBYSCORE"""
         return self.redis.zrangebyscore(key, min_score, max_score, start, num)
 
-    async def _redis_zrem(self, key: str, *values) -> int:
+    async def _redis_zrem(self, key: str, *values: Any) -> int:
         """Async wrapper for Redis ZREM"""
         return self.redis.zrem(key, *values)
 
-    async def _redis_sadd(self, key: str, *values) -> int:
+    async def _redis_sadd(self, key: str, *values: Any) -> int:
         """Async wrapper for Redis SADD"""
         return self.redis.sadd(key, *values)
 
-    async def _redis_srem(self, key: str, *values) -> int:
+    async def _redis_srem(self, key: str, *values: Any) -> int:
         """Async wrapper for Redis SREM"""
         return self.redis.srem(key, *values)
 
@@ -403,7 +403,7 @@ class RetryQueueWorker:
         self.batch_size = batch_size
         self.running = False
 
-    async def start(self):
+    async def start(self) -> None:
         """Start the worker"""
         self.running = True
         logger.info(f"Starting retry queue worker {self.worker_id}")
@@ -432,7 +432,7 @@ class RetryQueueWorker:
             self.running = False
             logger.info(f"Worker {self.worker_id} stopped")
 
-    async def stop(self):
+    async def stop(self) -> None:
         """Stop the worker"""
         self.running = False
 
@@ -450,7 +450,7 @@ def get_retry_queue(redis_client: redis.Redis | None = None) -> RetryQueue:
     return _global_retry_queue
 
 
-async def start_retry_worker():
+async def start_retry_worker() -> None:
     """Start global retry queue worker"""
     global _global_worker
     if _global_worker is None:
@@ -461,7 +461,7 @@ async def start_retry_worker():
         await _global_worker.start()
 
 
-async def stop_retry_worker():
+async def stop_retry_worker() -> None:
     """Stop global retry queue worker"""
     global _global_worker
     if _global_worker and _global_worker.running:

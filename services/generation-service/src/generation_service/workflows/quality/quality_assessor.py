@@ -6,7 +6,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Dict, List, Optional, Tuple
 
 # Import Core Module components
 try:
@@ -21,7 +21,7 @@ except (ImportError, RuntimeError):
     CORE_AVAILABLE = False
     import logging
 
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__)  # type: ignore[assignment]
 
     # Fallback utility functions
     def utc_now():
@@ -30,13 +30,13 @@ except (ImportError, RuntimeError):
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -79,9 +79,9 @@ class QualityScore:
     dimension: QualityDimension
     score: float  # 0.0 to 1.0
     confidence: float  # 0.0 to 1.0
-    details: dict[str, Any]
-    suggestions: list[str]
-    evidence: list[str]
+    details: Dict[str, Any]
+    suggestions: List[str]
+    evidence: List[str]
 
 
 @dataclass
@@ -112,7 +112,7 @@ class QualityAssessor:
     - Configurable quality standards
     """
 
-    def __init__(self, config: dict[str, Any] = None):
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         self.config = config or {}
 
         # Quality dimension weights (customizable)

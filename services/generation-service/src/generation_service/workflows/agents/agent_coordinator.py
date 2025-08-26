@@ -4,7 +4,7 @@ Agent Coordinator - Manages and coordinates specialized AI agents
 
 import asyncio
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional, Dict, List, Tuple
 
 # Import Core Module components
 try:
@@ -22,19 +22,19 @@ except (ImportError, RuntimeError):
     logger = logging.getLogger(__name__)
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -70,7 +70,7 @@ from .tension_builder_agent import TensionBuilderAgent
 class AgentExecutionPlan:
     """Plan for agent execution with dependencies and ordering"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.agents: list[tuple[BaseSpecialAgent, dict[str, Any]]] = []
         self.execution_order: list[str] = []
         self.parallel_groups: list[list[str]] = []
@@ -81,15 +81,15 @@ class AgentExecutionPlan:
     def add_agent(
         self,
         agent: BaseSpecialAgent,
-        config: dict[str, Any] = None,
-        dependencies: list[str] = None,
-    ):
+        config: Optional[Dict[str, Any]] = None,
+        dependencies: Optional[List[str]] = None,
+    ) -> None:
         """Add an agent to the execution plan"""
         self.agents.append((agent, config or {}))
         if dependencies:
             self.dependencies[agent.agent_name] = dependencies
 
-    def optimize_execution_order(self):
+    def optimize_execution_order(self) -> None:
         """Optimize execution order based on dependencies and priorities"""
         # Sort by priority (higher priority first) and dependencies
         agent_priorities = [
@@ -115,7 +115,7 @@ class AgentExecutionPlan:
         # Identify parallel execution opportunities
         self._identify_parallel_groups()
 
-    def _identify_parallel_groups(self):
+    def _identify_parallel_groups(self) -> None:
         """Identify agents that can be executed in parallel"""
         self.parallel_groups = []
         remaining = set(self.execution_order)
@@ -157,7 +157,7 @@ class AgentCoordinator:
     - Configuration management for agent behavior
     """
 
-    def __init__(self, provider_factory=None, config: dict[str, Any] = None):
+    def __init__(self, provider_factory: Optional[Any] = None, config: Optional[Dict[str, Any]] = None) -> None:
         self.provider_factory = provider_factory
         self.config = config or {}
 
@@ -204,7 +204,7 @@ class AgentCoordinator:
                 },
             )
 
-    async def analyze_content_needs(self, state: GenerationState) -> dict[str, Any]:
+    async def analyze_content_needs(self, state: GenerationState) -> Dict[str, Any]:
         """
         Analyze content to determine which agents should be applied
         """
@@ -258,7 +258,7 @@ class AgentCoordinator:
         return analysis_result
 
     async def create_execution_plan(
-        self, state: GenerationState, preferences: dict[str, Any] = None
+        self, state: GenerationState, preferences: Optional[Dict[str, Any]] = None
     ) -> AgentExecutionPlan:
         """
         Create optimized execution plan for agents
@@ -440,7 +440,7 @@ class AgentCoordinator:
             return error_state
 
     async def execute_adaptive_workflow(
-        self, state: GenerationState, preferences: dict[str, Any] = None
+        self, state: GenerationState, preferences: Optional[Dict[str, Any]] = None
     ) -> GenerationState:
         """
         Execute complete adaptive workflow: analyze, plan, and execute
@@ -456,14 +456,14 @@ class AgentCoordinator:
         # Execute the plan
         return await self.execute_plan(state, plan)
 
-    def get_agent_recommendations(self, state: GenerationState) -> dict[str, Any]:
+    def get_agent_recommendations(self, state: GenerationState) -> Optional[Dict[str, Any]]:
         """
         Get agent recommendations without executing them
         """
 
         # This would typically be async, but we'll make it sync for convenience
         # In practice, you might want to cache analyses
-        pass
+        return None
 
     def _estimate_initial_quality(self, content: str) -> float:
         """Estimate initial content quality"""
@@ -491,8 +491,8 @@ class AgentCoordinator:
         return quality
 
     def _create_agent_config(
-        self, agent_info: dict[str, Any], preferences: dict[str, Any]
-    ) -> dict[str, Any]:
+        self, agent_info: Dict[str, Any], preferences: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Create configuration for an agent based on analysis and preferences"""
 
         base_config = self.config.get(agent_info["agent_name"], {})
@@ -512,8 +512,8 @@ class AgentCoordinator:
         return config
 
     def _determine_dependencies(
-        self, agent_name: str, selected_agents: list[dict]
-    ) -> list[str]:
+        self, agent_name: str, selected_agents: List[Dict[str, Any]]
+    ) -> List[str]:
         """Determine execution dependencies for an agent"""
 
         # Define dependency rules
@@ -589,7 +589,7 @@ class AgentCoordinator:
 
         return merged_state
 
-    def get_coordinator_metrics(self) -> dict[str, Any]:
+    def get_coordinator_metrics(self) -> Dict[str, Any]:
         """Get coordinator performance metrics"""
 
         return {

@@ -15,7 +15,7 @@ class HealthCheckDTO(BaseModel):
     service_name: str
     status: str
     version: str
-    details: dict
+    details: dict[str, Any]
 
 
 from typing import Any
@@ -31,7 +31,7 @@ router = APIRouter(prefix="/health", tags=["Health"])
 
 
 @router.get("/", response_model=APIResponseDTO)
-async def health_check():
+async def health_check() -> APIResponseDTO:
     """기본 헬스체크"""
     health_data = HealthCheckDTO(
         service_name="project-service",
@@ -46,11 +46,12 @@ async def health_check():
 
 
 @router.get("/database", response_model=APIResponseDTO)
-async def database_health_check(db: Session = Depends(get_db)):
+async def database_health_check(db: Session = Depends(get_db)) -> APIResponseDTO:
     """데이터베이스 헬스체크"""
     try:
         # 간단한 데이터베이스 쿼리로 연결 확인
-        db.execute("SELECT 1")
+        from sqlalchemy import text
+        db.execute(text("SELECT 1"))
 
         health_data = HealthCheckDTO(
             service_name="project-service",

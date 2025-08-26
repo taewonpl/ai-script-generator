@@ -5,7 +5,7 @@ AI 생성 및 RAG 관련 서비스 간 통신용 DTO를 정의합니다.
 """
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional, List, Dict, Union
 
 from pydantic import Field, field_validator
 
@@ -29,7 +29,7 @@ class AIModelConfigDTO(BaseSchema):
     )
 
     # 추가 설정 (모델별로 다를 수 있음)
-    extra_params: dict[str, Any] = Field(
+    extra_params: Dict[str, Any] = Field(
         default_factory=dict, description="추가 매개변수"
     )
 
@@ -72,22 +72,22 @@ class RAGConfigDTO(BaseSchema):
     )
 
     # 지식베이스 설정
-    knowledge_base_ids: list[str] = Field(
+    knowledge_base_ids: List[str] = Field(
         default_factory=list, description="사용할 지식베이스 ID 목록"
     )
     include_metadata: bool = Field(default=True, description="메타데이터 포함 여부")
 
     # 필터링
-    document_types: list[str] | None = Field(None, description="문서 타입 필터")
-    date_range: dict[str, datetime] | None = Field(None, description="날짜 범위 필터")
-    tags: list[str] | None = Field(None, description="태그 필터")
+    document_types: Optional[List[str]] = Field(None, description="문서 타입 필터")
+    date_range: Optional[Dict[str, datetime]] = Field(None, description="날짜 범위 필터")
+    tags: Optional[List[str]] = Field(None, description="태그 필터")
 
 
 class GenerationRequestDTO(BaseSchema, IDMixin):
     """생성 요청 DTO"""
 
     project_id: str = Field(..., description="프로젝트 ID")
-    episode_id: str | None = Field(None, description="에피소드 ID (선택적)")
+    episode_id: Optional[str] = Field(None, description="에피소드 ID (선택적)")
 
     # 생성 타입 및 목적
     generation_type: str = Field(
@@ -99,26 +99,26 @@ class GenerationRequestDTO(BaseSchema, IDMixin):
     prompt: str = Field(
         ..., min_length=10, max_length=10000, description="메인 프롬프트"
     )
-    system_prompt: str | None = Field(
+    system_prompt: Optional[str] = Field(
         None, max_length=2000, description="시스템 프롬프트"
     )
-    context: str | None = Field(None, max_length=5000, description="추가 컨텍스트")
+    context: Optional[str] = Field(None, max_length=5000, description="추가 컨텍스트")
 
     # 스타일 및 톤
-    style_guide: str | None = Field(None, description="스타일 가이드")
-    tone: str | None = Field(None, description="톤 (formal, casual, dramatic 등)")
-    genre_hints: list[str] = Field(default_factory=list, description="장르 힌트")
+    style_guide: Optional[str] = Field(None, description="스타일 가이드")
+    tone: Optional[str] = Field(None, description="톤 (formal, casual, dramatic 등)")
+    genre_hints: List[str] = Field(default_factory=list, description="장르 힌트")
 
     # AI 및 RAG 설정
     ai_config: AIModelConfigDTO = Field(..., description="AI 모델 설정")
-    rag_config: RAGConfigDTO | None = Field(None, description="RAG 설정")
+    rag_config: Optional[RAGConfigDTO] = Field(None, description="RAG 설정")
 
     # 메타데이터
     priority: int = Field(
         default=0, ge=0, le=10, description="우선순위 (0=낮음, 10=높음)"
     )
-    deadline: datetime | None = Field(None, description="완료 기한")
-    callback_url: str | None = Field(None, description="완료 시 호출할 콜백 URL")
+    deadline: Optional[datetime] = Field(None, description="완료 기한")
+    callback_url: Optional[str] = Field(None, description="완료 시 호출할 콜백 URL")
 
     @field_validator("generation_type")
     @classmethod
@@ -145,31 +145,31 @@ class GenerationMetadataDTO(BaseSchema):
 
     # AI 모델 정보
     model_used: str = Field(..., description="사용된 AI 모델")
-    model_version: str | None = Field(None, description="모델 버전")
+    model_version: Optional[str] = Field(None, description="모델 버전")
 
     # 성능 메트릭
     generation_time_ms: int = Field(..., description="생성 시간(밀리초)")
-    token_usage: dict[str, int] = Field(
+    token_usage: Dict[str, int] = Field(
         ..., description="토큰 사용량 (prompt_tokens, completion_tokens, total_tokens)"
     )
-    cost_estimate: float | None = Field(None, description="예상 비용 (USD)")
+    cost_estimate: Optional[float] = Field(None, description="예상 비용 (USD)")
 
     # RAG 정보 (사용된 경우)
     rag_used: bool = Field(default=False, description="RAG 사용 여부")
     retrieved_docs_count: int = Field(default=0, description="검색된 문서 수")
-    avg_similarity_score: float | None = Field(None, description="평균 유사도 점수")
+    avg_similarity_score: Optional[float] = Field(None, description="평균 유사도 점수")
 
     # 품질 메트릭
     content_length: int = Field(default=0, description="생성된 내용 길이")
-    readability_score: float | None = Field(None, description="가독성 점수")
-    coherence_score: float | None = Field(None, description="일관성 점수")
+    readability_score: Optional[float] = Field(None, description="가독성 점수")
+    coherence_score: Optional[float] = Field(None, description="일관성 점수")
 
     # 처리 정보
     retry_count: int = Field(default=0, description="재시도 횟수")
-    processing_node: str | None = Field(None, description="처리 노드 ID")
+    processing_node: Optional[str] = Field(None, description="처리 노드 ID")
 
     # 추가 메타데이터
-    extra_metadata: dict[str, Any] = Field(
+    extra_metadata: Dict[str, Any] = Field(
         default_factory=dict, description="추가 메타데이터"
     )
 
@@ -179,7 +179,7 @@ class GenerationResponseDTO(BaseSchema, IDMixin, TimestampMixin):
 
     request_id: str = Field(..., description="원본 요청 ID")
     project_id: str = Field(..., description="프로젝트 ID")
-    episode_id: str | None = Field(None, description="에피소드 ID")
+    episode_id: Optional[str] = Field(None, description="에피소드 ID")
 
     # 상태 및 결과
     status: GenerationStatus = Field(..., description="생성 상태")
@@ -188,12 +188,12 @@ class GenerationResponseDTO(BaseSchema, IDMixin, TimestampMixin):
     )
 
     # 생성된 내용
-    content: str | None = Field(None, description="생성된 주요 내용")
-    title: str | None = Field(None, description="생성된 제목")
-    summary: str | None = Field(None, description="내용 요약")
+    content: Optional[str] = Field(None, description="생성된 주요 내용")
+    title: Optional[str] = Field(None, description="생성된 제목")
+    summary: Optional[str] = Field(None, description="내용 요약")
 
     # 구조화된 결과 (타입에 따라 다름)
-    structured_result: dict[str, Any] | None = Field(
+    structured_result: Optional[Dict[str, Any]] = Field(
         None, description="구조화된 생성 결과"
     )
 
@@ -201,9 +201,9 @@ class GenerationResponseDTO(BaseSchema, IDMixin, TimestampMixin):
     metadata: GenerationMetadataDTO = Field(..., description="생성 메타데이터")
 
     # 오류 정보
-    error_message: str | None = Field(None, description="오류 메시지")
-    error_code: str | None = Field(None, description="오류 코드")
+    error_message: Optional[str] = Field(None, description="오류 메시지")
+    error_code: Optional[str] = Field(None, description="오류 코드")
 
     # 피드백 및 평가
-    quality_score: float | None = Field(None, ge=0.0, le=1.0, description="품질 점수")
-    feedback: str | None = Field(None, description="피드백")
+    quality_score: Optional[float] = Field(None, ge=0.0, le=1.0, description="품질 점수")
+    feedback: Optional[str] = Field(None, description="피드백")

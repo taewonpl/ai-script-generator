@@ -6,7 +6,7 @@ Provides essential DTOs, exception handling, configuration management, logging, 
 """
 
 import sys
-from typing import Any
+from typing import Any, Dict
 
 # Version information
 __version__ = "0.1.0"
@@ -19,7 +19,7 @@ def get_version() -> str:
     return __version__
 
 
-def get_package_info() -> dict[str, Any]:
+def get_package_info() -> Dict[str, Any]:
     """패키지 정보 반환"""
     return {
         "name": "ai-script-core",
@@ -93,6 +93,8 @@ from .utils import (
     safe_json_loads,
     # Text processing
     sanitize_text,
+    # Time utilities
+    utc_now,
 )
 
 # Public API - Only essential items for clean imports
@@ -143,4 +145,5 @@ __all__ = [
     "sanitize_text",
     "safe_json_loads",
     "safe_json_dumps",
+    "utc_now",
 ]

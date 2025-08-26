@@ -18,19 +18,19 @@ except (ImportError, RuntimeError):
     logger = logging.getLogger(__name__)
 
     # Fallback utility functions
-    def utc_now():
+    def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
 
         return datetime.now(timezone.utc)
 
-    def generate_uuid():
+    def generate_uuid() -> str:
         """Fallback UUID generation"""
         import uuid
 
         return str(uuid.uuid4())
 
-    def generate_id():
+    def generate_id() -> str:
         """Fallback ID generation"""
         import uuid
 
@@ -53,6 +53,8 @@ except (ImportError, RuntimeError):
         pass
 
 
+from typing import Any
+
 from generation_service.ai.prompts import PromptContext, ScriptType, StylistPrompts
 from generation_service.ai.providers.base_provider import ProviderGenerationRequest
 from generation_service.workflows.nodes.base_node import PromptNode
@@ -70,7 +72,7 @@ class StylistNode(PromptNode):
     - 기존 플롯 구조는 절대 변경하지 않음
     """
 
-    def __init__(self, provider_factory):
+    def __init__(self, provider_factory: Any) -> None:
         super().__init__(
             node_name="stylist",
             provider_name="local",  # Use Llama for styling work
