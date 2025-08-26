@@ -2,7 +2,7 @@
 RAG management API endpoints with Core Module integration
 """
 
-from typing import Any, Dict
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
@@ -79,7 +79,7 @@ async def add_documents(
     request: DocumentBatch,
     http_request: Request,
     rag_service: RAGService = Depends(get_rag_service),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Add documents to the RAG system"""
 
     try:
@@ -325,7 +325,7 @@ async def delete_document(
 )
 async def bulk_delete_documents(
     request: DocumentDeleteRequest, rag_service: RAGService = Depends(get_rag_service)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Bulk delete documents from the RAG system"""
 
     try:
@@ -370,7 +370,9 @@ async def bulk_delete_documents(
     summary="Get Collection Information",
     description="Get information about RAG collections",
 )
-async def get_collections(rag_service: RAGService = Depends(get_rag_service)) -> Dict[str, Any]:
+async def get_collections(
+    rag_service: RAGService = Depends(get_rag_service),
+) -> dict[str, Any]:
     """Get collection information"""
 
     try:
@@ -411,7 +413,7 @@ async def get_collections(rag_service: RAGService = Depends(get_rag_service)) ->
 )
 async def build_context(
     request: ContextBuildRequestDTO, rag_service: RAGService = Depends(get_rag_service)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Build context from provided search results"""
 
     try:
@@ -512,7 +514,9 @@ async def build_context(
     summary="Get RAG Metrics",
     description="Get comprehensive RAG system metrics",
 )
-async def get_rag_metrics(rag_service: RAGService = Depends(get_rag_service)) -> Dict[str, Any]:
+async def get_rag_metrics(
+    rag_service: RAGService = Depends(get_rag_service),
+) -> dict[str, Any]:
     """Get RAG system metrics"""
 
     try:
@@ -556,7 +560,9 @@ async def get_rag_metrics(rag_service: RAGService = Depends(get_rag_service)) ->
     summary="RAG Health Check",
     description="Perform comprehensive health check on RAG system",
 )
-async def health_check(rag_service: RAGService = Depends(get_rag_service)) -> Dict[str, Any]:
+async def health_check(
+    rag_service: RAGService = Depends(get_rag_service),
+) -> dict[str, Any]:
     """Perform health check on RAG system"""
 
     try:
@@ -585,7 +591,9 @@ async def health_check(rag_service: RAGService = Depends(get_rag_service)) -> Di
     summary="Reset RAG Collection",
     description="Reset the entire RAG collection (WARNING: This deletes all data)",
 )
-async def reset_collection(rag_service: RAGService = Depends(get_rag_service)) -> Dict[str, Any]:
+async def reset_collection(
+    rag_service: RAGService = Depends(get_rag_service),
+) -> dict[str, Any]:
     """Reset the RAG collection"""
 
     try:

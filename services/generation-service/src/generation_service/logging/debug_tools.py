@@ -9,7 +9,7 @@ import traceback
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Optional, Dict, List, Union
+from typing import Any
 
 # Import Core Module components
 try:
@@ -89,7 +89,7 @@ class DebugTools:
     - Debug logging with enhanced details
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, config: dict[str, Any] | None = None) -> None:
         self.config = config or {}
 
         # Debug configuration
@@ -115,7 +115,7 @@ class DebugTools:
         self._original_trace_func = None
         self._trace_depth = 0
 
-    def start_debug_session(self, session_id: Optional[str] = None) -> DebugSession:
+    def start_debug_session(self, session_id: str | None = None) -> DebugSession:
         """Start new debug session"""
 
         if not session_id:
@@ -133,7 +133,7 @@ class DebugTools:
         logger.info(f"Debug session started: {session_id}")
         return self.current_session
 
-    def stop_debug_session(self) -> Optional[DebugSession]:
+    def stop_debug_session(self) -> DebugSession | None:
         """Stop current debug session"""
 
         if not self.current_session:
@@ -198,7 +198,7 @@ class DebugTools:
             logger.debug(f"Breakpoint added: {identifier}")
 
     def hit_breakpoint(
-        self, identifier: str, locals_dict: Optional[Dict[str, Any]] = None
+        self, identifier: str, locals_dict: dict[str, Any] | None = None
     ) -> None:
         """Handle breakpoint hit"""
 
@@ -355,7 +355,7 @@ class DebugTools:
 
         return async_wrapper
 
-    def capture_memory_snapshot(self, label: str = "") -> Optional[Dict[str, Any]]:
+    def capture_memory_snapshot(self, label: str = "") -> dict[str, Any] | None:
         """Capture current memory usage snapshot"""
 
         try:
@@ -426,7 +426,7 @@ class DebugTools:
         log_func = getattr(logger, level.lower(), logger.debug)
         log_func(f"DEBUG: {message}", extra=debug_data)
 
-    def inspect_object(self, obj: Any, name: str = "object") -> Dict[str, Any]:
+    def inspect_object(self, obj: Any, name: str = "object") -> dict[str, Any]:
         """Inspect object and return detailed information"""
 
         inspection = {
@@ -473,7 +473,7 @@ class DebugTools:
 
         return inspection
 
-    def get_function_performance_report(self) -> Dict[str, Any]:
+    def get_function_performance_report(self) -> dict[str, Any]:
         """Get performance report for profiled functions"""
 
         report = {"total_functions": len(self._function_timings), "functions": {}}
@@ -504,7 +504,7 @@ class DebugTools:
 
         return report
 
-    def get_memory_usage_report(self) -> Dict[str, Any]:
+    def get_memory_usage_report(self) -> dict[str, Any]:
         """Get memory usage report from snapshots"""
 
         if not self._memory_snapshots:
@@ -565,7 +565,7 @@ class DebugTools:
 
         logger.info(f"Debug session exported to {file_path}")
 
-    def create_performance_summary(self) -> Dict[str, Any]:
+    def create_performance_summary(self) -> dict[str, Any]:
         """Create comprehensive performance summary"""
 
         return {
@@ -601,7 +601,9 @@ class DebugSection:
         self.debug_tools.capture_memory_snapshot(f"start_{self.section_name}")
         return self
 
-    def __exit__(self, exc_type: Optional[type], exc_val: Optional[Exception], exc_tb: Optional[Any]) -> None:
+    def __exit__(
+        self, exc_type: type | None, exc_val: Exception | None, exc_tb: Any | None
+    ) -> None:
         duration = time.time() - self.start_time
         self.debug_tools.capture_memory_snapshot(f"end_{self.section_name}")
 
@@ -622,13 +624,13 @@ class DebugSection:
 _debug_tools: DebugTools | None = None
 
 
-def get_debug_tools() -> Optional[DebugTools]:
+def get_debug_tools() -> DebugTools | None:
     """Get global debug tools instance"""
     global _debug_tools
     return _debug_tools
 
 
-def initialize_debug_tools(config: Optional[Dict[str, Any]] = None) -> DebugTools:
+def initialize_debug_tools(config: dict[str, Any] | None = None) -> DebugTools:
     """Initialize global debug tools"""
     global _debug_tools
 

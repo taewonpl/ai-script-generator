@@ -4,7 +4,7 @@ SSE-based Generation API with 5 event types
 
 import asyncio
 import logging
-from typing import Dict, Any
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request, status
 from fastapi.responses import StreamingResponse
@@ -40,7 +40,9 @@ def get_generation_service() -> GenerationService:
     summary="Start Script Generation",
     description="Start a new script generation job and return SSE endpoint",
 )
-async def start_generation(request: GenerationJobRequest, http_request: Request) -> GenerationJobResponse:
+async def start_generation(
+    request: GenerationJobRequest, http_request: Request
+) -> GenerationJobResponse:
     """
     Start a new script generation job
 
@@ -175,7 +177,7 @@ async def cancel_generation(jobId: str) -> None:
     summary="Get Generation Status",
     description="Get current status and details of a generation job",
 )
-async def get_generation_status(jobId: str) -> Dict[str, Any]:
+async def get_generation_status(jobId: str) -> dict[str, Any]:
     """Get generation job status and details"""
     try:
         job_manager = get_job_manager()
@@ -223,7 +225,7 @@ async def get_generation_status(jobId: str) -> Dict[str, Any]:
     summary="List Active Generations",
     description="Get list of currently active generation jobs",
 )
-async def list_active_generations() -> Dict[str, Any]:
+async def list_active_generations() -> dict[str, Any]:
     """List all active generation jobs"""
     try:
         job_manager = get_job_manager()
@@ -259,7 +261,7 @@ async def list_active_generations() -> Dict[str, Any]:
     summary="Generation Statistics",
     description="Get generation service statistics",
 )
-async def get_generation_stats() -> Dict[str, Any]:
+async def get_generation_stats() -> dict[str, Any]:
     """Get generation service statistics"""
     try:
         job_manager = get_job_manager()

@@ -2,20 +2,23 @@
 Projects API Router
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi import status as http_status
-from sqlalchemy.orm import Session
-
 # Use service DTOs for consistency
 from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import status as http_status
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
 from ..services.project_service import ProjectCreateDTO, ProjectUpdateDTO
+
 
 class SuccessResponseDTO(BaseModel):
     success: bool = True
     message: str = "Success"
     data: Any = None
     error: str | None = None
+
 
 from ..database import get_db
 from ..models.project import ProjectStatus, ProjectType
@@ -58,7 +61,9 @@ async def get_projects(
 @router.post(
     "/", response_model=SuccessResponseDTO, status_code=http_status.HTTP_201_CREATED
 )
-async def create_project(project_data: ProjectCreateDTO, db: Session = Depends(get_db)) -> SuccessResponseDTO:
+async def create_project(
+    project_data: ProjectCreateDTO, db: Session = Depends(get_db)
+) -> SuccessResponseDTO:
     """프로젝트 생성"""
     try:
         service = ProjectService(db)
@@ -68,7 +73,9 @@ async def create_project(project_data: ProjectCreateDTO, db: Session = Depends(g
             success=True, message="프로젝트가 성공적으로 생성되었습니다.", data=project
         )
     except ValidationError as e:
-        raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail=e.message)
+        raise HTTPException(
+            status_code=http_status.HTTP_400_BAD_REQUEST, detail=e.message
+        )
     except Exception as e:
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
@@ -90,7 +97,9 @@ async def get_project(
             success=True, message="프로젝트를 성공적으로 조회했습니다.", data=project
         )
     except NotFoundError as e:
-        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail=e.message)
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND, detail=e.message
+        )
     except Exception as e:
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
@@ -110,9 +119,13 @@ async def update_project(
             success=True, message="프로젝트가 성공적으로 수정되었습니다.", data=project
         )
     except NotFoundError as e:
-        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail=e.message)
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND, detail=e.message
+        )
     except ValidationError as e:
-        raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail=e.message)
+        raise HTTPException(
+            status_code=http_status.HTTP_400_BAD_REQUEST, detail=e.message
+        )
     except Exception as e:
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
@@ -120,7 +133,9 @@ async def update_project(
 
 
 @router.delete("/{project_id}", response_model=SuccessResponseDTO)
-async def delete_project(project_id: str, db: Session = Depends(get_db)) -> SuccessResponseDTO:
+async def delete_project(
+    project_id: str, db: Session = Depends(get_db)
+) -> SuccessResponseDTO:
     """프로젝트 삭제"""
     try:
         service = ProjectService(db)
@@ -138,7 +153,9 @@ async def delete_project(project_id: str, db: Session = Depends(get_db)) -> Succ
                 detail="프로젝트 삭제에 실패했습니다.",
             )
     except NotFoundError as e:
-        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail=e.message)
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND, detail=e.message
+        )
     except Exception as e:
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
@@ -162,9 +179,13 @@ async def update_project_progress(
             data=project,
         )
     except NotFoundError as e:
-        raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND, detail=e.message)
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND, detail=e.message
+        )
     except ValidationError as e:
-        raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail=e.message)
+        raise HTTPException(
+            status_code=http_status.HTTP_400_BAD_REQUEST, detail=e.message
+        )
     except Exception as e:
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)

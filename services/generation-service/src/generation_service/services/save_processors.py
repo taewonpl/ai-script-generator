@@ -145,7 +145,9 @@ class SaveProcessors:
         logger.info("Cache cleanup completed")
 
 
-def register_save_processors(project_service_url: str = "http://localhost:8002") -> None:
+def register_save_processors(
+    project_service_url: str = "http://localhost:8002",
+) -> None:
     """Register all save processors with the retry queue"""
     processors = SaveProcessors(project_service_url)
     queue = get_retry_queue()

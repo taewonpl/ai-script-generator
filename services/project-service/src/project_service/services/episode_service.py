@@ -5,10 +5,10 @@ Episode Business Logic Service
 import uuid
 from typing import Any
 
-from sqlalchemy.orm import Session
-
 # Use fallback DTOs - Core integration disabled for type stability
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
 
 class EpisodeDTO(BaseModel):
     id: str
@@ -18,13 +18,16 @@ class EpisodeDTO(BaseModel):
     status: str | None = None
     description: str | None = None
 
+
 class EpisodeCreateDTO(BaseModel):
     title: str
     description: str | None = None
 
+
 class EpisodeUpdateDTO(BaseModel):
     title: str | None = None
     description: str | None = None
+
 
 class BaseServiceException(Exception): ...
 
@@ -41,9 +44,11 @@ from ..repositories.project import ProjectRepository
 # Setup logging
 try:
     from ai_script_core import get_service_logger
+
     logger = get_service_logger("project-service.episode-service")
 except ImportError:
     import logging
+
     logger = logging.getLogger(__name__)  # type: ignore[assignment]
 
 
@@ -231,7 +236,9 @@ class EpisodeService:
 
         return [episode.to_dict() for episode in episodes]
 
-    def update_episode(self, episode_id: str, update_data: dict[str, Any]) -> dict[str, Any]:
+    def update_episode(
+        self, episode_id: str, update_data: dict[str, Any]
+    ) -> dict[str, Any]:
         """에피소드 수정"""
         # 에피소드 존재 확인
         if not self.repository.exists(episode_id):
@@ -269,7 +276,9 @@ class EpisodeService:
 
         return episode.to_dict()
 
-    def reorder_episodes(self, project_id: str, episode_orders: list[dict[str, Any]]) -> bool:
+    def reorder_episodes(
+        self, project_id: str, episode_orders: list[dict[str, Any]]
+    ) -> bool:
         """에피소드 순서 재정렬"""
         # 프로젝트 존재 확인
         if not self.project_repository.exists(project_id):

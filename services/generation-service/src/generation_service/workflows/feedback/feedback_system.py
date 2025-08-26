@@ -5,7 +5,7 @@ Feedback Loop System - Learns from user preferences and improves quality
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 # Import Core Module components
 try:
@@ -85,15 +85,15 @@ class UserFeedback:
     """Individual piece of user feedback"""
 
     feedback_id: str
-    user_id: Optional[str]
+    user_id: str | None
     generation_id: str
     feedback_type: FeedbackType
     sentiment: FeedbackSentiment
     content: dict[str, Any]  # Feedback content specific to type
-    quality_scores: Optional[Dict[str, float]]  # User-provided quality scores
+    quality_scores: dict[str, float] | None  # User-provided quality scores
     timestamp: datetime
-    session_id: Optional[str] = None
-    context: Optional[Dict[str, Any]] = None
+    session_id: str | None = None
+    context: dict[str, Any] | None = None
 
 
 @dataclass
@@ -101,10 +101,10 @@ class UserPreferenceProfile:
     """Learned user preference profile"""
 
     user_id: str
-    quality_preferences: Dict[QualityDimension, float]  # Importance weights
-    agent_preferences: Dict[str, float]  # Agent effectiveness for this user
-    style_preferences: Dict[str, Any]  # Style and content preferences
-    feedback_history: List[str]  # Feedback IDs
+    quality_preferences: dict[QualityDimension, float]  # Importance weights
+    agent_preferences: dict[str, float]  # Agent effectiveness for this user
+    style_preferences: dict[str, Any]  # Style and content preferences
+    feedback_history: list[str]  # Feedback IDs
     last_updated: datetime
     confidence_score: float  # How confident we are in these preferences
     total_feedback_count: int
@@ -122,12 +122,12 @@ class FeedbackLearningEngine:
     - Continuous improvement loops
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, config: dict[str, Any] | None = None) -> None:
         self.config = config or {}
 
         # Storage for feedback and preferences
-        self.feedback_storage: Dict[str, UserFeedback] = {}
-        self.user_profiles: Dict[str, UserPreferenceProfile] = {}
+        self.feedback_storage: dict[str, UserFeedback] = {}
+        self.user_profiles: dict[str, UserPreferenceProfile] = {}
 
         # Learning parameters
         self.learning_rate = self.config.get("learning_rate", 0.1)
@@ -177,9 +177,9 @@ class FeedbackLearningEngine:
         self,
         generation_id: str,
         user_rating: float,
-        quality_feedback: Optional[Dict[str, float]] = None,
-        user_id: Optional[str] = None,
-        comments: Optional[str] = None,
+        quality_feedback: dict[str, float] | None = None,
+        user_id: str | None = None,
+        comments: str | None = None,
     ) -> None:
         """Process feedback for a completed generation"""
 
@@ -203,9 +203,9 @@ class FeedbackLearningEngine:
     async def process_implicit_feedback(
         self,
         generation_id: str,
-        user_actions: Dict[str, Any],
-        user_id: Optional[str] = None,
-        session_duration: Optional[float] = None,
+        user_actions: dict[str, Any],
+        user_id: str | None = None,
+        session_duration: float | None = None,
     ) -> None:
         """Process implicit feedback from user behavior"""
 
@@ -231,7 +231,7 @@ class FeedbackLearningEngine:
 
         await self.record_feedback(feedback)
 
-    async def get_user_preferences(self, user_id: str) -> Optional[UserPreferenceProfile]:
+    async def get_user_preferences(self, user_id: str) -> UserPreferenceProfile | None:
         """Get learned preferences for a user"""
 
         if user_id not in self.user_profiles:
@@ -250,8 +250,8 @@ class FeedbackLearningEngine:
         return self.user_profiles.get(user_id)
 
     async def personalize_generation_config(
-        self, base_config: Dict[str, Any], user_id: Optional[str] = None
-    ) -> Dict[str, Any]:
+        self, base_config: dict[str, Any], user_id: str | None = None
+    ) -> dict[str, Any]:
         """Personalize generation configuration based on user preferences"""
 
         if not user_id:
@@ -310,8 +310,8 @@ class FeedbackLearningEngine:
         return personalized_config
 
     async def calibrate_quality_assessment(
-        self, assessor_scores: Dict[str, float], user_scores: Dict[str, float]
-    ) -> Dict[str, float]:
+        self, assessor_scores: dict[str, float], user_scores: dict[str, float]
+    ) -> dict[str, float]:
         """Calibrate quality assessment based on user feedback"""
 
         calibrated_scores = assessor_scores.copy()
@@ -330,7 +330,9 @@ class FeedbackLearningEngine:
 
         return calibrated_scores
 
-    async def get_improvement_suggestions(self, user_id: Optional[str] = None) -> List[str]:
+    async def get_improvement_suggestions(
+        self, user_id: str | None = None
+    ) -> list[str]:
         """Get improvement suggestions based on feedback patterns"""
 
         suggestions = []
@@ -473,7 +475,7 @@ class FeedbackLearningEngine:
             return FeedbackSentiment.NEGATIVE
 
     def _calculate_satisfaction_from_actions(
-        self, user_actions: Dict[str, Any], session_duration: Optional[float] = None
+        self, user_actions: dict[str, Any], session_duration: float | None = None
     ) -> float:
         """Calculate satisfaction score from user actions"""
 
@@ -500,8 +502,8 @@ class FeedbackLearningEngine:
         return max(0.0, min(1.0, satisfaction))
 
     def _calculate_calibration_factors(
-        self, assessor_scores: Dict[str, float], user_scores: Dict[str, float]
-    ) -> Dict[str, float]:
+        self, assessor_scores: dict[str, float], user_scores: dict[str, float]
+    ) -> dict[str, float]:
         """Calculate calibration factors for quality assessment"""
 
         calibration_factors = {}
@@ -521,7 +523,7 @@ class FeedbackLearningEngine:
 
         return calibration_factors
 
-    def _get_recent_feedback(self, window: timedelta) -> List[UserFeedback]:
+    def _get_recent_feedback(self, window: timedelta) -> list[UserFeedback]:
         """Get feedback within specified time window"""
 
         cutoff_time = (utc_now() if CORE_AVAILABLE else datetime.now()) - window
@@ -533,8 +535,8 @@ class FeedbackLearningEngine:
         ]
 
     def _analyze_common_feedback_patterns(
-        self, feedback_list: List[UserFeedback]
-    ) -> List[str]:
+        self, feedback_list: list[UserFeedback]
+    ) -> list[str]:
         """Analyze common patterns in feedback to generate suggestions"""
 
         suggestions = []
@@ -566,7 +568,7 @@ class FeedbackLearningEngine:
 
         return suggestions
 
-    def get_feedback_statistics(self) -> Dict[str, Any]:
+    def get_feedback_statistics(self) -> dict[str, Any]:
         """Get statistics about feedback system performance"""
 
         total_feedback = len(self.feedback_storage)

@@ -44,7 +44,7 @@ except (ImportError, RuntimeError):
 
     logger = logging.getLogger(__name__)  # type: ignore[assignment]
 
-    # Fallback utility functions  
+    # Fallback utility functions
     def utc_now() -> datetime:
         """Fallback UTC timestamp"""
         from datetime import datetime, timezone
@@ -56,28 +56,33 @@ except (ImportError, RuntimeError):
         import uuid
 
         return str(uuid.uuid4())
-    
+
     def calculate_hash(data: str) -> str:
         """Fallback hash calculation"""
         import hashlib
+
         return hashlib.md5(data.encode()).hexdigest()
-    
+
     def safe_json_dumps(data: Any) -> str:
         """Fallback JSON serialization"""
         import json
+
         return json.dumps(data, default=str)
-    
+
     # Fallback exception classes
     class BaseServiceException(Exception):
         """Fallback base service exception"""
+
         pass
-    
+
     class ExternalServiceError(BaseServiceException):
         """Fallback external service error"""
+
         pass
-        
+
     class ValidationException(BaseServiceException):
         """Fallback validation exception"""
+
         pass
 
     def generate_id() -> str:
@@ -134,8 +139,10 @@ class EmbeddingResponse:
 
 class EmbeddingError(Exception):
     """Base exception for embedding operations"""
-    
-    def __init__(self, message: str, operation: str = "embedding_generation", **kwargs: Any) -> None:
+
+    def __init__(
+        self, message: str, operation: str = "embedding_generation", **kwargs: Any
+    ) -> None:
         super().__init__(message)
         self.operation = operation
         self.kwargs = kwargs

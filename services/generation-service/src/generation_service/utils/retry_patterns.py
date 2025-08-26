@@ -143,7 +143,9 @@ async def async_retry(
     raise RetryError(error_msg, config.max_attempts, last_exception)
 
 
-def sync_retry(func: Callable[..., Any], config: RetryConfig, *args: Any, **kwargs: Any) -> Any:
+def sync_retry(
+    func: Callable[..., Any], config: RetryConfig, *args: Any, **kwargs: Any
+) -> Any:
     """Execute sync function with retry logic"""
 
     last_exception = None
@@ -211,7 +213,9 @@ def sync_retry(func: Callable[..., Any], config: RetryConfig, *args: Any, **kwar
     raise RetryError(error_msg, config.max_attempts, last_exception)
 
 
-def retry_decorator(config: RetryConfig) -> Callable[[Callable[..., T]], Callable[..., T]]:
+def retry_decorator(
+    config: RetryConfig,
+) -> Callable[[Callable[..., T]], Callable[..., T]]:
     """Decorator for adding retry logic to functions"""
 
     def decorator(func: Callable[..., T]) -> Callable[..., T]:
@@ -362,7 +366,9 @@ class TimeoutContext:
         return self.timeout
 
 
-async def with_timeout(coro: Any, timeout: float, operation_name: str = "operation") -> Any:
+async def with_timeout(
+    coro: Any, timeout: float, operation_name: str = "operation"
+) -> Any:
     """Execute coroutine with timeout"""
     try:
         return await asyncio.wait_for(coro, timeout=timeout)

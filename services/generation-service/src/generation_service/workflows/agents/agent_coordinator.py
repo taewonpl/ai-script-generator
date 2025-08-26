@@ -4,7 +4,7 @@ Agent Coordinator - Manages and coordinates specialized AI agents
 
 import asyncio
 from datetime import datetime
-from typing import Any, Optional, Dict, List, Tuple
+from typing import Any
 
 # Import Core Module components
 try:
@@ -81,8 +81,8 @@ class AgentExecutionPlan:
     def add_agent(
         self,
         agent: BaseSpecialAgent,
-        config: Optional[Dict[str, Any]] = None,
-        dependencies: Optional[List[str]] = None,
+        config: dict[str, Any] | None = None,
+        dependencies: list[str] | None = None,
     ) -> None:
         """Add an agent to the execution plan"""
         self.agents.append((agent, config or {}))
@@ -157,7 +157,9 @@ class AgentCoordinator:
     - Configuration management for agent behavior
     """
 
-    def __init__(self, provider_factory: Optional[Any] = None, config: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(
+        self, provider_factory: Any | None = None, config: dict[str, Any] | None = None
+    ) -> None:
         self.provider_factory = provider_factory
         self.config = config or {}
 
@@ -204,7 +206,7 @@ class AgentCoordinator:
                 },
             )
 
-    async def analyze_content_needs(self, state: GenerationState) -> Dict[str, Any]:
+    async def analyze_content_needs(self, state: GenerationState) -> dict[str, Any]:
         """
         Analyze content to determine which agents should be applied
         """
@@ -258,7 +260,7 @@ class AgentCoordinator:
         return analysis_result
 
     async def create_execution_plan(
-        self, state: GenerationState, preferences: Optional[Dict[str, Any]] = None
+        self, state: GenerationState, preferences: dict[str, Any] | None = None
     ) -> AgentExecutionPlan:
         """
         Create optimized execution plan for agents
@@ -440,7 +442,7 @@ class AgentCoordinator:
             return error_state
 
     async def execute_adaptive_workflow(
-        self, state: GenerationState, preferences: Optional[Dict[str, Any]] = None
+        self, state: GenerationState, preferences: dict[str, Any] | None = None
     ) -> GenerationState:
         """
         Execute complete adaptive workflow: analyze, plan, and execute
@@ -456,7 +458,9 @@ class AgentCoordinator:
         # Execute the plan
         return await self.execute_plan(state, plan)
 
-    def get_agent_recommendations(self, state: GenerationState) -> Optional[Dict[str, Any]]:
+    def get_agent_recommendations(
+        self, state: GenerationState
+    ) -> dict[str, Any] | None:
         """
         Get agent recommendations without executing them
         """
@@ -491,8 +495,8 @@ class AgentCoordinator:
         return quality
 
     def _create_agent_config(
-        self, agent_info: Dict[str, Any], preferences: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, agent_info: dict[str, Any], preferences: dict[str, Any]
+    ) -> dict[str, Any]:
         """Create configuration for an agent based on analysis and preferences"""
 
         base_config = self.config.get(agent_info["agent_name"], {})
@@ -512,8 +516,8 @@ class AgentCoordinator:
         return config
 
     def _determine_dependencies(
-        self, agent_name: str, selected_agents: List[Dict[str, Any]]
-    ) -> List[str]:
+        self, agent_name: str, selected_agents: list[dict[str, Any]]
+    ) -> list[str]:
         """Determine execution dependencies for an agent"""
 
         # Define dependency rules
@@ -589,7 +593,7 @@ class AgentCoordinator:
 
         return merged_state
 
-    def get_coordinator_metrics(self) -> Dict[str, Any]:
+    def get_coordinator_metrics(self) -> dict[str, Any]:
         """Get coordinator performance metrics"""
 
         return {

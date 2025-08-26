@@ -6,7 +6,7 @@ TypeScript와 정확히 매치되는 구조를 제공합니다.
 """
 
 from datetime import datetime
-from typing import Any, Literal, Union, Optional, Dict
+from typing import Any, Literal, Union
 
 from pydantic import Field
 
@@ -32,10 +32,10 @@ class ProgressEventData(BaseSSEEvent):
     current_step: str = Field(
         ..., description="현재 단계 (한국어 설명)", alias="currentStep"
     )
-    estimated_time: Optional[int] = Field(
+    estimated_time: int | None = Field(
         None, description="예상 남은 시간(초)", alias="estimatedTime"
     )
-    metadata: Optional[Dict[str, Any]] = Field(None, description="추가 메타데이터")
+    metadata: dict[str, Any] | None = Field(None, description="추가 메타데이터")
 
 
 class PreviewEventData(BaseSSEEvent):
@@ -44,8 +44,8 @@ class PreviewEventData(BaseSSEEvent):
     type: Literal["preview"] = Field(default="preview", description="이벤트 타입")
     markdown: str = Field(..., description="부분 스크립트 내용")
     is_partial: bool = Field(True, description="부분 내용 여부", alias="isPartial")
-    word_count: Optional[int] = Field(None, description="단어 수", alias="wordCount")
-    estimated_tokens: Optional[int] = Field(
+    word_count: int | None = Field(None, description="단어 수", alias="wordCount")
+    estimated_tokens: int | None = Field(
         None, description="예상 토큰 수", alias="estimatedTokens"
     )
 
@@ -62,12 +62,12 @@ class CompletionResult(BaseSchema):
 
     markdown: str = Field(..., description="완성된 스크립트")
     tokens: int = Field(..., description="사용된 토큰 수")
-    word_count: Optional[int] = Field(None, description="단어 수", alias="wordCount")
-    model_used: Optional[str] = Field(None, description="사용된 모델", alias="modelUsed")
-    episode_id: Optional[str] = Field(
+    word_count: int | None = Field(None, description="단어 수", alias="wordCount")
+    model_used: str | None = Field(None, description="사용된 모델", alias="modelUsed")
+    episode_id: str | None = Field(
         None, description="ChromaDB 에피소드 ID", alias="episodeId"
     )
-    saved_to_episode: Optional[bool] = Field(
+    saved_to_episode: bool | None = Field(
         None, description="에피소드 저장 여부", alias="savedToEpisode"
     )
 
@@ -85,7 +85,7 @@ class SSEErrorInfo(BaseSchema):
     code: str = Field(..., description="오류 코드")
     message: str = Field(..., description="오류 메시지")
     retryable: bool = Field(..., description="재시도 가능 여부")
-    details: Optional[Dict[str, Any]] = Field(None, description="오류 세부사항")
+    details: dict[str, Any] | None = Field(None, description="오류 세부사항")
 
 
 class HeartbeatEventData(BaseSSEEvent):
@@ -93,7 +93,7 @@ class HeartbeatEventData(BaseSSEEvent):
 
     type: Literal["heartbeat"] = Field(default="heartbeat", description="이벤트 타입")
     timestamp: datetime = Field(default_factory=datetime.now, description="타임스탬프")
-    server_info: Optional[Dict[str, Any]] = Field(
+    server_info: dict[str, Any] | None = Field(
         None, description="서버 정보", alias="serverInfo"
     )
 
@@ -117,10 +117,10 @@ class GenerationJobRequest(BaseSchema):
     """생성 작업 요청"""
 
     project_id: str = Field(..., description="프로젝트 ID", alias="projectId")
-    episode_number: Optional[int] = Field(
+    episode_number: int | None = Field(
         None, description="에피소드 번호", alias="episodeNumber"
     )
-    title: Optional[str] = Field(None, description="제목")
+    title: str | None = Field(None, description="제목")
     description: str = Field(
         ..., min_length=10, max_length=2000, description="스크립트 설명"
     )
@@ -139,7 +139,7 @@ class GenerationJobResponse(BaseSchema):
     job_id: str = Field(..., description="작업 ID", alias="jobId")
     status: str = Field(..., description="초기 상태")
     sse_url: str = Field(..., description="SSE 스트림 URL", alias="sseUrl")
-    estimated_duration: Optional[int] = Field(
+    estimated_duration: int | None = Field(
         None, description="예상 소요 시간(초)", alias="estimatedDuration"
     )
 
@@ -152,13 +152,13 @@ class GenerationJobDetails(BaseSchema):
     status: str = Field(..., description="현재 상태")
     progress: float = Field(default=0.0, ge=0.0, le=100.0, description="진행률")
     created_at: datetime = Field(..., description="생성 시간", alias="createdAt")
-    started_at: Optional[datetime] = Field(
+    started_at: datetime | None = Field(
         None, description="시작 시간", alias="startedAt"
     )
-    completed_at: Optional[datetime] = Field(
+    completed_at: datetime | None = Field(
         None, description="완료 시간", alias="completedAt"
     )
-    error_message: Optional[str] = Field(
+    error_message: str | None = Field(
         None, description="오류 메시지", alias="errorMessage"
     )
 
@@ -172,32 +172,32 @@ class GenerationStartResponse(BaseSchema):
     """생성 시작 API 응답"""
 
     success: bool = Field(..., description="성공 여부")
-    data: Optional[GenerationJobResponse] = Field(None, description="응답 데이터")
-    error: Optional[Dict[str, Any]] = Field(None, description="오류 정보")
+    data: GenerationJobResponse | None = Field(None, description="응답 데이터")
+    error: dict[str, Any] | None = Field(None, description="오류 정보")
 
 
 class GenerationStatusResponse(BaseSchema):
     """생성 상태 API 응답"""
 
     success: bool = Field(..., description="성공 여부")
-    data: Optional[GenerationJobDetails] = Field(None, description="작업 상세 정보")
-    error: Optional[Dict[str, Any]] = Field(None, description="오류 정보")
+    data: GenerationJobDetails | None = Field(None, description="작업 상세 정보")
+    error: dict[str, Any] | None = Field(None, description="오류 정보")
 
 
 class GenerationListResponse(BaseSchema):
     """활성 생성 목록 API 응답"""
 
     success: bool = Field(..., description="성공 여부")
-    data: Optional[Dict[str, Any]] = Field(None, description="활성 작업 목록")
-    error: Optional[Dict[str, Any]] = Field(None, description="오류 정보")
+    data: dict[str, Any] | None = Field(None, description="활성 작업 목록")
+    error: dict[str, Any] | None = Field(None, description="오류 정보")
 
 
 class GenerationStatsResponse(BaseSchema):
     """생성 통계 API 응답"""
 
     success: bool = Field(..., description="성공 여부")
-    data: Optional[Dict[str, Any]] = Field(None, description="생성 통계")
-    error: Optional[Dict[str, Any]] = Field(None, description="오류 정보")
+    data: dict[str, Any] | None = Field(None, description="생성 통계")
+    error: dict[str, Any] | None = Field(None, description="오류 정보")
 
 
 # =============================================================================
@@ -222,11 +222,11 @@ class SSEConnectionStatus(BaseSchema):
     max_retries: int = Field(
         default=5, description="최대 재시도 횟수", alias="maxRetries"
     )
-    next_retry_in: Optional[int] = Field(
+    next_retry_in: int | None = Field(
         None, description="다음 재시도까지 시간(초)", alias="nextRetryIn"
     )
-    error: Optional[str] = Field(None, description="오류 메시지")
-    last_heartbeat: Optional[datetime] = Field(
+    error: str | None = Field(None, description="오류 메시지")
+    last_heartbeat: datetime | None = Field(
         None, description="마지막 하트비트", alias="lastHeartbeat"
     )
 

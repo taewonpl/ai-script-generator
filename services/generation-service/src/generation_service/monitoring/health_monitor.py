@@ -8,7 +8,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union, Tuple
+from typing import Any
 
 # Import Core Module components
 try:
@@ -147,7 +147,7 @@ class HealthMonitor:
 
         # Monitoring state
         self._monitoring_enabled = False
-        self._monitoring_tasks: Dict[str, asyncio.Task[None]] = {}
+        self._monitoring_tasks: dict[str, asyncio.Task[None]] = {}
         self._health_history: list[dict[str, Any]] = []
 
         # Configuration
@@ -392,7 +392,9 @@ class HealthMonitor:
                 error=str(e),
             )
 
-    async def _update_component_health(self, component_name: str, result: HealthResult) -> None:
+    async def _update_component_health(
+        self, component_name: str, result: HealthResult
+    ) -> None:
         """Update component health status"""
 
         component = self._component_health[component_name]
@@ -509,7 +511,7 @@ class HealthMonitor:
         overall_status = self.get_overall_health_status()
 
         # Calculate component statistics
-        status_counts: Dict[str, int] = {}
+        status_counts: dict[str, int] = {}
         total_response_time = 0.0
         healthy_components = 0
 

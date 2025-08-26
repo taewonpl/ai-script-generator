@@ -128,7 +128,9 @@ class EpisodeMetricsCollector:
             )
         )
 
-    def record_retry_attempt(self, project_id: str, episode_id: str | None = None) -> None:
+    def record_retry_attempt(
+        self, project_id: str, episode_id: str | None = None
+    ) -> None:
         """Record a retry attempt"""
         self.record_metric(
             EpisodeMetric(
@@ -347,7 +349,9 @@ class EpisodePerformanceTracker:
 
         # Record metrics
         collector = EpisodeMetricsCollector(db)
-        collector.record_creation_duration(duration, project_id, episode_id or "unknown", success)
+        collector.record_creation_duration(
+            duration, project_id, episode_id or "unknown", success
+        )
 
         if retry_count > 0:
             for _ in range(retry_count):

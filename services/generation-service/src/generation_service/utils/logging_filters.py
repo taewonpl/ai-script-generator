@@ -4,8 +4,8 @@ Logging filters for sensitive data masking and security
 
 import logging
 import re
-from typing import Any, Mapping, Union
-from collections.abc import Sequence
+from collections.abc import Mapping
+from typing import Any
 
 
 class APIKeyMaskingFilter(logging.Filter):
@@ -125,11 +125,11 @@ class APIKeyMaskingFilter(logging.Filter):
         # Show first 4 and last 4 characters
         return f"{value[:4]}...{value[-4:]}"
 
-    def _mask_args(self, args: Union[tuple[Any, ...], Mapping[str, Any]]) -> tuple[Any, ...]:
+    def _mask_args(self, args: tuple[Any, ...] | Mapping[str, Any]) -> tuple[Any, ...]:
         """Mask sensitive data in log arguments"""
         if not args:
             return ()
-            
+
         # Handle Mapping case (keyword arguments)
         if isinstance(args, Mapping):
             # Convert mapping to tuple of values for compatibility
@@ -169,7 +169,9 @@ class APIKeyMaskingFilter(logging.Filter):
 
         return masked_dict
 
-    def _mask_collection(self, data: Union[list[Any], tuple[Any, ...]]) -> Union[list[Any], tuple[Any, ...]]:
+    def _mask_collection(
+        self, data: list[Any] | tuple[Any, ...]
+    ) -> list[Any] | tuple[Any, ...]:
         """Mask sensitive data in list/tuple"""
         if not isinstance(data, (list, tuple)):
             return data

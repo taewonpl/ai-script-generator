@@ -7,7 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union, Tuple
+from typing import Any
 
 # Import Core Module components
 try:
@@ -179,7 +179,7 @@ class AlertManager:
         self._alert_history: list[Alert] = []
 
         # Evaluation state
-        self._evaluation_tasks: Dict[str, asyncio.Task[None]] = {}
+        self._evaluation_tasks: dict[str, asyncio.Task[None]] = {}
         self._metric_buffer: dict[str, list[tuple]] = {}  # (timestamp, value)
         self._last_alert_time: dict[str, datetime] = {}
 
@@ -197,7 +197,7 @@ class AlertManager:
 
         # Monitoring state
         self._monitoring_enabled = False
-        self._cleanup_task: Optional[asyncio.Task[None]] = None
+        self._cleanup_task: asyncio.Task[None] | None = None
 
         # Initialize default alert rules
         self._initialize_default_rules()
@@ -313,7 +313,9 @@ class AlertManager:
 
         return False
 
-    def add_alert_handler(self, channel: AlertChannel, handler: Callable[[Alert], Any]) -> None:
+    def add_alert_handler(
+        self, channel: AlertChannel, handler: Callable[[Alert], Any]
+    ) -> None:
         """Add alert handler for specific channel"""
 
         if channel not in self._alert_handlers:
@@ -525,7 +527,9 @@ class AlertManager:
             },
         )
 
-    async def _check_alert_resolution(self, rule_name: str, current_value: float | str) -> None:
+    async def _check_alert_resolution(
+        self, rule_name: str, current_value: float | str
+    ) -> None:
         """Check if active alert should be resolved"""
 
         if rule_name in self._active_alerts:
@@ -565,7 +569,7 @@ class AlertManager:
                     },
                 )
 
-    async def _send_alert(self, alert: Alert, channels: List[AlertChannel]) -> None:
+    async def _send_alert(self, alert: Alert, channels: list[AlertChannel]) -> None:
         """Send alert through specified channels"""
 
         for channel in channels:
@@ -675,11 +679,11 @@ class AlertManager:
             logger.error(f"Webhook alert handler error: {e}")
 
     # Public API methods
-    def get_active_alerts(self) -> List[Alert]:
+    def get_active_alerts(self) -> list[Alert]:
         """Get all active alerts"""
         return list(self._active_alerts.values())
 
-    def get_alert_history(self, hours: int = 24) -> List[Alert]:
+    def get_alert_history(self, hours: int = 24) -> list[Alert]:
         """Get alert history for specified hours"""
 
         since = (utc_now() if CORE_AVAILABLE else datetime.now()) - timedelta(

@@ -6,7 +6,7 @@ import json
 import os
 from dataclasses import asdict, dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from ..workflows.agents import AgentPriority
 from ..workflows.quality import QualityDimension
@@ -182,7 +182,7 @@ class ConfigurationManager:
 
     def __init__(
         self,
-        config_file: Optional[str] = None,
+        config_file: str | None = None,
         profile: ConfigurationProfile = ConfigurationProfile.BALANCED,
     ):
         self.config_file = config_file or os.getenv(
@@ -310,7 +310,9 @@ class ConfigurationManager:
         """Get feedback system configuration"""
         return self.config.feedback
 
-    def update_agent_config(self, agent_name: str, config_updates: dict[str, Any]) -> None:
+    def update_agent_config(
+        self, agent_name: str, config_updates: dict[str, Any]
+    ) -> None:
         """Update configuration for a specific agent"""
 
         if agent_name not in self.config.agents:
@@ -337,7 +339,7 @@ class ConfigurationManager:
 
         self.config.quality.dimension_weights.update(dimension_weights)
 
-    def save_config(self, file_path: Optional[str] = None) -> None:
+    def save_config(self, file_path: str | None = None) -> None:
         """Save current configuration to file"""
 
         save_path = file_path or self.config_file
@@ -349,7 +351,7 @@ class ConfigurationManager:
         except Exception as e:
             raise RuntimeError(f"Failed to save configuration to {save_path}: {e}")
 
-    def export_config(self) -> Dict[str, Any]:
+    def export_config(self) -> dict[str, Any]:
         """Export configuration as dictionary"""
         return self._config_to_dict(self.config)
 
@@ -362,7 +364,7 @@ class ConfigurationManager:
         self.profile = profile
         self.config = self._create_profile_config(profile)
 
-    def validate_config(self) -> List[str]:
+    def validate_config(self) -> list[str]:
         """Validate current configuration and return any issues"""
 
         issues = []
@@ -399,7 +401,7 @@ class ConfigurationManager:
 
         return issues
 
-    def get_config_summary(self) -> Dict[str, Any]:
+    def get_config_summary(self) -> dict[str, Any]:
         """Get a summary of current configuration"""
 
         enabled_agents = [
@@ -420,7 +422,7 @@ class ConfigurationManager:
             "quality_assessment_enabled": self.config.enable_quality_assessment,
         }
 
-    def _config_to_dict(self, config: AdvancedConfiguration) -> Dict[str, Any]:
+    def _config_to_dict(self, config: AdvancedConfiguration) -> dict[str, Any]:
         """Convert configuration object to dictionary"""
 
         config_dict = asdict(config)
@@ -436,7 +438,7 @@ class ConfigurationManager:
 
         return config_dict
 
-    def _dict_to_config(self, config_dict: Dict[str, Any]) -> AdvancedConfiguration:
+    def _dict_to_config(self, config_dict: dict[str, Any]) -> AdvancedConfiguration:
         """Convert dictionary to configuration object"""
 
         # Handle enum conversions
@@ -479,7 +481,7 @@ class ConfigurationManager:
 
 
 # Global configuration manager instance
-_config_manager: Optional[ConfigurationManager] = None
+_config_manager: ConfigurationManager | None = None
 
 
 def get_config_manager() -> ConfigurationManager:
@@ -498,7 +500,7 @@ def get_config_manager() -> ConfigurationManager:
 
 
 def initialize_config_manager(
-    config_file: Optional[str] = None,
+    config_file: str | None = None,
     profile: ConfigurationProfile = ConfigurationProfile.BALANCED,
 ) -> ConfigurationManager:
     """Initialize global configuration manager with specific settings"""

@@ -376,7 +376,9 @@ class AsyncTaskPool:
                 logger.error(f"Worker error: {e}")
                 await asyncio.sleep(1.0)
 
-    async def _execute_task(self, task_id: str, coro: Awaitable[Any], timeout: float) -> None:
+    async def _execute_task(
+        self, task_id: str, coro: Awaitable[Any], timeout: float
+    ) -> None:
         """Execute a single task with timeout and error handling"""
 
         result = self._task_results[task_id]

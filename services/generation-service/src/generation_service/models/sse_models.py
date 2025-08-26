@@ -79,7 +79,12 @@ class FailedEventData(BaseModel):
 
     @classmethod
     def create_error(
-        cls, job_id: str, code: str, message: str, retryable: bool = False, **kwargs: Any
+        cls,
+        job_id: str,
+        code: str,
+        message: str,
+        retryable: bool = False,
+        **kwargs: Any,
     ) -> "FailedEventData":
         """Create failed event with error data"""
         error = {"code": code, "message": message, "retryable": retryable, **kwargs}
@@ -249,7 +254,9 @@ class GenerationJob(BaseModel):
         self.eventSequence += 1
         self.lastEventId = f"{self.jobId}_{self.eventSequence}"
 
-    def complete(self, final_content: str, tokens: int = 0, model_used: str | None = None) -> None:
+    def complete(
+        self, final_content: str, tokens: int = 0, model_used: str | None = None
+    ) -> None:
         """Mark job as completed"""
         self.status = GenerationJobStatus.COMPLETED
         self.progress = 100

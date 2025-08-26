@@ -4,7 +4,7 @@ Standardized event logging for critical application events.
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional, Dict
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -35,18 +35,18 @@ class ApplicationEvent(BaseModel):
 
     # Context information
     service: str = Field(..., description="Service name")
-    trace_id: Optional[str] = Field(default=None, description="Request trace ID")
-    job_id: Optional[str] = Field(default=None, description="Job/task ID")
-    project_id: Optional[str] = Field(default=None, description="Project context")
-    user_id: Optional[str] = Field(default=None, description="User ID")
+    trace_id: str | None = Field(default=None, description="Request trace ID")
+    job_id: str | None = Field(default=None, description="Job/task ID")
+    project_id: str | None = Field(default=None, description="Project context")
+    user_id: str | None = Field(default=None, description="User ID")
 
     # Event data
     metadata: dict[str, Any] = Field(default_factory=dict, description="Event metadata")
-    duration_ms: Optional[int] = Field(default=None, description="Operation duration")
+    duration_ms: int | None = Field(default=None, description="Operation duration")
 
     # Error information (if applicable)
-    error_code: Optional[str] = Field(default=None, description="Error code")
-    error_message: Optional[str] = Field(default=None, description="Error message")
+    error_code: str | None = Field(default=None, description="Error code")
+    error_message: str | None = Field(default=None, description="Error message")
 
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat() + "Z"}
@@ -59,7 +59,7 @@ class EventLogger:
         self,
         logger: StructuredLogger,
         service_name: str,
-        trace_context: Optional[TraceContext] = None,
+        trace_context: TraceContext | None = None,
     ):
         self.logger = logger
         self.service_name = service_name
@@ -70,10 +70,10 @@ class EventLogger:
         event_type: str,
         event_name: str,
         severity: EventSeverity = EventSeverity.MEDIUM,
-        metadata: Optional[Dict[str, Any]] = None,
-        duration_ms: Optional[int] = None,
-        error_code: Optional[str] = None,
-        error_message: Optional[str] = None,
+        metadata: dict[str, Any] | None = None,
+        duration_ms: int | None = None,
+        error_code: str | None = None,
+        error_message: str | None = None,
     ) -> None:
         """Log a standardized application event."""
 
@@ -112,7 +112,7 @@ class EventLogger:
         episode_id: str,
         episode_number: int,
         title: str,
-        duration_ms: Optional[int] = None,
+        duration_ms: int | None = None,
     ) -> None:
         """Log episode creation event."""
         self.log_event(
@@ -134,7 +134,7 @@ class EventLogger:
         project_id: str,
         episode_id: str,
         changes: dict[str, Any],
-        duration_ms: Optional[int] = None,
+        duration_ms: int | None = None,
     ) -> None:
         """Log episode update event."""
         self.log_event(
@@ -155,7 +155,7 @@ class EventLogger:
         project_id: str,
         episode_id: str,
         episode_number: int,
-        duration_ms: Optional[int] = None,
+        duration_ms: int | None = None,
     ) -> None:
         """Log episode deletion event."""
         self.log_event(
@@ -199,7 +199,7 @@ class EventLogger:
         generation_id: str,
         progress_percentage: float,
         current_step: str,
-        estimated_remaining_ms: Optional[int] = None,
+        estimated_remaining_ms: int | None = None,
     ) -> None:
         """Log generation progress event."""
         self.log_event(
@@ -220,7 +220,7 @@ class EventLogger:
         output_length: int,
         total_tokens: int,
         duration_ms: int,
-        cost_estimate: Optional[float] = None,
+        cost_estimate: float | None = None,
     ) -> None:
         """Log generation completion event."""
         self.log_event(
@@ -275,7 +275,7 @@ class EventLogger:
 
     # SSE connection events
     def log_sse_connection_opened(
-        self, client_id: str, endpoint: str, user_agent: Optional[str] = None
+        self, client_id: str, endpoint: str, user_agent: str | None = None
     ) -> None:
         """Log SSE connection opened event."""
         self.log_event(
@@ -339,8 +339,8 @@ class EventLogger:
         self,
         method: str,
         endpoint: str,
-        request_size: Optional[int] = None,
-        client_ip: Optional[str] = None,
+        request_size: int | None = None,
+        client_ip: str | None = None,
     ) -> None:
         """Log API request started event."""
         self.log_event(
@@ -460,7 +460,7 @@ class EventLogger:
 def create_event_logger(
     structured_logger: StructuredLogger,
     service_name: str,
-    trace_context: Optional[TraceContext] = None,
+    trace_context: TraceContext | None = None,
 ) -> EventLogger:
     """Create an event logger instance."""
     return EventLogger(structured_logger, service_name, trace_context)
@@ -471,8 +471,8 @@ def log_resource_lifecycle_event(
     resource_type: str,
     resource_id: str,
     action: str,
-    metadata: Optional[Dict[str, Any]] = None,
-    duration_ms: Optional[int] = None,
+    metadata: dict[str, Any] | None = None,
+    duration_ms: int | None = None,
 ) -> None:
     """Log generic resource lifecycle event."""
     event_type_map = {
@@ -513,8 +513,8 @@ def log_integration_event(
     action: str,
     success: bool,
     duration_ms: int,
-    metadata: Optional[Dict[str, Any]] = None,
-    error_message: Optional[str] = None,
+    metadata: dict[str, Any] | None = None,
+    error_message: str | None = None,
 ) -> None:
     """Log external integration event."""
     event_name = f"{integration_name} {action.title()}"

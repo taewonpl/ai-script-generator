@@ -4,7 +4,7 @@ Service-specific Exception Classes for AI Script Generator v3.0
 각 마이크로서비스별 특화된 예외 클래스들을 정의합니다.
 """
 
-from typing import Any, Optional
+from typing import Any
 
 from .base import BaseServiceException, ErrorCategory, ErrorSeverity, NotFoundError
 
@@ -36,7 +36,7 @@ class EpisodeNotFoundError(NotFoundError):
     """에피소드를 찾을 수 없는 예외"""
 
     def __init__(
-        self, episode_id: str, project_id: Optional[str] = None, **kwargs: Any
+        self, episode_id: str, project_id: str | None = None, **kwargs: Any
     ) -> None:
         identifier = {"episode_id": episode_id}
         if project_id:
@@ -58,7 +58,7 @@ class ProjectStatusError(ProjectServiceError):
         message: str,
         project_id: str,
         current_status: str,
-        required_status: Optional[str] = None,
+        required_status: str | None = None,
         **kwargs: Any,
     ) -> None:
         self.project_id = project_id
@@ -194,7 +194,7 @@ class GenerationTimeoutError(GenerationServiceError):
     """생성 시간 초과 오류"""
 
     def __init__(
-        self, timeout_seconds: int, generation_id: Optional[str] = None, **kwargs: Any
+        self, timeout_seconds: int, generation_id: str | None = None, **kwargs: Any
     ) -> None:
         self.timeout_seconds = timeout_seconds
         self.generation_id = generation_id
@@ -388,7 +388,7 @@ class RateLimitExceededError(GatewayError):
         client_id: str,
         limit: int,
         window_seconds: int,
-        retry_after: Optional[int] = None,
+        retry_after: int | None = None,
         **kwargs: Any,
     ) -> None:
         self.client_id = client_id

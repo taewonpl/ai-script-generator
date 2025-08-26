@@ -2,7 +2,7 @@
 Advanced API endpoints for specialized agents and quality assessment
 """
 
-from typing import Any, Dict
+from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -320,7 +320,7 @@ async def compare_content_quality(
     enhanced_content: str,
     user_id: str | None = None,
     assessor: QualityAssessor = Depends(get_quality_assessor),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Compare quality assessments between two pieces of content
     """
@@ -348,7 +348,7 @@ async def submit_feedback(
     request: FeedbackSubmissionRequest,
     background_tasks: BackgroundTasks,
     feedback_engine: FeedbackLearningEngine = Depends(get_feedback_engine),
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """
     Submit user feedback for continuous learning and improvement
     """
@@ -408,9 +408,9 @@ async def get_user_preferences(
 @router.post("/preferences/{user_id}/personalize")
 async def personalize_config(
     user_id: str,
-    base_config: Dict[str, Any],
+    base_config: dict[str, Any],
     feedback_engine: FeedbackLearningEngine = Depends(get_feedback_engine),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Personalize generation configuration based on user preferences
     """
@@ -434,7 +434,7 @@ async def personalize_config(
 @router.get("/stats/agents")
 async def get_agent_statistics(
     coordinator: AgentCoordinator = Depends(get_agent_coordinator),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get statistics about agent performance and usage
     """
@@ -450,7 +450,7 @@ async def get_agent_statistics(
 @router.get("/stats/quality")
 async def get_quality_statistics(
     assessor: QualityAssessor = Depends(get_quality_assessor),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get statistics about quality assessment performance
     """
@@ -466,7 +466,7 @@ async def get_quality_statistics(
 @router.get("/stats/feedback")
 async def get_feedback_statistics(
     feedback_engine: FeedbackLearningEngine = Depends(get_feedback_engine),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get statistics about feedback system performance
     """
@@ -481,7 +481,7 @@ async def get_feedback_statistics(
 
 # Configuration and Management
 @router.get("/capabilities")
-async def get_agent_capabilities() -> Dict[str, Dict[str, Any]]:
+async def get_agent_capabilities() -> dict[str, dict[str, Any]]:
     """
     Get available agent capabilities and their descriptions
     """
@@ -502,7 +502,7 @@ async def agent_system_health(
     coordinator: AgentCoordinator = Depends(get_agent_coordinator),
     assessor: QualityAssessor = Depends(get_quality_assessor),
     feedback_engine: FeedbackLearningEngine = Depends(get_feedback_engine),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Check health status of the agent system
     """

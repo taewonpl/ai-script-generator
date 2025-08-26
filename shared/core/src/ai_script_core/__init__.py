@@ -19,7 +19,7 @@ def get_version() -> str:
     return __version__
 
 
-def get_package_info() -> Dict[str, Any]:
+def get_package_info() -> dict[str, Any]:
     """패키지 정보 반환"""
     return {
         "name": "ai-script-core",

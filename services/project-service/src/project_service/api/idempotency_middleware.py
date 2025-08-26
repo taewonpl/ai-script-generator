@@ -4,30 +4,40 @@ FastAPI middleware for handling idempotency keys in project service
 
 import json
 from collections.abc import Callable
+
+# Always use fallback implementation for type stability
+from datetime import datetime
 from typing import Any
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
-# Always use fallback implementation for type stability
-from datetime import datetime
-
 CORE_AVAILABLE = False
+
 
 class IdempotencyConflictError(Exception):
     """Idempotency key conflict error"""
+
     pass
+
 
 class InMemoryIdempotencyManager:
     def __init__(self) -> None:
         self._responses: dict[str, dict[str, Any]] = {}
 
-    def check_idempotency(self, key: str, request_data: dict[str, Any] | None = None) -> dict[str, Any] | None:
+    def check_idempotency(
+        self, key: str, request_data: dict[str, Any] | None = None
+    ) -> dict[str, Any] | None:
         return self._responses.get(key)
 
     def store_response(
-        self, key: str, status_code: int, response_data: dict[str, Any], headers: dict[str, str] | None = None, ttl_seconds: int | None = None
+        self,
+        key: str,
+        status_code: int,
+        response_data: dict[str, Any],
+        headers: dict[str, str] | None = None,
+        ttl_seconds: int | None = None,
     ) -> None:
         self._responses[key] = {
             "status_code": status_code,
@@ -36,15 +46,26 @@ class InMemoryIdempotencyManager:
             "created_at": datetime.utcnow(),
         }
 
+
 _fallback_manager = InMemoryIdempotencyManager()
 
-def check_idempotency(key: str, request_data: dict[str, Any] | None = None) -> dict[str, Any] | None:
+
+def check_idempotency(
+    key: str, request_data: dict[str, Any] | None = None
+) -> dict[str, Any] | None:
     return _fallback_manager.check_idempotency(key, request_data)
 
+
 def store_idempotent_response(
-    key: str, status_code: int, response_data: dict[str, Any], headers: dict[str, str] | None = None, ttl_seconds: int | None = None
+    key: str,
+    status_code: int,
+    response_data: dict[str, Any],
+    headers: dict[str, str] | None = None,
+    ttl_seconds: int | None = None,
 ) -> None:
-    _fallback_manager.store_response(key, status_code, response_data, headers, ttl_seconds)
+    _fallback_manager.store_response(
+        key, status_code, response_data, headers, ttl_seconds
+    )
 
 
 class IdempotencyMiddleware(BaseHTTPMiddleware):
@@ -64,7 +85,9 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
         self.methods = methods or {"POST", "PUT", "PATCH"}
         self.enabled_paths = enabled_paths or {"/projects", "/episodes"}
 
-    async def dispatch(self, request: Request, call_next: Callable[[Request], Any]) -> Any:
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Any]
+    ) -> Any:
         """Handle idempotency for applicable requests"""
 
         # Only process applicable methods and paths

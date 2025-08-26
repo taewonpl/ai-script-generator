@@ -9,7 +9,7 @@ from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel
 
@@ -47,7 +47,7 @@ try:
         safe_json_loads,
         utc_now,
     )
-    
+
     # Try to import optional attributes
     try:
         from ai_script_core import (
@@ -60,18 +60,18 @@ try:
         # Define fallback classes if not available in Core
         class ErrorCategory(Enum):
             VALIDATION = "validation"
-            EXTERNAL_SERVICE = "external_service" 
+            EXTERNAL_SERVICE = "external_service"
             INTERNAL = "internal"
-        
+
         class ErrorSeverity(Enum):
             LOW = "low"
             MEDIUM = "medium"
             HIGH = "high"
             CRITICAL = "critical"
-            
+
         class ExternalServiceError(Exception):
             pass
-            
+
         class ServiceUnavailableError(Exception):
             pass
 
@@ -105,73 +105,88 @@ except (ImportError, RuntimeError):
     # Fallback base classes
     class BaseDTO:
         """Fallback base DTO class"""
+
         pass
 
     class SuccessResponseDTO:
         """Fallback success response DTO"""
+
         pass
 
     class ErrorResponseDTO:
         """Fallback error response DTO"""
+
         pass
-    
+
     class AIModelConfigDTO:
         """Fallback AI model config DTO"""
+
         pass
-    
+
     class GenerationMetadataDTO:
         """Fallback generation metadata DTO"""
+
         pass
-    
+
     # Fallback exception classes
     class BaseServiceException(Exception):
         """Fallback base service exception"""
+
         pass
-    
+
     class GenerationServiceError(BaseServiceException):
         """Fallback generation service error"""
+
         pass
-        
+
     class ValidationException(BaseServiceException):
         """Fallback validation exception"""
+
         pass
-        
+
     class ExternalServiceError(BaseServiceException):
         """Fallback external service error"""
+
         pass
-        
+
     class ServiceUnavailableError(BaseServiceException):
         """Fallback service unavailable error"""
+
         pass
-    
+
     # Fallback enums
     class ErrorCategory(str, Enum):
         """Fallback error category"""
+
         VALIDATION = "validation"
         EXTERNAL_SERVICE = "external_service"
         INTERNAL = "internal"
-    
+
     class ErrorSeverity(str, Enum):
         """Fallback error severity"""
+
         LOW = "low"
         MEDIUM = "medium"
         HIGH = "high"
         CRITICAL = "critical"
-    
+
     # Fallback utility functions
     def calculate_hash(data: str) -> str:
         """Fallback hash calculation"""
         import hashlib
+
         return hashlib.md5(data.encode()).hexdigest()
-    
+
     def safe_json_dumps(data: Any) -> str:
         """Fallback JSON serialization"""
         import json
+
         return json.dumps(data, default=str)
-    
+
     def safe_json_loads(data: str) -> Any:
         """Fallback JSON deserialization"""
         import json
+
         return json.loads(data)
 
 

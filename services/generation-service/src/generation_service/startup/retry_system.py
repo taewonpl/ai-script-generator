@@ -2,8 +2,8 @@
 Startup initialization for retry queue system
 """
 
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator, Any
 
 from ..services.retry_queue import start_retry_worker, stop_retry_worker
 from ..services.save_processors import register_save_processors

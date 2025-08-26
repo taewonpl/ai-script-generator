@@ -69,7 +69,9 @@ class SuccessResponse(BaseModel):
 
 
 @router.post("/", response_model=SuccessResponse, status_code=status.HTTP_201_CREATED)
-async def create_episode(project_id: str, request: EpisodeCreateRequest) -> SuccessResponse:
+async def create_episode(
+    project_id: str, request: EpisodeCreateRequest
+) -> SuccessResponse:
     """
     Create episode with automatic number assignment
 

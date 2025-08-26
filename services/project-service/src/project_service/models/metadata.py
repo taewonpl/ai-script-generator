@@ -36,7 +36,7 @@ class ProjectMetadata(Base, TimestampMixin):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # 관계 설정
-    project: Mapped["Project"] = relationship(
+    project: Mapped[Project] = relationship(
         "Project", back_populates="project_metadata"
     )
 

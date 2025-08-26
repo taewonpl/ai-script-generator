@@ -3,7 +3,7 @@ Plot Twister Agent - Adds unexpected plot twists and narrative surprises
 """
 
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 # Import Core Module components
 try:
@@ -73,7 +73,9 @@ class PlotTwisterAgent(BaseSpecialAgent):
     - Enhances audience engagement through unexpected developments
     """
 
-    def __init__(self, provider_factory: Optional[Any] = None, config: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(
+        self, provider_factory: Any | None = None, config: dict[str, Any] | None = None
+    ) -> None:
         default_config = {
             "twist_intensity": 0.7,  # How dramatic the twists should be (0.1-1.0)
             "max_twists": 2,  # Maximum number of twists to add
@@ -94,7 +96,7 @@ class PlotTwisterAgent(BaseSpecialAgent):
             config=default_config,
         )
 
-    async def analyze_content(self, state: GenerationState) -> Dict[str, Any]:
+    async def analyze_content(self, state: GenerationState) -> dict[str, Any]:
         """
         Analyze script content to determine if plot twists would enhance the story
         """
@@ -140,7 +142,7 @@ class PlotTwisterAgent(BaseSpecialAgent):
 
         return analysis
 
-    async def enhance_content(self, state: GenerationState) -> Dict[str, Any]:
+    async def enhance_content(self, state: GenerationState) -> dict[str, Any]:
         """
         Apply plot twists to enhance the narrative
         """

@@ -7,7 +7,7 @@ import time
 import uuid
 from collections.abc import Callable
 from datetime import datetime, timedelta
-from typing import Any, Optional, Dict, Set
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -20,8 +20,8 @@ class IdempotencyKey(BaseModel):
         default_factory=datetime.utcnow, description="Key creation timestamp"
     )
     expires_at: datetime = Field(..., description="Key expiration timestamp")
-    operation: Optional[str] = Field(default=None, description="Associated operation")
-    request_hash: Optional[str] = Field(
+    operation: str | None = Field(default=None, description="Associated operation")
+    request_hash: str | None = Field(
         default=None, description="Hash of the original request"
     )
 
@@ -83,9 +83,9 @@ class IdempotencyManager:
 
     def create_key(
         self,
-        operation: Optional[str] = None,
-        request_data: Optional[Any] = None,
-        ttl_seconds: Optional[int] = None,
+        operation: str | None = None,
+        request_data: Any | None = None,
+        ttl_seconds: int | None = None,
     ) -> IdempotencyKey:
         """Create a new idempotency key."""
         key = generate_idempotency_key()
@@ -105,7 +105,7 @@ class IdempotencyManager:
         self._keys[key] = idempotency_key
         return idempotency_key
 
-    def get_key(self, key: str) -> Optional[IdempotencyKey]:
+    def get_key(self, key: str) -> IdempotencyKey | None:
         """Get idempotency key by key string."""
         idempotency_key = self._keys.get(key)
         if not idempotency_key:
@@ -130,8 +130,8 @@ class IdempotencyManager:
         key: str,
         status_code: int,
         response_data: Any,
-        headers: Optional[Dict[str, str]] = None,
-        ttl_seconds: Optional[int] = None,
+        headers: dict[str, str] | None = None,
+        ttl_seconds: int | None = None,
     ) -> IdempotentResponse:
         """Store response for idempotent operation."""
         ttl = ttl_seconds or self.default_ttl_seconds
@@ -147,7 +147,7 @@ class IdempotencyManager:
         self._responses[key] = response
         return response
 
-    def get_response(self, key: str) -> Optional[IdempotentResponse]:
+    def get_response(self, key: str) -> IdempotentResponse | None:
         """Get stored response for idempotency key."""
         response = self._responses.get(key)
         if not response:
@@ -161,8 +161,8 @@ class IdempotencyManager:
         return response
 
     def check_idempotency(
-        self, key: str, request_data: Optional[Any] = None
-    ) -> Optional[IdempotentResponse]:
+        self, key: str, request_data: Any | None = None
+    ) -> IdempotentResponse | None:
         """Check if operation is idempotent and return cached response if available."""
         # Check if key exists
         idempotency_key = self.get_key(key)
@@ -218,7 +218,7 @@ class IdempotencyConflictError(Exception):
 
 
 # Singleton instance for global use
-_global_manager: Optional[IdempotencyManager] = None
+_global_manager: IdempotencyManager | None = None
 
 
 def get_idempotency_manager() -> IdempotencyManager:
@@ -230,8 +230,8 @@ def get_idempotency_manager() -> IdempotencyManager:
 
 
 def check_idempotency(
-    key: str, request_data: Optional[Any] = None
-) -> Optional[IdempotentResponse]:
+    key: str, request_data: Any | None = None
+) -> IdempotentResponse | None:
     """Check idempotency using global manager."""
     manager = get_idempotency_manager()
     return manager.check_idempotency(key, request_data)
@@ -241,8 +241,8 @@ def store_idempotent_response(
     key: str,
     status_code: int,
     response_data: Any,
-    headers: Optional[Dict[str, str]] = None,
-    ttl_seconds: Optional[int] = None,
+    headers: dict[str, str] | None = None,
+    ttl_seconds: int | None = None,
 ) -> IdempotentResponse:
     """Store idempotent response using global manager."""
     manager = get_idempotency_manager()
@@ -356,7 +356,7 @@ class IdempotencyMiddleware:
         app: Any,
         header_name: str = "Idempotency-Key",
         ttl_seconds: int = 3600,
-        methods: Optional[Set[str]] = None,
+        methods: set[str] | None = None,
     ) -> None:
         self.app = app
         self.header_name = header_name

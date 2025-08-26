@@ -4,7 +4,7 @@ Request tracing and distributed tracing support.
 
 import uuid
 from datetime import datetime
-from typing import Any, Optional, Dict
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -28,20 +28,20 @@ class TraceContext(BaseModel):
     trace_id: str = Field(
         ..., description="Unique trace ID for the entire request flow"
     )
-    job_id: Optional[str] = Field(
+    job_id: str | None = Field(
         default=None, description="Generation job ID if applicable"
     )
-    project_id: Optional[str] = Field(default=None, description="Project context ID")
-    user_id: Optional[str] = Field(default=None, description="User ID for the request")
-    service: Optional[str] = Field(default=None, description="Originating service name")
+    project_id: str | None = Field(default=None, description="Project context ID")
+    user_id: str | None = Field(default=None, description="User ID for the request")
+    service: str | None = Field(default=None, description="Originating service name")
 
     # Request metadata
     request_timestamp: datetime = Field(default_factory=datetime.utcnow)
-    request_path: Optional[str] = Field(default=None, description="API endpoint path")
-    request_method: Optional[str] = Field(default=None, description="HTTP method")
+    request_path: str | None = Field(default=None, description="API endpoint path")
+    request_method: str | None = Field(default=None, description="HTTP method")
 
     # Additional context
-    metadata: Dict[str, Any] = Field(
+    metadata: dict[str, Any] = Field(
         default_factory=dict, description="Additional trace metadata"
     )
 
@@ -65,7 +65,7 @@ def generate_request_id() -> str:
 
 
 def extract_trace_context(
-    headers: Dict[str, str], service_name: Optional[str] = None
+    headers: dict[str, str], service_name: str | None = None
 ) -> TraceContext:
     """Extract trace context from HTTP headers."""
 
@@ -88,7 +88,7 @@ def extract_trace_context(
 
 
 def inject_trace_headers(
-    trace_context: TraceContext, processing_time_ms: Optional[int] = None
+    trace_context: TraceContext, processing_time_ms: int | None = None
 ) -> dict[str, str]:
     """Inject trace context into HTTP response headers."""
 
@@ -112,7 +112,7 @@ def inject_trace_headers(
 
 
 def create_child_trace_context(
-    parent_context: TraceContext, service_name: str, job_id: Optional[str] = None
+    parent_context: TraceContext, service_name: str, job_id: str | None = None
 ) -> TraceContext:
     """Create a child trace context for service-to-service calls."""
 
@@ -147,13 +147,13 @@ class TracingMiddleware:
         return extract_trace_context(headers, self.service_name)
 
     def inject_headers(
-        self, context: TraceContext, processing_time_ms: Optional[int] = None
+        self, context: TraceContext, processing_time_ms: int | None = None
     ) -> dict[str, str]:
         """Inject trace headers into response."""
         return inject_trace_headers(context, processing_time_ms)
 
     def create_child_context(
-        self, parent_context: TraceContext, job_id: Optional[str] = None
+        self, parent_context: TraceContext, job_id: str | None = None
     ) -> TraceContext:
         """Create child context for downstream calls."""
         return create_child_trace_context(parent_context, self.service_name, job_id)

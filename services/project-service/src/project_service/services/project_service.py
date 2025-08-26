@@ -5,10 +5,10 @@ Project Business Logic Service
 import uuid
 from typing import Any
 
-from sqlalchemy.orm import Session
-
 # Use fallback DTOs - Core integration disabled for type stability
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
 
 class ProjectDTO(BaseModel):
     id: str
@@ -21,16 +21,19 @@ class ProjectDTO(BaseModel):
     logline: str | None = None
     deadline: str | None = None
 
+
 class ProjectCreateDTO(BaseModel):
     name: str
     type: str
     description: str | None = None
+
 
 class ProjectUpdateDTO(BaseModel):
     name: str | None = None
     type: str | None = None
     description: str | None = None
     status: str | None = None
+
 
 class BaseServiceException(Exception): ...
 

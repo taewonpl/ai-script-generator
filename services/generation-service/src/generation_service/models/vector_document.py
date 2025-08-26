@@ -48,20 +48,24 @@ except (ImportError, RuntimeError):
     def generate_prefixed_id(prefix: str) -> str:
         """Fallback prefixed ID generation"""
         import uuid
+
         return f"{prefix}_{str(uuid.uuid4())[:8]}"
 
     # Fallback base classes - inherit from BaseModel for type safety
     class BaseDTO(BaseModel):
         """Fallback base DTO class using Pydantic"""
+
         pass
 
     class SuccessResponseDTO(BaseModel):
         """Fallback success response DTO"""
+
         success: bool = True
         message: str = "Success"
 
     class ErrorResponseDTO(BaseModel):
         """Fallback error response DTO"""
+
         success: bool = False
         error: str
 

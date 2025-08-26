@@ -59,7 +59,7 @@ class Episode(Base, TimestampMixin):
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # 관계 설정
-    project: Mapped["Project"] = relationship("Project", back_populates="episodes")
+    project: Mapped[Project] = relationship("Project", back_populates="episodes")
 
     def __repr__(self) -> str:
         return f"<Episode(id='{self.id}', title='{self.title}', number={self.number})>"

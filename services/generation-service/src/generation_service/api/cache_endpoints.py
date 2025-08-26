@@ -500,7 +500,9 @@ class CacheAPI:
                 status_code=500, detail=f"Cache clear all failed: {e!s}"
             )
 
-    async def warm_cache(self, cache_type: str, warm_data: list[dict[str, Any]]) -> dict[str, Any]:
+    async def warm_cache(
+        self, cache_type: str, warm_data: list[dict[str, Any]]
+    ) -> dict[str, Any]:
         """Warm cache with precomputed data"""
 
         try:
@@ -627,7 +629,9 @@ class CacheAPI:
             logger.error(f"Cache analytics retrieval failed: {e}")
             return {"error": f"Cache analytics retrieval failed: {e!s}"}
 
-    async def get_hit_ratio(self, hours: int = Query(default=1, ge=1, le=24)) -> dict[str, Any]:
+    async def get_hit_ratio(
+        self, hours: int = Query(default=1, ge=1, le=24)
+    ) -> dict[str, Any]:
         """Get cache hit ratio over time"""
 
         try:

@@ -2,7 +2,7 @@
 Scene Visualizer Agent - Enhances visual storytelling and scene descriptions
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 # Import Core Module components
 try:
@@ -72,7 +72,9 @@ class SceneVisualizerAgent(BaseSpecialAgent):
     - Optimizes for visual media adaptation
     """
 
-    def __init__(self, provider_factory: Optional[Any] = None, config: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(
+        self, provider_factory: Any | None = None, config: dict[str, Any] | None = None
+    ) -> None:
         default_config = {
             "detail_level": 0.7,  # How much visual detail to add
             "cinematic_style": True,  # Use cinematic language
@@ -93,7 +95,7 @@ class SceneVisualizerAgent(BaseSpecialAgent):
             config=default_config,
         )
 
-    async def analyze_content(self, state: GenerationState) -> Dict[str, Any]:
+    async def analyze_content(self, state: GenerationState) -> dict[str, Any]:
         """Analyze visual description quality and identify enhancement opportunities"""
 
         content = state.get("styled_script") or state.get("draft_script", "")
@@ -125,7 +127,7 @@ class SceneVisualizerAgent(BaseSpecialAgent):
 
         return visual_analysis
 
-    async def enhance_content(self, state: GenerationState) -> Dict[str, Any]:
+    async def enhance_content(self, state: GenerationState) -> dict[str, Any]:
         """Enhance visual storytelling and scene descriptions"""
 
         content = state.get("styled_script") or state.get("draft_script", "")

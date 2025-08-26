@@ -6,7 +6,7 @@ import asyncio
 import json
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 # Import Core Module components
 try:
@@ -113,12 +113,12 @@ class MonitoringDashboard:
 
         # Dashboard state
         self._dashboard_enabled = False
-        self._update_task: Optional[asyncio.Task[None]] = None
+        self._update_task: asyncio.Task[None] | None = None
 
         # WebSocket connections for real-time updates
-        self._websocket_connections: List[Any] = []
+        self._websocket_connections: list[Any] = []
 
-    def _initialize_dashboard_metrics(self) -> List[DashboardMetric]:
+    def _initialize_dashboard_metrics(self) -> list[DashboardMetric]:
         """Initialize dashboard metrics configuration"""
 
         return [

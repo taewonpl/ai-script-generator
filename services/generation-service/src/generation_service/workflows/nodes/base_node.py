@@ -4,7 +4,7 @@ Base node class for LangGraph workflow nodes
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 # Import Core Module components
 try:
@@ -297,7 +297,7 @@ class BaseNode(ABC):
 
         return error_message
 
-    def _get_execution_metadata(self, state: GenerationState) -> Dict[str, Any]:
+    def _get_execution_metadata(self, state: GenerationState) -> dict[str, Any]:
         """
         Get execution metadata for logging
 
@@ -309,7 +309,7 @@ class BaseNode(ABC):
             "quality_score": state.get("current_quality_score", 0.0),
         }
 
-    def _calculate_quality_score(self, state: GenerationState) -> Optional[float]:
+    def _calculate_quality_score(self, state: GenerationState) -> float | None:
         """
         Calculate quality score for this node's output
 
@@ -333,7 +333,7 @@ class BaseNode(ABC):
         else:
             return "architecting"
 
-    def get_node_info(self) -> Dict[str, Any]:
+    def get_node_info(self) -> dict[str, Any]:
         """Get information about this node"""
 
         return {
@@ -371,7 +371,7 @@ class ProviderNode(BaseNode):
             self.logger.error(error_msg)
             raise NodeExecutionError(error_msg, self.node_name, e)
 
-    def _get_execution_metadata(self, state: GenerationState) -> Dict[str, Any]:
+    def _get_execution_metadata(self, state: GenerationState) -> dict[str, Any]:
         """Add provider-specific metadata"""
 
         base_metadata = super()._get_execution_metadata(state)
@@ -392,11 +392,13 @@ class PromptNode(ProviderNode):
     Extends ProviderNode with prompt template functionality.
     """
 
-    def __init__(self, node_name: str, provider_name: str, prompt_template: Any) -> None:
+    def __init__(
+        self, node_name: str, provider_name: str, prompt_template: Any
+    ) -> None:
         super().__init__(node_name, provider_name)
         self.prompt_template = prompt_template
 
-    def _get_execution_metadata(self, state: GenerationState) -> Dict[str, Any]:
+    def _get_execution_metadata(self, state: GenerationState) -> dict[str, Any]:
         """Add prompt-specific metadata"""
 
         base_metadata = super()._get_execution_metadata(state)

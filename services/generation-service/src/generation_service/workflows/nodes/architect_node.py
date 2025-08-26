@@ -53,7 +53,7 @@ except (ImportError, RuntimeError):
         pass
 
 
-from typing import Any, Optional
+from typing import Any
 
 from generation_service.ai.prompts import ArchitectPrompts, PromptContext, ScriptType
 from generation_service.ai.providers.base_provider import ProviderGenerationRequest
@@ -72,7 +72,7 @@ class ArchitectNode(PromptNode):
     - 논리적 완성도에만 집중 (스타일 적용 금지)
     """
 
-    def __init__(self, provider_factory: Any, rag_service: Optional[Any] = None) -> None:
+    def __init__(self, provider_factory: Any, rag_service: Any | None = None) -> None:
         super().__init__(
             node_name="architect",
             provider_name="anthropic",  # Use Claude for architectural work

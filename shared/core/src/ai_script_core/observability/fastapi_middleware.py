@@ -4,7 +4,7 @@ FastAPI middleware integration for unified observability system.
 
 import time
 from collections.abc import Callable
-from typing import Any, Optional, Set, List, Union, Dict
+from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.responses import JSONResponse
@@ -41,8 +41,8 @@ class ObservabilityMiddleware(BaseHTTPMiddleware):
         enable_tracing: bool = True,
         enable_metrics: bool = True,
         enable_idempotency: bool = True,
-        idempotent_methods: Optional[Set[str]] = None,
-        excluded_paths: Optional[Set[str]] = None,
+        idempotent_methods: set[str] | None = None,
+        excluded_paths: set[str] | None = None,
     ):
         super().__init__(app)
         self.service_name = service_name
@@ -295,7 +295,7 @@ def setup_observability(
     app: FastAPI,
     service_name: str,
     version: str = "1.0.0",
-    health_dependencies: Optional[List[Any]] = None,
+    health_dependencies: list[Any] | None = None,
 ) -> dict[str, Any]:
     """
     Set up comprehensive observability for a FastAPI application.
@@ -331,7 +331,7 @@ def setup_observability(
 
     # Add metrics endpoint
     @app.get("/metrics")
-    async def get_metrics() -> Union[Dict[str, Any], JSONResponse]:
+    async def get_metrics() -> dict[str, Any] | JSONResponse:
         """Metrics endpoint."""
         try:
             metrics_collector = get_metrics_collector()
@@ -369,17 +369,17 @@ def setup_observability(
 
 
 # Dependency injection for FastAPI routes
-def get_trace_context(request: Request) -> Optional[TraceContext]:
+def get_trace_context(request: Request) -> TraceContext | None:
     """Get trace context from request state."""
     return getattr(request.state, "trace_context", None)
 
 
-def get_event_logger(request: Request) -> Optional[EventLogger]:
+def get_event_logger(request: Request) -> EventLogger | None:
     """Get event logger from request state."""
     return getattr(request.state, "event_logger", None)
 
 
-def get_request_start_time(request: Request) -> Optional[float]:
+def get_request_start_time(request: Request) -> float | None:
     """Get request start time from request state."""
     return getattr(request.state, "start_time", None)
 
@@ -450,12 +450,12 @@ class OperationTracker:
         self,
         operation_name: str,
         event_logger: EventLogger,
-        trace_context: Optional[TraceContext] = None,
+        trace_context: TraceContext | None = None,
     ):
         self.operation_name = operation_name
         self.event_logger = event_logger
         self.trace_context = trace_context
-        self.start_time: Optional[float] = None
+        self.start_time: float | None = None
         self.success = True
 
     def __enter__(self) -> "OperationTracker":

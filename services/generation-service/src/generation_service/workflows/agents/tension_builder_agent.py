@@ -2,7 +2,7 @@
 Tension Builder Agent - Builds dramatic tension and optimizes pacing
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 # Import Core Module components
 try:
@@ -126,7 +126,9 @@ class TensionBuilderAgent(BaseSpecialAgent):
         },
     }
 
-    def __init__(self, provider_factory: Optional[Any] = None, config: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(
+        self, provider_factory: Any | None = None, config: dict[str, Any] | None = None
+    ) -> None:
         default_config = {
             "tension_intensity": 0.8,  # How intense tension should be (0.1-1.0)
             "pacing_optimization": True,  # Enable pacing optimization
@@ -151,7 +153,7 @@ class TensionBuilderAgent(BaseSpecialAgent):
             config=default_config,
         )
 
-    async def analyze_content(self, state: GenerationState) -> Dict[str, Any]:
+    async def analyze_content(self, state: GenerationState) -> dict[str, Any]:
         """
         Analyze tension patterns and pacing to determine enhancement opportunities
         """
@@ -199,7 +201,7 @@ class TensionBuilderAgent(BaseSpecialAgent):
 
         return analysis
 
-    async def enhance_content(self, state: GenerationState) -> Dict[str, Any]:
+    async def enhance_content(self, state: GenerationState) -> dict[str, Any]:
         """
         Enhance dramatic tension and optimize pacing
         """

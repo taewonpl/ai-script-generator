@@ -12,7 +12,7 @@ from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional, Dict, List, Union
+from typing import Any
 
 # Import Core Module components
 try:
@@ -140,7 +140,7 @@ class StructuredLogger:
     - Debug mode with enhanced details
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
+    def __init__(self, config: dict[str, Any] | None = None) -> None:
         self.config = config or {}
 
         # Logger configuration
@@ -421,7 +421,9 @@ class StructuredLogger:
 
         return duration
 
-    def log_workflow_start(self, workflow_id: str, workflow_type: Optional[str] = None) -> None:
+    def log_workflow_start(
+        self, workflow_id: str, workflow_type: str | None = None
+    ) -> None:
         """Log workflow start"""
 
         self.update_context(workflow_id=workflow_id)
@@ -433,7 +435,7 @@ class StructuredLogger:
         )
 
     def log_workflow_end(
-        self, workflow_id: str, success: bool = True, error: Optional[str] = None
+        self, workflow_id: str, success: bool = True, error: str | None = None
     ) -> None:
         """Log workflow completion"""
 
@@ -456,8 +458,8 @@ class StructuredLogger:
         node_id: str,
         node_type: str,
         success: bool = True,
-        duration: Optional[float] = None,
-        error: Optional[str] = None,
+        duration: float | None = None,
+        error: str | None = None,
     ) -> None:
         """Log workflow node execution"""
 
@@ -484,10 +486,10 @@ class StructuredLogger:
         self,
         provider: str,
         model: str,
-        tokens_used: Optional[int] = None,
+        tokens_used: int | None = None,
         success: bool = True,
-        duration: Optional[float] = None,
-        error: Optional[str] = None,
+        duration: float | None = None,
+        error: str | None = None,
     ) -> None:
         """Log AI API call"""
 
@@ -513,7 +515,11 @@ class StructuredLogger:
             self.error(f"AI API call failed: {provider}/{model}", **log_data)
 
     def log_cache_operation(
-        self, operation: str, cache_key: str, hit: Optional[bool] = None, duration: Optional[float] = None
+        self,
+        operation: str,
+        cache_key: str,
+        hit: bool | None = None,
+        duration: float | None = None,
     ) -> None:
         """Log cache operation"""
 
@@ -536,8 +542,8 @@ class StructuredLogger:
         self._log_handlers.append(handler)
 
     def get_recent_logs(
-        self, count: int = 100, level: Optional[LogLevel] = None
-    ) -> List[LogEntry]:
+        self, count: int = 100, level: LogLevel | None = None
+    ) -> list[LogEntry]:
         """Get recent log entries"""
 
         logs = self._log_entries
@@ -547,7 +553,7 @@ class StructuredLogger:
 
         return logs[-count:]
 
-    def search_logs(self, query: str, max_results: int = 100) -> List[LogEntry]:
+    def search_logs(self, query: str, max_results: int = 100) -> list[LogEntry]:
         """Search log entries by message content"""
 
         results = []
@@ -565,7 +571,7 @@ class StructuredLogger:
 
         return results
 
-    def get_logs_by_context(self, **context_filters: Any) -> List[LogEntry]:
+    def get_logs_by_context(self, **context_filters: Any) -> list[LogEntry]:
         """Get logs filtered by context"""
 
         results = []
@@ -584,7 +590,7 @@ class StructuredLogger:
 
         return results
 
-    def get_performance_summary(self) -> Dict[str, Any]:
+    def get_performance_summary(self) -> dict[str, Any]:
         """Get performance metrics from logs"""
 
         operations = {}
@@ -671,7 +677,9 @@ class LogContextManager:
         self.logger.set_context(self.new_context)
         return self
 
-    def __exit__(self, exc_type: Optional[type], exc_val: Optional[Exception], exc_tb: Optional[Any]) -> None:
+    def __exit__(
+        self, exc_type: type | None, exc_val: Exception | None, exc_tb: Any | None
+    ) -> None:
         self.logger.set_context(self.previous_context)
 
 
@@ -688,7 +696,9 @@ class PerformanceTimer:
         self.timer_id = self.logger.start_timer(self.operation_name)
         return self
 
-    def __exit__(self, exc_type: Optional[type], exc_val: Optional[Exception], exc_tb: Optional[Any]) -> None:
+    def __exit__(
+        self, exc_type: type | None, exc_val: Exception | None, exc_tb: Any | None
+    ) -> None:
         if self.timer_id:
             self.logger.end_timer(self.timer_id, self.operation_name)
 
@@ -697,14 +707,14 @@ class PerformanceTimer:
 _structured_logger: StructuredLogger | None = None
 
 
-def get_structured_logger() -> Optional[StructuredLogger]:
+def get_structured_logger() -> StructuredLogger | None:
     """Get global structured logger instance"""
     global _structured_logger
     return _structured_logger
 
 
 def initialize_structured_logger(
-    config: Optional[Dict[str, Any]] = None,
+    config: dict[str, Any] | None = None,
 ) -> StructuredLogger:
     """Initialize global structured logger"""
     global _structured_logger

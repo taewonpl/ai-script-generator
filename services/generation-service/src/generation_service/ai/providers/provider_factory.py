@@ -97,7 +97,9 @@ class ProviderFactory:
                 error_msg = "HuggingFace provider not implemented"
                 self._import_failures[ProviderType.HUGGINGFACE] = error_msg
                 logger.error("HuggingFace provider not implemented")
-                raise ImportError(f"{error_msg}. Use OpenAI, Anthropic, or Local providers instead")
+                raise ImportError(
+                    f"{error_msg}. Use OpenAI, Anthropic, or Local providers instead"
+                )
 
             else:
                 raise ValueError(f"Unknown provider type: {provider_type}")

@@ -10,7 +10,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union, Tuple
+from typing import Any
 
 # Import Core Module components
 try:
@@ -186,8 +186,8 @@ class MetricsCollector:
 
         # Collection state
         self._collection_enabled = False
-        self._collection_task: Optional[asyncio.Task[None]] = None
-        self._cleanup_task: Optional[asyncio.Task[None]] = None
+        self._collection_task: asyncio.Task[None] | None = None
+        self._cleanup_task: asyncio.Task[None] | None = None
 
         # Event handlers
         self._metric_handlers: list[Callable[[str, MetricValue], None]] = []
@@ -626,11 +626,16 @@ class MetricTimer:
         self.labels = labels
         self.start_time = None
 
-    def __enter__(self) -> 'MetricTimer':
+    def __enter__(self) -> "MetricTimer":
         self.start_time = time.time()
         return self
 
-    def __exit__(self, exc_type: Optional[type], exc_val: Optional[BaseException], exc_tb: Optional[object]) -> None:
+    def __exit__(
+        self,
+        exc_type: type | None,
+        exc_val: BaseException | None,
+        exc_tb: object | None,
+    ) -> None:
         if self.start_time:
             duration = time.time() - self.start_time
             self.collector.record_timer(self.metric_name, duration, self.labels)

@@ -38,7 +38,9 @@ class EpisodeChromaService:
         )
 
         try:
-            self.chroma_store = EpisodeChromaStore(db_path=self.chroma_db_path or "./data/chroma")
+            self.chroma_store = EpisodeChromaStore(
+                db_path=self.chroma_db_path or "./data/chroma"
+            )
             logger.info(
                 f"EpisodeChromaService initialized with ChromaDB at {self.chroma_db_path}"
             )

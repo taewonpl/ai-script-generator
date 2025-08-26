@@ -130,7 +130,7 @@ class RAGResponse:
 
 class RAGServiceError(Exception):
     """Base exception for RAG service operations"""
-    
+
     def __init__(self, message: str, operation: str = "rag_operation", **kwargs: Any):
         super().__init__(message)
         self.operation = operation

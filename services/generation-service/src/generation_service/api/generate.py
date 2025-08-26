@@ -2,7 +2,8 @@
 Script generation endpoints with Core Module integration
 """
 
-from typing import Any, Dict, List
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from generation_service.models.generation import (
@@ -204,7 +205,7 @@ async def cancel_generation(
 )
 async def get_generation_quality(
     generation_id: str, service: GenerationService = Depends(get_generation_service)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get quality metrics for a generation"""
 
     try:
@@ -234,7 +235,7 @@ async def get_generation_quality(
 )
 async def get_quality_statistics(
     service: GenerationService = Depends(get_generation_service),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get service quality statistics"""
 
     try:
@@ -256,7 +257,7 @@ async def get_quality_statistics(
 )
 async def list_active_generations(
     service: GenerationService = Depends(get_generation_service),
-) -> Dict[str, List[str]]:
+) -> dict[str, list[str]]:
     """List active generations"""
 
     try:
@@ -276,7 +277,7 @@ async def list_active_generations(
     summary="List Generation Templates",
     description="Get available script generation templates",
 )
-async def list_templates() -> Dict[str, List[Dict[str, str]]]:
+async def list_templates() -> dict[str, list[dict[str, str]]]:
     """List available generation templates"""
 
     # TODO: Implement template management
@@ -545,7 +546,7 @@ async def cancel_workflow(
 )
 async def list_active_workflows(
     service: GenerationService = Depends(get_generation_service),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """List all active workflows"""
 
     try:
@@ -570,7 +571,7 @@ async def list_active_workflows(
 )
 async def get_workflow_info(
     service: GenerationService = Depends(get_generation_service),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Get workflow system information"""
 
     try:

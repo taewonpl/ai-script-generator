@@ -51,6 +51,7 @@ async def database_health_check(db: Session = Depends(get_db)) -> APIResponseDTO
     try:
         # 간단한 데이터베이스 쿼리로 연결 확인
         from sqlalchemy import text
+
         db.execute(text("SELECT 1"))
 
         health_data = HealthCheckDTO(

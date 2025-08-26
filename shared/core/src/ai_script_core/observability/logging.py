@@ -7,7 +7,7 @@ import logging
 import sys
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional, Dict
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -30,7 +30,7 @@ class ServiceContext(BaseModel):
 
     service_name: str = Field(..., description="Service name")
     version: str = Field(default="1.0.0", description="Service version")
-    instance_id: Optional[str] = Field(default=None, description="Service instance ID")
+    instance_id: str | None = Field(default=None, description="Service instance ID")
     environment: str = Field(default="production", description="Deployment environment")
 
 
@@ -42,9 +42,9 @@ class StructuredLogEntry(BaseModel):
     service: str = Field(..., description="Service name")
 
     # Tracing information
-    trace_id: Optional[str] = Field(default=None, description="Request trace ID")
-    job_id: Optional[str] = Field(default=None, description="Job/task ID")
-    project_id: Optional[str] = Field(default=None, description="Project context")
+    trace_id: str | None = Field(default=None, description="Request trace ID")
+    job_id: str | None = Field(default=None, description="Job/task ID")
+    project_id: str | None = Field(default=None, description="Project context")
 
     # Log content
     message: str = Field(..., description="Log message")
@@ -53,14 +53,14 @@ class StructuredLogEntry(BaseModel):
     )
 
     # Performance data
-    duration_ms: Optional[int] = Field(
+    duration_ms: int | None = Field(
         default=None, description="Operation duration in milliseconds"
     )
 
     # Error information (if applicable)
-    error_code: Optional[str] = Field(default=None, description="Error code")
-    error_type: Optional[str] = Field(default=None, description="Error class name")
-    stack_trace: Optional[str] = Field(default=None, description="Error stack trace")
+    error_code: str | None = Field(default=None, description="Error code")
+    error_type: str | None = Field(default=None, description="Error class name")
+    stack_trace: str | None = Field(default=None, description="Error stack trace")
 
     class Config:
         json_encoders = {datetime: lambda v: v.isoformat() + "Z"}
@@ -72,7 +72,7 @@ class StructuredLogger:
     def __init__(
         self,
         service_context: ServiceContext,
-        trace_context: Optional[TraceContext] = None,
+        trace_context: TraceContext | None = None,
     ):
         self.service_context = service_context
         self.trace_context = trace_context
@@ -89,11 +89,11 @@ class StructuredLogger:
         self,
         level: LogLevel,
         message: str,
-        metadata: Optional[Dict[str, Any]] = None,
-        duration_ms: Optional[int] = None,
-        error_code: Optional[str] = None,
-        error_type: Optional[str] = None,
-        stack_trace: Optional[str] = None,
+        metadata: dict[str, Any] | None = None,
+        duration_ms: int | None = None,
+        error_code: str | None = None,
+        error_type: str | None = None,
+        stack_trace: str | None = None,
     ) -> StructuredLogEntry:
         """Create a structured log entry."""
 
@@ -139,9 +139,9 @@ class StructuredLogger:
     def error(
         self,
         message: str,
-        error_code: Optional[str] = None,
-        error_type: Optional[str] = None,
-        stack_trace: Optional[str] = None,
+        error_code: str | None = None,
+        error_type: str | None = None,
+        stack_trace: str | None = None,
         **metadata: Any,
     ) -> None:
         """Log error level message."""
@@ -158,9 +158,9 @@ class StructuredLogger:
     def critical(
         self,
         message: str,
-        error_code: Optional[str] = None,
-        error_type: Optional[str] = None,
-        stack_trace: Optional[str] = None,
+        error_code: str | None = None,
+        error_type: str | None = None,
+        stack_trace: str | None = None,
         **metadata: Any,
     ) -> None:
         """Log critical level message."""
@@ -251,8 +251,8 @@ def create_service_logger(
     service_name: str,
     version: str = "1.0.0",
     environment: str = "production",
-    instance_id: Optional[str] = None,
-    trace_context: Optional[TraceContext] = None,
+    instance_id: str | None = None,
+    trace_context: TraceContext | None = None,
 ) -> StructuredLogger:
     """Create a structured logger for a service."""
 

@@ -4,10 +4,11 @@ Performance configuration management system
 
 import json
 import os
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union, Callable
+from typing import Any
 
 import yaml
 
@@ -37,11 +38,11 @@ class CacheConfig:
     """Cache configuration settings"""
 
     enabled: bool = True
-    redis_url: Optional[str] = None
+    redis_url: str | None = None
     redis_host: str = "localhost"
     redis_port: int = 6379
     redis_db: int = 0
-    redis_password: Optional[str] = None
+    redis_password: str | None = None
     memory_fallback: bool = True
     memory_cache_size: int = 1000
     default_ttl: int = 3600
@@ -146,7 +147,7 @@ class LoggingConfig:
     debug_mode: bool = False
 
     # File logging
-    log_file: Optional[str] = None
+    log_file: str | None = None
     max_file_size: int = 100 * 1024 * 1024  # 100MB
     backup_count: int = 5
 
@@ -204,7 +205,7 @@ class EnvironmentConfig:
 
     # External services
     ai_providers: dict[str, dict[str, Any]] = field(default_factory=dict)
-    database_url: Optional[str] = None
+    database_url: str | None = None
 
     # Security
     cors_origins: list[str] = field(default_factory=list)
@@ -223,12 +224,12 @@ class PerformanceConfig:
     logging: LoggingConfig = field(default_factory=LoggingConfig)
     targets: PerformanceTargets = field(default_factory=PerformanceTargets)
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary"""
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "PerformanceConfig":
+    def from_dict(cls, data: dict[str, Any]) -> "PerformanceConfig":
         """Create from dictionary"""
 
         # Extract nested configs
@@ -263,7 +264,7 @@ class PerformanceConfig:
             targets=targets,
         )
 
-    def validate(self) -> List[str]:
+    def validate(self) -> list[str]:
         """Validate configuration and return list of issues"""
 
         issues = []
@@ -302,7 +303,7 @@ class PerformanceConfig:
 
         return issues
 
-    def get_environment_overrides(self) -> Dict[str, Any]:
+    def get_environment_overrides(self) -> dict[str, Any]:
         """Get configuration overrides based on environment"""
 
         overrides = {}
@@ -380,15 +381,15 @@ class ConfigManager:
     - Configuration templates
     """
 
-    def __init__(self, config_dir: Optional[str] = None):
+    def __init__(self, config_dir: str | None = None):
         self.config_dir = Path(config_dir) if config_dir else Path("config")
-        self.current_config: Optional[PerformanceConfig] = None
-        self._config_watchers: List[Callable[[Any], None]] = []
+        self.current_config: PerformanceConfig | None = None
+        self._config_watchers: list[Callable[[Any], None]] = []
 
     def load_config(
         self,
-        environment: Union[str, Environment] = Environment.DEVELOPMENT,
-        config_file: Optional[str] = None,
+        environment: str | Environment = Environment.DEVELOPMENT,
+        config_file: str | None = None,
     ) -> PerformanceConfig:
         """Load configuration for specified environment"""
 
@@ -430,7 +431,7 @@ class ConfigManager:
 
         return performance_config
 
-    def _load_base_config(self) -> Dict[str, Any]:
+    def _load_base_config(self) -> dict[str, Any]:
         """Load base configuration"""
 
         return {
@@ -443,7 +444,7 @@ class ConfigManager:
             }
         }
 
-    def _load_environment_config(self, environment: Environment) -> Dict[str, Any]:
+    def _load_environment_config(self, environment: Environment) -> dict[str, Any]:
         """Load environment-specific configuration"""
 
         config_file = self.config_dir / f"{environment.value}.yaml"
@@ -459,7 +460,7 @@ class ConfigManager:
             }
         }
 
-    def _load_config_file(self, file_path: str) -> Dict[str, Any]:
+    def _load_config_file(self, file_path: str) -> dict[str, Any]:
         """Load configuration from file"""
 
         config_path = Path(file_path)
@@ -484,10 +485,10 @@ class ConfigManager:
             logger.error(f"Failed to load configuration file {file_path}: {e}")
             return {}
 
-    def _load_from_environment_variables(self) -> Dict[str, Any]:
+    def _load_from_environment_variables(self) -> dict[str, Any]:
         """Load configuration from environment variables"""
 
-        config: Dict[str, Any] = {}
+        config: dict[str, Any] = {}
 
         # Map environment variables to config keys
         env_mappings = {
@@ -518,7 +519,7 @@ class ConfigManager:
             if env_value is not None:
                 # Convert value to appropriate type
                 try:
-                    converted_value: Union[bool, int, float, str]
+                    converted_value: bool | int | float | str
                     if value_type == bool:
                         converted_value = env_value.lower() in (
                             "true",
@@ -543,7 +544,7 @@ class ConfigManager:
 
         return config
 
-    def _set_nested_config(self, config: Dict[str, Any], key: str, value: Any) -> None:
+    def _set_nested_config(self, config: dict[str, Any], key: str, value: Any) -> None:
         """Set nested configuration value using dot notation"""
 
         keys = key.split(".")
@@ -556,10 +557,10 @@ class ConfigManager:
 
         target[keys[-1]] = value
 
-    def _merge_configs(self, configs: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def _merge_configs(self, configs: list[dict[str, Any]]) -> dict[str, Any]:
         """Merge multiple configuration dictionaries"""
 
-        merged: Dict[str, Any] = {}
+        merged: dict[str, Any] = {}
 
         for config in configs:
             merged = self._deep_merge(merged, config)
@@ -567,8 +568,8 @@ class ConfigManager:
         return merged
 
     def _deep_merge(
-        self, base: Dict[str, Any], override: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, base: dict[str, Any], override: dict[str, Any]
+    ) -> dict[str, Any]:
         """Deep merge two dictionaries"""
 
         result = base.copy()
@@ -619,7 +620,7 @@ class ConfigManager:
         self.save_config(template_config, file_path)
         logger.info(f"Configuration template created: {file_path}")
 
-    def validate_config_file(self, file_path: str) -> List[str]:
+    def validate_config_file(self, file_path: str) -> list[str]:
         """Validate configuration file"""
 
         try:
@@ -634,7 +635,7 @@ class ConfigManager:
         """Add callback for configuration changes"""
         self._config_watchers.append(callback)
 
-    def reload_config(self) -> Optional[PerformanceConfig]:
+    def reload_config(self) -> PerformanceConfig | None:
         """Reload current configuration"""
 
         if self.current_config:
@@ -652,22 +653,22 @@ class ConfigManager:
 
         return None
 
-    def get_current_config(self) -> Optional[PerformanceConfig]:
+    def get_current_config(self) -> PerformanceConfig | None:
         """Get current configuration"""
         return self.current_config
 
 
 # Global configuration manager
-_config_manager: Optional[ConfigManager] = None
+_config_manager: ConfigManager | None = None
 
 
-def get_config_manager() -> Optional[ConfigManager]:
+def get_config_manager() -> ConfigManager | None:
     """Get global configuration manager"""
     global _config_manager
     return _config_manager
 
 
-def initialize_config_manager(config_dir: Optional[str] = None) -> ConfigManager:
+def initialize_config_manager(config_dir: str | None = None) -> ConfigManager:
     """Initialize global configuration manager"""
     global _config_manager
 
@@ -675,7 +676,7 @@ def initialize_config_manager(config_dir: Optional[str] = None) -> ConfigManager
     return _config_manager
 
 
-def get_current_config() -> Optional[PerformanceConfig]:
+def get_current_config() -> PerformanceConfig | None:
     """Get current performance configuration"""
     manager = get_config_manager()
     return manager.get_current_config() if manager else None

@@ -51,10 +51,10 @@ class Project(Base, TimestampMixin):
     progress_percentage: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     next_episode_number: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
 
-    episodes: Mapped["list[Episode]"] = relationship(
+    episodes: Mapped[list[Episode]] = relationship(
         "Episode", back_populates="project", cascade="all, delete-orphan"
     )
-    project_metadata: Mapped["list[ProjectMetadata]"] = relationship(
+    project_metadata: Mapped[list[ProjectMetadata]] = relationship(
         "ProjectMetadata", back_populates="project", cascade="all, delete-orphan"
     )
 

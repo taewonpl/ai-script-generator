@@ -3,18 +3,20 @@ Episode numbering system monitoring API endpoints
 """
 
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi import status as http_status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+
 class SuccessResponseDTO(BaseModel):
     success: bool = True
     message: str = "Success"
     data: Any = None
     error: str | None = None
+
 
 from ..database import get_db
 from ..monitoring.episode_alerting import get_alert_manager
@@ -23,6 +25,7 @@ from ..monitoring.integrity_jobs import IntegrityAutoFixer, get_integrity_job
 
 try:
     from ai_script_core import get_service_logger
+
     # Use local SuccessResponseDTO to avoid import conflicts
     logger = get_service_logger("project-service.monitoring-api")
     CORE_AVAILABLE = True
@@ -58,7 +61,9 @@ async def get_integrity_summary(db: Session = Depends(get_db)) -> SuccessRespons
 
 
 @router.get("/integrity/project/{project_id}")
-async def get_project_integrity(project_id: str, db: Session = Depends(get_db)) -> SuccessResponseDTO:
+async def get_project_integrity(
+    project_id: str, db: Session = Depends(get_db)
+) -> SuccessResponseDTO:
     """Get integrity status for a specific project"""
     try:
         checker = get_integrity_checker(db)
@@ -202,7 +207,9 @@ async def trigger_alert_checks(
 
 
 @router.post("/alerts/{alert_key}/resolve")
-async def resolve_alert(alert_key: str, db: Session = Depends(get_db)) -> SuccessResponseDTO:
+async def resolve_alert(
+    alert_key: str, db: Session = Depends(get_db)
+) -> SuccessResponseDTO:
     """Resolve a specific alert"""
     try:
         alert_manager = get_alert_manager(db)
@@ -307,7 +314,7 @@ async def export_metrics(
     format: str = Query("json", description="Export format: json, prometheus"),
     project_id: str | None = Query(None, description="Filter by project"),
     db: Session = Depends(get_db),
-) -> SuccessResponseDTO | Dict[str, Any]:
+) -> SuccessResponseDTO | dict[str, Any]:
     """Export episode monitoring metrics"""
     try:
         # Collect all metrics

@@ -2,7 +2,7 @@
 Main LangGraph workflow for script generation
 """
 
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 # Import Core Module components
 try:
@@ -90,7 +90,7 @@ class GenerationWorkflow:
     4. Finalization - Result compilation
     """
 
-    def __init__(self, provider_factory: Any, rag_service: Optional[Any] = None) -> None:
+    def __init__(self, provider_factory: Any, rag_service: Any | None = None) -> None:
         self.provider_factory = provider_factory
         self.rag_service = rag_service
 
@@ -234,7 +234,7 @@ class GenerationWorkflow:
             return state
 
     async def execute(
-        self, request: GenerationRequest, generation_id: Optional[str] = None
+        self, request: GenerationRequest, generation_id: str | None = None
     ) -> GenerationResponse:
         """
         Execute the complete workflow
@@ -474,7 +474,7 @@ class GenerationWorkflow:
             },
         )
 
-    def get_workflow_info(self) -> Dict[str, Any]:
+    def get_workflow_info(self) -> dict[str, Any]:
         """Get information about the workflow"""
 
         return {

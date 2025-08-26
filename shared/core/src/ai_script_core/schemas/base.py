@@ -5,7 +5,7 @@ Base Schemas for AI Script Generator v3.0
 """
 
 from datetime import datetime
-from typing import Generic, TypeVar, Optional, List
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -41,19 +41,19 @@ class BaseResponseSchema(BaseSchema, Generic[T]):
 
     success: bool = Field(..., description="성공 여부")
     message: str = Field(..., description="응답 메시지")
-    data: Optional[T] = Field(None, description="응답 데이터")
+    data: T | None = Field(None, description="응답 데이터")
     timestamp: datetime = Field(default_factory=datetime.now, description="응답 시간")
 
     @classmethod
     def success_response(
-        cls, data: Optional[T] = None, message: str = "Success"
+        cls, data: T | None = None, message: str = "Success"
     ) -> "BaseResponseSchema[T]":
         """성공 응답 생성"""
         return cls(success=True, message=message, data=data)
 
     @classmethod
     def error_response(
-        cls, message: str = "Error occurred", data: Optional[T] = None
+        cls, message: str = "Error occurred", data: T | None = None
     ) -> "BaseResponseSchema[T]":
         """오류 응답 생성"""
         return cls(success=False, message=message, data=data)
@@ -86,12 +86,12 @@ class PaginationSchema(BaseSchema):
 class PaginatedResponse(BaseSchema, Generic[T]):
     """페이지네이션된 응답 스키마"""
 
-    items: List[T] = Field(..., description="데이터 목록")
+    items: list[T] = Field(..., description="데이터 목록")
     pagination: PaginationSchema = Field(..., description="페이지네이션 정보")
 
     @classmethod
     def create(
-        cls, items: List[T], page: int, size: int, total: int
+        cls, items: list[T], page: int, size: int, total: int
     ) -> "PaginatedResponse[T]":
         """페이지네이션된 응답 생성"""
         pagination = PaginationSchema.calculate(page, size, total)
@@ -101,17 +101,17 @@ class PaginatedResponse(BaseSchema, Generic[T]):
 class RequestMetadata(BaseSchema):
     """요청 메타데이터"""
 
-    request_id: Optional[str] = Field(None, description="요청 ID")
-    user_id: Optional[str] = Field(None, description="사용자 ID")
-    service_name: Optional[str] = Field(None, description="요청한 서비스명")
+    request_id: str | None = Field(None, description="요청 ID")
+    user_id: str | None = Field(None, description="사용자 ID")
+    service_name: str | None = Field(None, description="요청한 서비스명")
     timestamp: datetime = Field(default_factory=datetime.now, description="요청 시간")
 
 
 class ResponseMetadata(BaseSchema):
     """응답 메타데이터"""
 
-    request_id: Optional[str] = Field(None, description="요청 ID")
+    request_id: str | None = Field(None, description="요청 ID")
     service_name: str = Field(..., description="응답한 서비스명")
     version: str = Field(..., description="서비스 버전")
     timestamp: datetime = Field(default_factory=datetime.now, description="응답 시간")
-    processing_time_ms: Optional[int] = Field(None, description="처리 시간(밀리초)")
+    processing_time_ms: int | None = Field(None, description="처리 시간(밀리초)")

@@ -5,7 +5,7 @@ Base class for specialized AI agents
 from abc import ABC, abstractmethod
 from datetime import datetime
 from enum import Enum
-from typing import Any, Optional, Dict, Union
+from typing import Any
 
 # Import Core Module components
 try:
@@ -111,8 +111,8 @@ class BaseSpecialAgent(ABC):
         agent_name: str,
         capabilities: list[AgentCapability],
         priority: AgentPriority = AgentPriority.MEDIUM,
-        provider_factory: Optional[Any] = None,
-        config: Optional[Dict[str, Any]] = None,
+        provider_factory: Any | None = None,
+        config: dict[str, Any] | None = None,
     ) -> None:
         self.agent_name = agent_name
         self.capabilities = capabilities
@@ -293,8 +293,8 @@ class BaseSpecialAgent(ABC):
     def _update_state_with_enhancement(
         self,
         state: GenerationState,
-        enhancement_result: Dict[str, Any],
-        analysis: Dict[str, Any],
+        enhancement_result: dict[str, Any],
+        analysis: dict[str, Any],
     ) -> GenerationState:
         """Update state with enhancement results"""
 
@@ -351,7 +351,7 @@ class BaseSpecialAgent(ABC):
         return enhanced_state
 
     def _update_execution_metrics(
-        self, execution_time: float, enhancement_result: Dict[str, Any]
+        self, execution_time: float, enhancement_result: dict[str, Any]
     ) -> None:
         """Update agent execution metrics"""
 
@@ -397,7 +397,7 @@ Please provide the enhanced version of the script.
 
     async def execute_ai_enhancement(
         self, prompt: str, max_tokens: int = 3000
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Execute AI enhancement using the provider"""
 
         if not self.provider:

@@ -2,8 +2,6 @@
 Middleware setup for generation service
 """
 
-from typing import Any, Dict, Set
-
 from fastapi import FastAPI
 
 from ..api.idempotency_middleware import IdempotencyMiddleware

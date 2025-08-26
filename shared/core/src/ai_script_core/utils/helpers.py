@@ -13,7 +13,7 @@ import uuid
 from collections.abc import Callable
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional, Dict, List, Union
+from typing import Any
 from urllib.parse import urlparse
 
 import aiohttp
@@ -89,7 +89,7 @@ def generate_numeric_id(length: int = 8) -> str:
 
 
 def format_datetime(
-    dt: Optional[datetime] = None, format_type: str = "iso", timezone_aware: bool = True
+    dt: datetime | None = None, format_type: str = "iso", timezone_aware: bool = True
 ) -> str:
     """
     날짜/시간을 다양한 형식으로 포맷
@@ -122,8 +122,8 @@ def format_datetime(
 
 
 def parse_datetime(
-    date_string: str, formats: Optional[List[str]] = None
-) -> Optional[datetime]:
+    date_string: str, formats: list[str] | None = None
+) -> datetime | None:
     """
     문자열을 datetime으로 파싱 (여러 포맷 시도)
 
@@ -168,8 +168,8 @@ def to_utc(dt: datetime) -> datetime:
 
 
 def calculate_age(
-    from_date: datetime, to_date: Optional[datetime] = None
-) -> Dict[str, int]:
+    from_date: datetime, to_date: datetime | None = None
+) -> dict[str, int]:
     """
     두 날짜 사이의 시간 차이 계산
 
@@ -208,7 +208,7 @@ def sanitize_text(
     remove_html: bool = True,
     normalize_whitespace: bool = True,
     remove_special_chars: bool = False,
-    max_length: Optional[int] = None,
+    max_length: int | None = None,
 ) -> str:
     """
     텍스트 정제
@@ -284,13 +284,13 @@ def clean_filename(filename: str, max_length: int = 255) -> str:
     return cleaned
 
 
-def extract_emails(text: str) -> List[str]:
+def extract_emails(text: str) -> list[str]:
     """텍스트에서 이메일 주소 추출"""
     email_pattern = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
     return re.findall(email_pattern, text)
 
 
-def extract_urls(text: str) -> List[str]:
+def extract_urls(text: str) -> list[str]:
     """텍스트에서 URL 추출"""
     url_pattern = r'https?://[^\s<>"{}|\\^`[\]]+'
     return re.findall(url_pattern, text)
@@ -325,7 +325,7 @@ def validate_service_health(
     timeout: int = 5,
     expected_status: int = 200,
     health_endpoint: str = "/health",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     서비스 상태 확인 (동기)
 
@@ -407,7 +407,7 @@ async def validate_service_health_async(
     timeout: int = 5,
     expected_status: int = 200,
     health_endpoint: str = "/health",
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     서비스 상태 확인 (비동기)
 
@@ -483,8 +483,8 @@ async def validate_service_health_async(
 
 
 def check_multiple_services(
-    services: List[str], timeout: int = 5, max_workers: int = 10
-) -> Dict[str, Dict[str, Any]]:
+    services: list[str], timeout: int = 5, max_workers: int = 10
+) -> dict[str, dict[str, Any]]:
     """
     여러 서비스 상태를 동시에 확인
 
@@ -528,7 +528,7 @@ def check_multiple_services(
 # =============================================================================
 
 
-def calculate_hash(data: Union[str, bytes], algorithm: str = "sha256") -> str:
+def calculate_hash(data: str | bytes, algorithm: str = "sha256") -> str:
     """
     데이터의 해시값 계산
 
@@ -563,7 +563,7 @@ def safe_json_dumps(obj: Any, default: Any = None, **kwargs: Any) -> str:
         return default or "{}"
 
 
-def deep_merge(dict1: Dict[str, Any], dict2: Dict[str, Any]) -> Dict[str, Any]:
+def deep_merge(dict1: dict[str, Any], dict2: dict[str, Any]) -> dict[str, Any]:
     """딕셔너리 깊은 병합"""
     result = dict1.copy()
 

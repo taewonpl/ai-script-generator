@@ -6,7 +6,7 @@ import asyncio
 import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any, Optional, Dict
+from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -42,9 +42,9 @@ class EpisodeIntegrityJob:
         self.db = db
         self.config = config or IntegrityJobConfig()
         self.is_running = False
-        self.last_check: Optional[datetime] = None
-        self.last_deep_check: Optional[datetime] = None
-        self.stats: Dict[str, Any] = {
+        self.last_check: datetime | None = None
+        self.last_deep_check: datetime | None = None
+        self.stats: dict[str, Any] = {
             "total_runs": 0,
             "total_projects_checked": 0,
             "total_issues_found": 0,
@@ -181,7 +181,9 @@ class EpisodeIntegrityJob:
                 "projects_with_issues": len(project_issues),
                 "total_issues": total_issues,
                 "project_issues": project_issues,
-                "timestamp": self.last_deep_check.isoformat() if self.last_deep_check else "",
+                "timestamp": (
+                    self.last_deep_check.isoformat() if self.last_deep_check else ""
+                ),
             }
 
             logger.info(

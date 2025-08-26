@@ -342,7 +342,9 @@ class ConfigValidator:
         if model and not any(valid in model for valid in ["claude-3", "claude-2"]):
             self.warnings.append(f"Unknown Anthropic model in {provider}: {model}")
 
-    def _validate_local_model_config(self, provider: str, config: dict[str, Any]) -> None:
+    def _validate_local_model_config(
+        self, provider: str, config: dict[str, Any]
+    ) -> None:
         """Validate local model configuration"""
         endpoint_url = config.get("endpoint_url", "")
 
@@ -422,7 +424,9 @@ class ConfigValidator:
                 )
 
 
-async def validate_external_connections(settings: Any) -> tuple[bool, list[str], list[str]]:
+async def validate_external_connections(
+    settings: Any,
+) -> tuple[bool, list[str], list[str]]:
     """
     Validate external service connections
 

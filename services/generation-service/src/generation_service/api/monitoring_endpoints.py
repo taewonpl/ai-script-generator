@@ -440,7 +440,9 @@ class MonitoringAPI:
             logger.error(f"Active alerts retrieval failed: {e}")
             return {"error": f"Active alerts retrieval failed: {e!s}"}
 
-    async def get_alert_history(self, hours: int = Query(default=24, ge=1, le=168)) -> dict[str, Any]:
+    async def get_alert_history(
+        self, hours: int = Query(default=24, ge=1, le=168)
+    ) -> dict[str, Any]:
         """Get alert history"""
 
         try:

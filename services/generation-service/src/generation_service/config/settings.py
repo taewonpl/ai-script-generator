@@ -4,7 +4,7 @@ Application settings management with validation and type safety
 
 import json
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -73,11 +73,11 @@ class Settings(BaseSettings):
     )
 
     # Cache settings
-    redis_url: Optional[str] = Field(default=None, description="Redis connection URL")
+    redis_url: str | None = Field(default=None, description="Redis connection URL")
     redis_host: str = Field(default="localhost", description="Redis host")
     redis_port: int = Field(default=6379, ge=1, le=65535, description="Redis port")
     redis_db: int = Field(default=0, ge=0, le=15, description="Redis database number")
-    redis_password: Optional[str] = Field(default=None, description="Redis password")
+    redis_password: str | None = Field(default=None, description="Redis password")
     cache_ttl_default: int = Field(
         default=3600, ge=1, description="Default cache TTL in seconds"
     )
@@ -110,7 +110,7 @@ class Settings(BaseSettings):
 
     # Logging settings
     log_level: LogLevel = Field(default=LogLevel.INFO, description="Logging level")
-    log_file: Optional[str] = Field(default=None, description="Log file path")
+    log_file: str | None = Field(default=None, description="Log file path")
     log_max_file_size: int = Field(
         default=100 * 1024 * 1024,
         ge=1024 * 1024,
@@ -135,12 +135,8 @@ class Settings(BaseSettings):
     )
 
     # AI Provider settings
-    openai_api_key: Optional[str] = Field(
-        default=None, description="OpenAI API key"
-    )
-    anthropic_api_key: Optional[str] = Field(
-        default=None, description="Anthropic API key"
-    )
+    openai_api_key: str | None = Field(default=None, description="OpenAI API key")
+    anthropic_api_key: str | None = Field(default=None, description="Anthropic API key")
     ai_provider_timeout: float = Field(
         default=30.0, ge=1.0, le=300.0, description="AI provider timeout"
     )
@@ -152,13 +148,13 @@ class Settings(BaseSettings):
     cors_origins: list[str] = Field(
         default_factory=list, description="CORS allowed origins"
     )
-    api_key: Optional[str] = Field(default=None, description="API key for authentication")
+    api_key: str | None = Field(default=None, description="API key for authentication")
     rate_limit_requests: int = Field(
         default=1000, ge=10, description="Rate limit requests per hour"
     )
 
     # Database settings (if needed)
-    database_url: Optional[str] = Field(
+    database_url: str | None = Field(
         default=None, description="Database connection URL"
     )
     database_pool_size: int = Field(
@@ -215,13 +211,13 @@ class Settings(BaseSettings):
 
     @field_validator("cors_origins", mode="before")
     @classmethod
-    def validate_cors_origins(cls, v: Any) -> List[str]:
+    def validate_cors_origins(cls, v: Any) -> list[str]:
         """Parse CORS origins from string (JSON/CSV) or list"""
         if isinstance(v, str):
             # Try JSON parsing first
             if v.strip().startswith("[") and v.strip().endswith("]"):
                 try:
-                    parsed: List[str] = json.loads(v)
+                    parsed: list[str] = json.loads(v)
                     return parsed
                 except json.JSONDecodeError:
                     pass
@@ -246,7 +242,7 @@ class Settings(BaseSettings):
         """Check if running in testing environment"""
         return self.environment == Environment.TESTING
 
-    def get_cache_config(self) -> Dict[str, Any]:
+    def get_cache_config(self) -> dict[str, Any]:
         """Get cache configuration"""
         return {
             "enabled": self.enable_caching,
@@ -260,7 +256,7 @@ class Settings(BaseSettings):
             "memory_cache_size": 1000,
         }
 
-    def get_async_config(self) -> Dict[str, Any]:
+    def get_async_config(self) -> dict[str, Any]:
         """Get async optimization configuration"""
         return {
             "enabled": self.enable_async_optimization,
@@ -272,7 +268,7 @@ class Settings(BaseSettings):
             "priority_timeout": 120.0,
         }
 
-    def get_resource_config(self) -> Dict[str, Any]:
+    def get_resource_config(self) -> dict[str, Any]:
         """Get resource management configuration"""
         return {
             "enabled": True,
@@ -283,7 +279,7 @@ class Settings(BaseSettings):
             "monitoring_interval": self.monitoring_interval,
         }
 
-    def get_monitoring_config(self) -> Dict[str, Any]:
+    def get_monitoring_config(self) -> dict[str, Any]:
         """Get monitoring configuration"""
         return {
             "enabled": self.enable_monitoring,
@@ -296,7 +292,7 @@ class Settings(BaseSettings):
             "dashboard_enabled": self.dashboard_enabled,
         }
 
-    def get_logging_config(self) -> Dict[str, Any]:
+    def get_logging_config(self) -> dict[str, Any]:
         """Get logging configuration"""
         return {
             "enabled": True,
@@ -311,7 +307,7 @@ class Settings(BaseSettings):
             "trace_retention_hours": self.trace_retention_hours,
         }
 
-    def get_ai_provider_config(self) -> Dict[str, Dict[str, Any]]:
+    def get_ai_provider_config(self) -> dict[str, dict[str, Any]]:
         """Get AI provider configuration"""
         providers = {}
 
@@ -339,7 +335,7 @@ class Settings(BaseSettings):
 
         return providers
 
-    def get_performance_targets(self) -> Dict[str, Any]:
+    def get_performance_targets(self) -> dict[str, Any]:
         """Get performance targets"""
         return {
             "workflow_execution_time_target": 30.0,
@@ -380,7 +376,7 @@ class Settings(BaseSettings):
             )
             self.trace_sample_rate = 0.1  # Reduced sampling in production
 
-    def validate_settings(self) -> List[str]:
+    def validate_settings(self) -> list[str]:
         """Validate settings and return list of issues"""
 
         issues = []
@@ -412,7 +408,7 @@ class Settings(BaseSettings):
 
         return issues
 
-    def get_summary(self) -> Dict[str, Any]:
+    def get_summary(self) -> dict[str, Any]:
         """Get configuration summary"""
 
         return {
@@ -437,7 +433,7 @@ class Settings(BaseSettings):
 
 
 # Global settings instance
-_settings: Optional[Settings] = None
+_settings: Settings | None = None
 
 
 def get_settings() -> Settings:
@@ -456,7 +452,7 @@ def get_settings() -> Settings:
     return _settings
 
 
-def initialize_settings(env_file: Optional[str] = None, **overrides: Any) -> Settings:
+def initialize_settings(env_file: str | None = None, **overrides: Any) -> Settings:
     """Initialize settings with optional overrides"""
     global _settings
 

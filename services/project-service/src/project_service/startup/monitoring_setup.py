@@ -2,8 +2,9 @@
 Startup configuration for episode monitoring system
 """
 
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import AsyncIterator, Any
+from typing import Any
 
 from ..database.connection import get_session
 from ..monitoring.episode_alerting import setup_alert_handlers
@@ -15,7 +16,7 @@ from ..monitoring.integrity_jobs import (
 
 try:
     from ai_script_core import get_service_logger
-    
+
     logger = get_service_logger("project-service.monitoring-setup")
 except ImportError:
     import logging
