@@ -3,7 +3,7 @@ Cache management API endpoints
 """
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
@@ -74,8 +74,8 @@ class CacheOperationRequest(BaseModel):
 
     cache_type: str
     key_args: dict[str, Any]
-    data: Any | None = None
-    ttl: int | None = None
+    data: Optional[Any] = None
+    ttl: Optional[int] = None
 
 
 class CacheOperationResponse(BaseModel):
@@ -85,8 +85,8 @@ class CacheOperationResponse(BaseModel):
     operation: str
     cache_type: str
     key: str
-    result: Any | None = None
-    error: str | None = None
+    result: Optional[Any] = None
+    error: Optional[str] = None
 
 
 class CacheAPI:

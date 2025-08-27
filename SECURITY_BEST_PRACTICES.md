@@ -203,6 +203,55 @@ git reflog expire --expire=now --all && git gc --prune=now --aggressive
 
 **⚠️ 주의**: 퍼블릭 이슈나 풀 리퀘스트에 보안 취약점 보고 금지
 
+## 🛡️ 8. 보안 미들웨어 (Security Middleware)
+
+### 자동 보안 기능
+
+AI Script Generator v3.0에는 다음 보안 미들웨어가 자동 적용됩니다:
+
+#### 보안 헤더 (Security Headers)
+```
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-XSS-Protection: 1; mode=block
+Referrer-Policy: strict-origin-when-cross-origin
+```
+
+#### 속도 제한 (Rate Limiting)
+- **Generation Service**: 100 requests/minute per IP
+- **Project Service**: 200 requests/minute per IP
+- 429 상태 코드 반환 시 적절한 재시도 로직 구현
+
+#### 요청 검증 (Request Validation)
+- 최대 요청 크기: 16MB
+- 허용된 Content-Type만 처리
+- 악성 패턴 자동 차단 (XSS, 경로 탐색 등)
+
+#### API 키 검증 (선택사항)
+- Generation Service의 민감한 엔드포인트 보호
+- X-API-Key 헤더 또는 Authorization Bearer 토큰 지원
+
+### 설정 방법
+
+```python
+# services/*/src/*/main.py
+from .middleware import setup_security_middleware
+
+setup_security_middleware(
+    app,
+    enable_rate_limiting=True,
+    rate_limit_calls=100,
+    rate_limit_period=60,
+)
+```
+
+### 보안 모니터링
+
+- Rate limit 위반 시 자동 로그 생성
+- 악성 요청 패턴 탐지 및 기록
+- 클라이언트 IP 추적 (프록시 헤더 고려)
+
 ---
 
-*마지막 업데이트: 2024년 12월 - 하드코딩된 PostgreSQL 인증정보 수정 완료*
+*마지막 업데이트: 2025년 8월 - 보안 미들웨어 및 자동화된 보안 검증 추가*

@@ -19,23 +19,23 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy and install Core Module
-COPY ../../shared/core /app/shared/core
+COPY shared/core /app/shared/core
 WORKDIR /app/shared/core
 RUN pip install -e .
 WORKDIR /app
 
 # Copy requirements and install Python dependencies
-COPY requirements.txt ./
+COPY services/generation-service/requirements.txt ./
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application source
-COPY src/ ./src/
-COPY main.py ./
+COPY services/generation-service/src/ ./src/
+COPY services/generation-service/main.py ./
 
-# Copy Docker scripts if they exist
-COPY docker/entrypoint.sh /entrypoint.sh 2>/dev/null || echo '#!/bin/bash\nexec "$@"' > /entrypoint.sh
-COPY docker/health-check.sh /health-check.sh 2>/dev/null || echo '#!/bin/bash\ncurl -f http://localhost:8000/health || exit 1' > /health-check.sh
+# Create default scripts
+RUN echo '#!/bin/bash\nexec "$@"' > /entrypoint.sh
+RUN echo '#!/bin/bash\ncurl -f http://localhost:8002/health || exit 1' > /health-check.sh
 
 # Make scripts executable
 RUN chmod +x /entrypoint.sh /health-check.sh
@@ -62,7 +62,7 @@ ENV DATA_ROOT_PATH=/app/data \
     PYTHONPATH=/app/src:/app
 
 # Expose port
-EXPOSE 8000
+EXPOSE 8002
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
@@ -72,4 +72,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
 ENTRYPOINT ["/entrypoint.sh"]
 
 # Default command - directly use uvicorn
-CMD ["uvicorn", "generation_service.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "generation_service.main:app", "--host", "0.0.0.0", "--port", "8002"]

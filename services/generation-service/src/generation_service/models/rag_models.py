@@ -4,7 +4,7 @@ RAG-specific models with Core Module integration
 
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -184,16 +184,16 @@ if CORE_AVAILABLE:
         )
 
         # Filtering parameters
-        project_id: str | None = Field(None, description="Filter by project ID")
-        episode_id: str | None = Field(None, description="Filter by episode ID")
-        document_types: list[DocumentType] | None = Field(
+        project_id: Optional[str] = Field(None, description="Filter by project ID")
+        episode_id: Optional[str] = Field(None, description="Filter by episode ID")
+        document_types: Optional[list[DocumentType]] = Field(
             None, description="Filter by document types"
         )
-        importance_levels: list[DocumentImportance] | None = Field(
+        importance_levels: Optional[list[DocumentImportance]] = Field(
             None, description="Filter by importance levels"
         )
-        tags: list[str] | None = Field(None, description="Filter by tags")
-        character_names: list[str] | None = Field(
+        tags: Optional[list[str]] = Field(None, description="Filter by tags")
+        character_names: Optional[list[str]] = Field(
             None, description="Filter by character names"
         )
 
@@ -202,7 +202,7 @@ if CORE_AVAILABLE:
         diversify_results: bool = Field(
             default=True, description="Diversify search results"
         )
-        custom_weights: dict[str, float] | None = Field(
+        custom_weights: Optional[dict[str, float]] = Field(
             None, description="Custom scoring weights"
         )
 
@@ -221,8 +221,8 @@ if CORE_AVAILABLE:
 
         document_id: str = Field(..., description="Document identifier")
         content: str = Field(..., description="Document content")
-        title: str | None = Field(None, description="Document title")
-        summary: str | None = Field(None, description="Document summary")
+        title: Optional[str] = Field(None, description="Document title")
+        summary: Optional[str] = Field(None, description="Document summary")
 
         # Relevance metrics
         similarity_score: float = Field(
@@ -236,7 +236,7 @@ if CORE_AVAILABLE:
         # Document metadata
         document_type: DocumentType = Field(..., description="Type of document")
         importance: DocumentImportance = Field(..., description="Document importance")
-        project_id: str | None = Field(None, description="Associated project")
+        project_id: Optional[str] = Field(None, description="Associated project")
         tags: list[str] = Field(default_factory=list, description="Document tags")
 
         # Additional metadata
@@ -308,8 +308,8 @@ if CORE_AVAILABLE:
         )
 
         # Project context
-        project_id: str | None = Field(None, description="Project context")
-        generation_type: str | None = Field(
+        project_id: Optional[str] = Field(None, description="Project context")
+        generation_type: Optional[str] = Field(
             None, description="Type of generation (script, dialogue, etc.)"
         )
 
@@ -421,16 +421,16 @@ else:
         )
 
         # Filtering parameters
-        project_id: str | None = Field(None, description="Filter by project ID")
-        episode_id: str | None = Field(None, description="Filter by episode ID")
-        document_types: list[DocumentType] | None = Field(
+        project_id: Optional[str] = Field(None, description="Filter by project ID")
+        episode_id: Optional[str] = Field(None, description="Filter by episode ID")
+        document_types: Optional[list[DocumentType]] = Field(
             None, description="Filter by document types"
         )
-        importance_levels: list[DocumentImportance] | None = Field(
+        importance_levels: Optional[list[DocumentImportance]] = Field(
             None, description="Filter by importance levels"
         )
-        tags: list[str] | None = Field(None, description="Filter by tags")
-        character_names: list[str] | None = Field(
+        tags: Optional[list[str]] = Field(None, description="Filter by tags")
+        character_names: Optional[list[str]] = Field(
             None, description="Filter by character names"
         )
 
@@ -439,7 +439,7 @@ else:
         diversify_results: bool = Field(
             default=True, description="Diversify search results"
         )
-        custom_weights: dict[str, float] | None = Field(
+        custom_weights: Optional[dict[str, float]] = Field(
             None, description="Custom scoring weights"
         )
 
@@ -458,8 +458,8 @@ else:
 
         document_id: str = Field(..., description="Document identifier")
         content: str = Field(..., description="Document content")
-        title: str | None = Field(None, description="Document title")
-        summary: str | None = Field(None, description="Document summary")
+        title: Optional[str] = Field(None, description="Document title")
+        summary: Optional[str] = Field(None, description="Document summary")
 
         # Relevance metrics
         similarity_score: float = Field(
@@ -473,7 +473,7 @@ else:
         # Document metadata
         document_type: DocumentType = Field(..., description="Type of document")
         importance: DocumentImportance = Field(..., description="Document importance")
-        project_id: str | None = Field(None, description="Associated project")
+        project_id: Optional[str] = Field(None, description="Associated project")
         tags: list[str] = Field(default_factory=list, description="Document tags")
 
         # Additional metadata
@@ -549,8 +549,8 @@ else:
         )
 
         # Project context
-        project_id: str | None = Field(None, description="Project context")
-        generation_type: str | None = Field(
+        project_id: Optional[str] = Field(None, description="Project context")
+        generation_type: Optional[str] = Field(
             None, description="Type of generation (script, dialogue, etc.)"
         )
 
@@ -619,7 +619,7 @@ class RAGBulkOperationDTO(BaseModel):
     operation_type: str = Field(
         ..., description="Type of bulk operation (add, update, delete)"
     )
-    document_ids: list[str] | None = Field(
+    document_ids: Optional[list[str]] = Field(
         None, description="Document IDs for bulk operations"
     )
     batch_size: int = Field(
@@ -630,10 +630,10 @@ class RAGBulkOperationDTO(BaseModel):
     )
 
     # Operation-specific data
-    documents: list[dict[str, Any]] | None = Field(
+    documents: Optional[list[dict[str, Any]]] = Field(
         None, description="Documents for bulk add/update"
     )
-    metadata_updates: dict[str, Any] | None = Field(
+    metadata_updates: Optional[dict[str, Any]] = Field(
         None, description="Metadata updates for bulk operations"
     )
 
@@ -657,7 +657,7 @@ class RAGBulkOperationDTO(BaseModel):
 # Utility functions for model creation
 def create_search_request(
     query: str,
-    project_id: str | None = None,
+    project_id: Optional[str] = None,
     search_strategy: SearchStrategy = SearchStrategy.HYBRID,
     **kwargs,
 ) -> RAGSearchRequestDTO:

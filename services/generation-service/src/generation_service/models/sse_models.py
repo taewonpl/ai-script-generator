@@ -5,19 +5,18 @@ Server-Sent Events (SSE) models for real-time generation updates
 import json
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
 
 class SSEEventType(str, Enum):
-    """SSE event types for generation updates"""
+    """SSE event types for generation updates (CLAUDE.md 계약)"""
 
     PROGRESS = "progress"
     PREVIEW = "preview"
     COMPLETED = "completed"
-    FAILED = "failed"
-    HEARTBEAT = "heartbeat"
+    ERROR = "error"
 
 
 class GenerationJobStatus(str, Enum):
@@ -30,94 +29,68 @@ class GenerationJobStatus(str, Enum):
     CANCELED = "canceled"
 
 
-class ProgressEventData(BaseModel):
-    """Progress event data structure"""
+class StandardSSEEventData(BaseModel):
+    """CLAUDE.md 계약에 따른 표준 SSE 이벤트 데이터 구조
 
-    type: str = SSEEventType.PROGRESS
-    jobId: str = Field(..., description="Generation job ID")
-    value: int = Field(..., ge=0, le=100, description="Progress percentage (0-100)")
-    currentStep: str = Field(..., description="Current step description in Korean")
-    estimatedTime: int | None = Field(
-        None, description="Estimated remaining time in seconds"
+    공통 스키마: {id, status, content, eta_ms}
+    """
+
+    id: str = Field(..., description="Generation job ID")
+    status: SSEEventType = Field(..., description="Event type/status")
+    content: Any = Field(..., description="Event-specific content payload")
+    eta_ms: Optional[int] = Field(
+        None, description="Estimated time remaining in milliseconds"
     )
-    metadata: dict[str, Any] | None = Field(None, description="Additional metadata")
 
 
-class PreviewEventData(BaseModel):
-    """Preview event data structure"""
+# Content payload types for each event
+class ProgressContent(BaseModel):
+    """Progress event content payload"""
 
-    type: str = SSEEventType.PREVIEW
-    jobId: str = Field(..., description="Generation job ID")
-    markdown: str = Field(..., description="Partial script content in markdown")
-    isPartial: bool = Field(True, description="Whether this is partial content")
-    wordCount: int | None = Field(None, description="Current word count")
-    estimatedTokens: int | None = Field(None, description="Estimated token count")
-
-
-class CompletedEventData(BaseModel):
-    """Completed event data structure"""
-
-    type: str = SSEEventType.COMPLETED
-    jobId: str = Field(..., description="Generation job ID")
-    result: dict[str, Any] = Field(..., description="Final generation result")
-
-    @classmethod
-    def create_result(
-        cls, job_id: str, markdown: str, tokens: int, **kwargs: Any
-    ) -> "CompletedEventData":
-        """Create completed event with result data"""
-        result = {"markdown": markdown, "tokens": tokens, **kwargs}
-        return cls(jobId=job_id, result=result)
+    progress_percentage: int = Field(..., ge=0, le=100)
+    current_step: str = Field(..., description="Current processing step")
+    steps_completed: int = Field(..., ge=0)
+    total_steps: int = Field(..., gt=0)
 
 
-class FailedEventData(BaseModel):
-    """Failed event data structure"""
+class PreviewContent(BaseModel):
+    """Preview event content payload"""
 
-    type: str = SSEEventType.FAILED
-    jobId: str = Field(..., description="Generation job ID")
-    error: dict[str, Any] = Field(..., description="Error information")
-
-    @classmethod
-    def create_error(
-        cls,
-        job_id: str,
-        code: str,
-        message: str,
-        retryable: bool = False,
-        **kwargs: Any,
-    ) -> "FailedEventData":
-        """Create failed event with error data"""
-        error = {"code": code, "message": message, "retryable": retryable, **kwargs}
-        return cls(jobId=job_id, error=error)
+    markdown: str = Field(..., description="Partial script content")
+    is_partial: bool = Field(default=True)
+    word_count: int = Field(..., ge=0)
+    estimated_tokens: Optional[int] = Field(None, ge=0)
 
 
-class HeartbeatEventData(BaseModel):
-    """Heartbeat event data structure"""
+class CompletedContent(BaseModel):
+    """Completed event content payload"""
 
-    type: str = SSEEventType.HEARTBEAT
-    timestamp: str = Field(..., description="Current timestamp in ISO format")
-    jobId: str | None = Field(None, description="Optional job ID")
+    markdown: str = Field(..., description="Final script content")
+    total_tokens: int = Field(..., ge=0)
+    word_count: int = Field(..., ge=0)
+    generation_time_ms: int = Field(..., ge=0)
+    quality_score: Optional[float] = Field(None, ge=0, le=1)
 
-    @classmethod
-    def create_now(cls, job_id: str | None = None) -> "HeartbeatEventData":
-        """Create heartbeat event with current timestamp"""
-        return cls(timestamp=datetime.now(timezone.utc).isoformat(), jobId=job_id)
+
+class ErrorContent(BaseModel):
+    """Error event content payload"""
+
+    error_code: str = Field(..., description="Error code")
+    error_message: str = Field(..., description="Human readable error message")
+    retryable: bool = Field(default=False, description="Whether the error is retryable")
+    retry_after_ms: Optional[int] = Field(
+        None, ge=0, description="Suggested retry delay"
+    )
 
 
 class SSEEvent(BaseModel):
-    """Base SSE event structure"""
+    """CLAUDE.md 계약에 따른 표준 SSE 이벤트 구조"""
 
     event: SSEEventType = Field(..., description="Event type")
-    data: (
-        ProgressEventData
-        | PreviewEventData
-        | CompletedEventData
-        | FailedEventData
-        | HeartbeatEventData
-    ) = Field(..., description="Event data")
+    data: StandardSSEEventData = Field(..., description="Standard event data")
 
-    def format_sse(self, event_id: str | None = None) -> str:
-        """Format as SSE message with optional ID field"""
+    def format_sse(self, event_id: Optional[str] = None) -> str:
+        """Format as Server-Sent Event message"""
         data_json = json.dumps(self.data.model_dump(), ensure_ascii=False)
 
         sse_message = f"event: {self.event.value}\ndata: {data_json}\n"
@@ -128,13 +101,115 @@ class SSEEvent(BaseModel):
 
         return sse_message + "\n"
 
+    @classmethod
+    def create_progress(
+        cls,
+        job_id: str,
+        progress_percentage: int,
+        current_step: str,
+        steps_completed: int,
+        total_steps: int,
+        eta_ms: Optional[int] = None,
+    ) -> "SSEEvent":
+        """Create progress event"""
+        content = ProgressContent(
+            progress_percentage=progress_percentage,
+            current_step=current_step,
+            steps_completed=steps_completed,
+            total_steps=total_steps,
+        )
+        data = StandardSSEEventData(
+            id=job_id,
+            status=SSEEventType.PROGRESS,
+            content=content.model_dump(),
+            eta_ms=eta_ms,
+        )
+        return cls(event=SSEEventType.PROGRESS, data=data)
+
+    @classmethod
+    def create_preview(
+        cls,
+        job_id: str,
+        markdown: str,
+        word_count: int,
+        is_partial: bool = True,
+        estimated_tokens: Optional[int] = None,
+        eta_ms: Optional[int] = None,
+    ) -> "SSEEvent":
+        """Create preview event"""
+        content = PreviewContent(
+            markdown=markdown,
+            is_partial=is_partial,
+            word_count=word_count,
+            estimated_tokens=estimated_tokens,
+        )
+        data = StandardSSEEventData(
+            id=job_id,
+            status=SSEEventType.PREVIEW,
+            content=content.model_dump(),
+            eta_ms=eta_ms,
+        )
+        return cls(event=SSEEventType.PREVIEW, data=data)
+
+    @classmethod
+    def create_completed(
+        cls,
+        job_id: str,
+        markdown: str,
+        total_tokens: int,
+        word_count: int,
+        generation_time_ms: int,
+        quality_score: Optional[float] = None,
+    ) -> "SSEEvent":
+        """Create completed event"""
+        content = CompletedContent(
+            markdown=markdown,
+            total_tokens=total_tokens,
+            word_count=word_count,
+            generation_time_ms=generation_time_ms,
+            quality_score=quality_score,
+        )
+        data = StandardSSEEventData(
+            id=job_id,
+            status=SSEEventType.COMPLETED,
+            content=content.model_dump(),
+            eta_ms=None,
+        )
+        return cls(event=SSEEventType.COMPLETED, data=data)
+
+    @classmethod
+    def create_error(
+        cls,
+        job_id: str,
+        error_code: str,
+        error_message: str,
+        retryable: bool = False,
+        retry_after_ms: Optional[int] = None,
+    ) -> "SSEEvent":
+        """Create error event"""
+        content = ErrorContent(
+            error_code=error_code,
+            error_message=error_message,
+            retryable=retryable,
+            retry_after_ms=retry_after_ms,
+        )
+        data = StandardSSEEventData(
+            id=job_id,
+            status=SSEEventType.ERROR,
+            content=content.model_dump(),
+            eta_ms=None,
+        )
+        return cls(event=SSEEventType.ERROR, data=data)
+
 
 class GenerationJob(BaseModel):
     """Generation job tracking model"""
 
     jobId: str = Field(..., description="Unique job ID")
     projectId: str = Field(..., description="Project ID")
-    episodeNumber: int | None = Field(None, description="Episode number if specified")
+    episodeNumber: Optional[int] = Field(
+        None, description="Episode number if specified"
+    )
 
     # Job configuration
     title: str = Field(..., description="Script title")
@@ -151,82 +226,92 @@ class GenerationJob(BaseModel):
 
     # Content
     currentContent: str = Field("", description="Current generated content")
-    finalContent: str | None = Field(None, description="Final completed content")
+    finalContent: Optional[str] = Field(None, description="Final completed content")
 
     # Metadata
     tokens: int = Field(default=0, description="Token count")
     wordCount: int = Field(default=0, description="Word count")
-    modelUsed: str | None = Field(None, description="AI model used")
+    modelUsed: Optional[str] = Field(None, description="AI model used")
 
     # Timing
     createdAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    startedAt: datetime | None = Field(None, description="When streaming started")
-    completedAt: datetime | None = Field(None, description="When completed")
-    estimatedDuration: int | None = Field(
+    startedAt: Optional[datetime] = Field(None, description="When streaming started")
+    completedAt: Optional[datetime] = Field(None, description="When completed")
+    estimatedDuration: Optional[int] = Field(
         None, description="Estimated duration in seconds"
     )
 
     # Error handling
-    errorCode: str | None = Field(None, description="Error code if failed")
-    errorMessage: str | None = Field(None, description="Error message if failed")
+    errorCode: Optional[str] = Field(None, description="Error code if failed")
+    errorMessage: Optional[str] = Field(None, description="Error message if failed")
     retryCount: int = Field(default=0, description="Number of retry attempts")
 
     # Episode integration
-    episodeId: str | None = Field(None, description="Created episode ID")
+    episodeId: Optional[str] = Field(None, description="Created episode ID")
     savedToEpisode: bool = Field(default=False, description="Whether saved to episode")
 
     # Event tracking for Last-Event-ID support
     eventSequence: int = Field(
         default=0, description="Event sequence number for Last-Event-ID"
     )
-    lastEventId: str | None = Field(None, description="Last event ID sent to client")
+    lastEventId: Optional[str] = Field(None, description="Last event ID sent to client")
 
     def to_progress_event(self) -> SSEEvent:
         """Convert to progress SSE event"""
-        data = ProgressEventData(
-            jobId=self.jobId,
-            value=self.progress,
-            currentStep=self.currentStep,
-            estimatedTime=self.get_estimated_remaining_time(),
-            metadata=None,
+        return SSEEvent.create_progress(
+            job_id=self.jobId,
+            progress_percentage=self.progress,
+            current_step=self.currentStep,
+            steps_completed=min(self.progress, 100) // 10,  # Rough estimate
+            total_steps=10,  # Rough estimate
+            eta_ms=(
+                self.get_estimated_remaining_time() * 1000
+                if self.get_estimated_remaining_time()
+                else None
+            ),
         )
-        return SSEEvent(event=SSEEventType.PROGRESS, data=data)
 
     def to_preview_event(self) -> SSEEvent:
         """Convert to preview SSE event"""
-        data = PreviewEventData(
-            jobId=self.jobId,
+        return SSEEvent.create_preview(
+            job_id=self.jobId,
             markdown=self.currentContent,
-            isPartial=self.status != GenerationJobStatus.COMPLETED,
-            wordCount=self.wordCount,
-            estimatedTokens=self.tokens,
+            word_count=self.wordCount,
+            is_partial=self.status != GenerationJobStatus.COMPLETED,
+            estimated_tokens=self.tokens if self.tokens > 0 else None,
+            eta_ms=(
+                self.get_estimated_remaining_time() * 1000
+                if self.get_estimated_remaining_time()
+                else None
+            ),
         )
-        return SSEEvent(event=SSEEventType.PREVIEW, data=data)
 
     def to_completed_event(self) -> SSEEvent:
         """Convert to completed SSE event"""
-        data = CompletedEventData.create_result(
+        generation_time = 0
+        if self.startedAt and self.completedAt:
+            generation_time = int(
+                (self.completedAt - self.startedAt).total_seconds() * 1000
+            )
+
+        return SSEEvent.create_completed(
             job_id=self.jobId,
             markdown=self.finalContent or self.currentContent,
-            tokens=self.tokens,
-            wordCount=self.wordCount,
-            modelUsed=self.modelUsed,
-            episodeId=self.episodeId,
-            savedToEpisode=self.savedToEpisode,
+            total_tokens=self.tokens,
+            word_count=self.wordCount,
+            generation_time_ms=generation_time,
         )
-        return SSEEvent(event=SSEEventType.COMPLETED, data=data)
 
     def to_failed_event(self) -> SSEEvent:
         """Convert to failed SSE event"""
-        data = FailedEventData.create_error(
+        return SSEEvent.create_error(
             job_id=self.jobId,
-            code=self.errorCode or "GENERATION_ERROR",
-            message=self.errorMessage or "Generation failed",
+            error_code=self.errorCode or "GENERATION_ERROR",
+            error_message=self.errorMessage or "Generation failed",
             retryable=self.retryCount < 3,
         )
-        return SSEEvent(event=SSEEventType.FAILED, data=data)
 
-    def get_estimated_remaining_time(self) -> int | None:
+    def get_estimated_remaining_time(self) -> Optional[int]:
         """Calculate estimated remaining time in seconds"""
         if not self.startedAt or self.progress <= 0:
             return self.estimatedDuration
@@ -255,7 +340,7 @@ class GenerationJob(BaseModel):
         self.lastEventId = f"{self.jobId}_{self.eventSequence}"
 
     def complete(
-        self, final_content: str, tokens: int = 0, model_used: str | None = None
+        self, final_content: str, tokens: int = 0, model_used: Optional[str] = None
     ) -> None:
         """Mark job as completed"""
         self.status = GenerationJobStatus.COMPLETED
@@ -303,17 +388,17 @@ class GenerationJobRequest(BaseModel):
     """Request to create a new generation job"""
 
     projectId: str = Field(..., description="Project ID")
-    episodeNumber: int | None = Field(
+    episodeNumber: Optional[int] = Field(
         None, description="Episode number (auto-assigned if not provided)"
     )
-    title: str | None = Field(
+    title: Optional[str] = Field(
         None, description="Script title (auto-generated if not provided)"
     )
     description: str = Field(..., description="Script description/prompt")
     scriptType: str = Field(default="drama", description="Type of script")
-    model: str | None = Field(None, description="Preferred AI model")
-    temperature: float | None = Field(0.7, description="Generation creativity")
-    lengthTarget: int | None = Field(None, description="Target length in words")
+    model: Optional[str] = Field(None, description="Preferred AI model")
+    temperature: Optional[float] = Field(0.7, description="Generation creativity")
+    lengthTarget: Optional[int] = Field(None, description="Target length in words")
 
 
 class GenerationJobResponse(BaseModel):
@@ -326,8 +411,8 @@ class GenerationJobResponse(BaseModel):
 
     # Job details
     projectId: str
-    episodeNumber: int | None = None
+    episodeNumber: Optional[int] = None
     title: str
-    estimatedDuration: int | None = Field(
+    estimatedDuration: Optional[int] = Field(
         None, description="Estimated duration in seconds"
     )

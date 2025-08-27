@@ -4,7 +4,7 @@ Base node class for LangGraph workflow nodes
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 # Import Core Module components
 try:
@@ -70,7 +70,7 @@ class NodeExecutionError(Exception):
     """Base exception for node execution errors"""
 
     def __init__(
-        self, message: str, node_name: str, original_error: Exception | None = None
+        self, message: str, node_name: str, original_error: Optional[Exception] = None
     ):
         self.message = message
         self.node_name = node_name
@@ -87,7 +87,7 @@ if CORE_AVAILABLE:
             self,
             message: str,
             node_name: str,
-            original_error: Exception | None = None,
+            original_error: Optional[Exception] = None,
         ):
             super().__init__(
                 message=message,
@@ -309,7 +309,7 @@ class BaseNode(ABC):
             "quality_score": state.get("current_quality_score", 0.0),
         }
 
-    def _calculate_quality_score(self, state: GenerationState) -> float | None:
+    def _calculate_quality_score(self, state: GenerationState) -> Optional[float]:
         """
         Calculate quality score for this node's output
 

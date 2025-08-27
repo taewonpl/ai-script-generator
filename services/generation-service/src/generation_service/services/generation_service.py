@@ -7,7 +7,7 @@ import logging
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 from generation_service.ai.prompts import (
     ArchitectPrompts,
@@ -62,7 +62,7 @@ except (ImportError, RuntimeError):
     CORE_AVAILABLE = False
     import logging
 
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(__name__)  # type: ignore[assignment]
 
     # Fallback utility functions
     def utc_now() -> datetime:
@@ -167,7 +167,7 @@ class GenerationService:
 
         # Hybrid workflow storage
         self._workflows: dict[str, HybridWorkflowResponse] = {}
-        self._workflow_tasks: dict[str, asyncio.Task] = {}
+        self._workflow_tasks: dict[str, asyncio.Task[Any]] = {}
         self._workflow_progress: dict[str, WorkflowProgress] = {}
         self._node_results: dict[str, list[NodeExecutionResult]] = {}
 
@@ -329,7 +329,7 @@ class GenerationService:
 
     async def get_generation_status(
         self, generation_id: str
-    ) -> GenerationResponse | None:
+    ) -> Optional[GenerationResponse]:
         """Get the status of a generation request"""
         return self._generations.get(generation_id)
 
@@ -1072,7 +1072,7 @@ ORIGINAL REQUEST CONTEXT:
 
     def _identify_special_agent_type(
         self, request: GenerationRequest
-    ) -> tuple[SpecialAgentType | None, list[str]]:
+    ) -> tuple[Optional[SpecialAgentType], list[str]]:
         """Identify special agent type and requirements based on request"""
 
         requirements = []
@@ -1468,7 +1468,7 @@ ORIGINAL REQUEST CONTEXT:
 
     async def get_generation_quality_metrics(
         self, generation_id: str
-    ) -> dict[str, Any] | None:
+    ) -> Optional[dict[str, Any]]:
         """Get quality metrics for a specific generation"""
 
         context = self._contexts.get(generation_id)
@@ -1583,7 +1583,7 @@ ORIGINAL REQUEST CONTEXT:
         """Get generation service statistics"""
         total = len(self._generations)
 
-        stats = {
+        stats: dict[str, Any] = {
             "total_generations": total,
             "by_status": {status.value: 0 for status in GenerationStatus},
             "by_script_type": {},
@@ -1898,7 +1898,7 @@ ORIGINAL REQUEST CONTEXT:
 
     async def get_workflow_status(
         self, workflow_id: str
-    ) -> WorkflowStatusResponse | None:
+    ) -> Optional[WorkflowStatusResponse]:
         """Get current status of a workflow execution"""
 
         if workflow_id not in self._workflows:

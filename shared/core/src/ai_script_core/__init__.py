@@ -82,7 +82,9 @@ from .schemas import (
 
 # Essential Utility Exports
 from .utils import (
+    calculate_hash,
     format_datetime,
+    generate_prefixed_id,
     generate_uuid,
     # Logging
     get_service_logger,
@@ -140,6 +142,8 @@ __all__ = [
     # Essential utilities
     "get_settings",
     "get_service_logger",
+    "calculate_hash",
+    "generate_prefixed_id",
     "generate_uuid",
     "format_datetime",
     "sanitize_text",

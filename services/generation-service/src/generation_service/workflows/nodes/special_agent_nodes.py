@@ -53,7 +53,7 @@ except (ImportError, RuntimeError):
         pass
 
 
-from typing import Any
+from typing import Any, Optional
 
 from generation_service.ai.prompts import (
     PromptContext,
@@ -340,7 +340,7 @@ class SpecialAgentNode(PromptNode):
                 "Enhanced script is identical to styled script - no enhancement applied"
             )
 
-    def _calculate_quality_score(self, state: GenerationState) -> float | None:
+    def _calculate_quality_score(self, state: GenerationState) -> Optional[float]:
         """Calculate quality score for special agent output"""
 
         enhanced_script = state.get("enhanced_script", "")

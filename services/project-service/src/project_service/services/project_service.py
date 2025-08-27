@@ -85,8 +85,7 @@ class ProjectService:
             "name": project_data.name,
             "type": project_data.type,
             "description": project_data.description,
-            "settings": {},
-            "progress_percentage": 0.0,
+            "progress_percentage": 0,
         }
 
         # 프로젝트 생성

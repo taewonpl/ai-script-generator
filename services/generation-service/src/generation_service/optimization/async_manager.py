@@ -8,7 +8,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 # Import Core Module components
 try:
@@ -88,10 +88,10 @@ class TaskResult:
     task_id: str
     status: TaskStatus
     result: Any = None
-    error: Exception | None = None
-    start_time: datetime | None = None
-    end_time: datetime | None = None
-    execution_time: float | None = None
+    error: Optional[Exception] = None
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    execution_time: Optional[float] = None
     metadata: dict[str, Any] = None
 
     def __post_init__(self) -> None:
@@ -146,8 +146,8 @@ class AsyncTaskPool:
         self._semaphore = asyncio.Semaphore(max_concurrent_tasks)
 
         # Worker task
-        self._worker_task: asyncio.Task | None = None
-        self._cleanup_task: asyncio.Task | None = None
+        self._worker_task: asyncio.Optional[Task] = None
+        self._cleanup_task: asyncio.Optional[Task] = None
         self._shutdown_event = asyncio.Event()
 
         # Metrics
@@ -203,9 +203,9 @@ class AsyncTaskPool:
         self,
         coro: Awaitable[Any],
         priority: TaskPriority = TaskPriority.NORMAL,
-        timeout: float | None = None,
-        task_id: str | None = None,
-        metadata: dict[str, Any] | None = None,
+        timeout: Optional[float] = None,
+        task_id: Optional[str] = None,
+        metadata: Optional[dict[str, Any]] = None,
     ) -> str:
         """Submit a task for async execution"""
 
@@ -244,7 +244,7 @@ class AsyncTaskPool:
         return task_id
 
     async def get_result(
-        self, task_id: str, timeout: float | None = None
+        self, task_id: str, timeout: Optional[float] = None
     ) -> TaskResult:
         """Get result for a specific task"""
 
@@ -293,7 +293,7 @@ class AsyncTaskPool:
         return False
 
     async def wait_for_tasks(
-        self, task_ids: list[str], timeout: float | None = None
+        self, task_ids: list[str], timeout: Optional[float] = None
     ) -> list[TaskResult]:
         """Wait for multiple tasks to complete"""
 
@@ -318,8 +318,8 @@ class AsyncTaskPool:
     async def execute_batch(
         self,
         coroutines: list[Awaitable[Any]],
-        max_concurrent: int | None = None,
-        timeout: float | None = None,
+        max_concurrent: Optional[int] = None,
+        timeout: Optional[float] = None,
         priority: TaskPriority = TaskPriority.NORMAL,
     ) -> list[TaskResult]:
         """Execute a batch of coroutines with controlled concurrency"""
@@ -512,7 +512,7 @@ class AsyncTaskPool:
         """Get current task pool metrics"""
         return self.metrics
 
-    def get_task_status(self, task_id: str) -> TaskStatus | None:
+    def get_task_status(self, task_id: str) -> Optional[TaskStatus]:
         """Get status of a specific task"""
 
         result = self._task_results.get(task_id)
@@ -538,7 +538,7 @@ class AsyncManager:
     - Adaptive concurrency based on system load
     """
 
-    def __init__(self, config: dict[str, Any] | None = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         self.config = config or {}
 
         # Task pools for different workload types
@@ -551,7 +551,7 @@ class AsyncManager:
         self._circuit_breakers: dict[str, dict[str, Any]] = {}
 
         # System load monitoring
-        self._load_monitor_task: asyncio.Task | None = None
+        self._load_monitor_task: asyncio.Optional[Task] = None
         self._current_load = 0.0
 
         # Initialize default pools
@@ -616,7 +616,7 @@ class AsyncManager:
         logger.info("AsyncManager stopped")
 
     async def execute_ai_batch(
-        self, coroutines: list[Awaitable[Any]], timeout: float | None = None
+        self, coroutines: list[Awaitable[Any]], timeout: Optional[float] = None
     ) -> list[TaskResult]:
         """Execute AI API calls with optimized batching"""
 
@@ -632,7 +632,7 @@ class AsyncManager:
         self,
         coroutines: list[Awaitable[Any]],
         pool_name: str = "general",
-        timeout: float | None = None,
+        timeout: Optional[float] = None,
     ) -> list[TaskResult]:
         """Execute coroutines in parallel using specified pool"""
 
@@ -643,7 +643,7 @@ class AsyncManager:
         return await pool.execute_batch(coroutines, timeout=timeout)
 
     async def submit_priority_task(
-        self, coro: Awaitable[Any], timeout: float | None = None
+        self, coro: Awaitable[Any], timeout: Optional[float] = None
     ) -> str:
         """Submit high-priority task"""
 
@@ -715,16 +715,16 @@ class AsyncManager:
 
 
 # Global async manager instance
-_async_manager: AsyncManager | None = None
+_async_manager: Optional[AsyncManager] = None
 
 
-def get_async_manager() -> AsyncManager | None:
+def get_async_manager() -> Optional[AsyncManager]:
     """Get global async manager instance"""
     global _async_manager
     return _async_manager
 
 
-def initialize_async_manager(config: dict[str, Any] | None = None) -> AsyncManager:
+def initialize_async_manager(config: Optional[dict[str, Any]] = None) -> AsyncManager:
     """Initialize global async manager"""
     global _async_manager
 

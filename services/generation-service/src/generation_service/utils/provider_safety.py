@@ -175,7 +175,7 @@ def validate_provider_health(provider: BaseProvider, model_name: str) -> None:
 
 async def get_fallback_provider(
     provider_factory: ProviderFactory, preferred_model: str, task_type: str = "general"
-) -> BaseProvider | None:
+) -> Optional[BaseProvider]:
     """
     Get a fallback provider when the preferred model is unavailable
 

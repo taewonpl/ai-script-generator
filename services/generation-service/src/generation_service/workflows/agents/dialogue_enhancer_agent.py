@@ -2,7 +2,7 @@
 Dialogue Enhancer Agent - Improves dialogue quality, naturalness, and character voice
 """
 
-from typing import Any
+from typing import Any, Optional
 
 # Import Core Module components
 try:
@@ -113,7 +113,9 @@ class DialogueEnhancerAgent(BaseSpecialAgent):
     }
 
     def __init__(
-        self, provider_factory: Any | None = None, config: dict[str, Any] | None = None
+        self,
+        provider_factory: Optional[Any] = None,
+        config: Optional[dict[str, Any]] = None,
     ) -> None:
         default_config = {
             "humor_level": 0.7,  # How much humor to inject (0.0-1.0)

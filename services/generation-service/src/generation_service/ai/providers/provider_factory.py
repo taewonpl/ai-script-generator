@@ -4,7 +4,7 @@ Factory for creating AI providers with lazy loading
 
 import logging
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from .base_provider import BaseProvider, ProviderStatus
 
@@ -111,7 +111,7 @@ class ProviderFactory:
             logger.error(f"Failed to create {provider_type} provider: {e}")
             raise
 
-    async def get_provider(self, model_name: str) -> BaseProvider | None:
+    async def get_provider(self, model_name: str) -> Optional[BaseProvider]:
         """Get provider for a specific model"""
 
         # Check if we already have this provider cached
@@ -137,7 +137,7 @@ class ProviderFactory:
             logger.error(f"Failed to get provider for {model_name}: {e}")
             return None
 
-    def _find_provider_config(self, model_name: str) -> dict[str, Any] | None:
+    def _find_provider_config(self, model_name: str) -> Optional[dict[str, Any]]:
         """Find provider configuration for a model"""
 
         # Check direct model configurations
@@ -154,7 +154,7 @@ class ProviderFactory:
         # Fallback: try to infer provider from model name
         return self._infer_provider_config(model_name)
 
-    def _infer_provider_config(self, model_name: str) -> dict[str, Any] | None:
+    def _infer_provider_config(self, model_name: str) -> Optional[dict[str, Any]]:
         """Infer provider configuration from model name"""
 
         # OpenAI models
@@ -247,13 +247,13 @@ class ProviderFactory:
 
         return results
 
-    def get_default_model(self) -> str | None:
+    def get_default_model(self) -> Optional[str]:
         """Get the default model name"""
         return self.config.get("default_model")
 
     async def get_best_provider_for_task(
         self, task_type: str = "general"
-    ) -> BaseProvider | None:
+    ) -> Optional[BaseProvider]:
         """Get the best provider for a specific task type with enhanced fallback"""
 
         # Task-specific provider preferences
@@ -306,7 +306,7 @@ class ProviderFactory:
         # Enhanced fallback strategy
         return await self._fallback_provider_selection()
 
-    async def load_balancer_provider(self, models: list[str]) -> BaseProvider | None:
+    async def load_balancer_provider(self, models: list[str]) -> Optional[BaseProvider]:
         """Get provider using load balancing across multiple models with enhanced error handling"""
 
         import random
@@ -429,7 +429,7 @@ class ProviderFactory:
 
         return stats
 
-    async def _fallback_provider_selection(self) -> BaseProvider | None:
+    async def _fallback_provider_selection(self) -> Optional[BaseProvider]:
         """Enhanced fallback provider selection strategy"""
 
         logger.info("Attempting fallback provider selection...")

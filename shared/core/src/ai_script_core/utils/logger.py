@@ -99,7 +99,7 @@ class TextFormatter(logging.Formatter):
         super().__init__(format_string, datefmt="%Y-%m-%d %H:%M:%S")
 
 
-class ContextualLoggerAdapter(logging.LoggerAdapter[logging.Logger]):
+class ContextualLoggerAdapter(logging.LoggerAdapter):
     """컨텍스트 정보를 자동으로 추가하는 로거 어댑터"""
 
     def __init__(self, logger: logging.Logger, extra: dict[str, Any] | None = None):

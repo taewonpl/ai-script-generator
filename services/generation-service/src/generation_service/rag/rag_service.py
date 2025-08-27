@@ -7,7 +7,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 # Import Core Module components
 try:
@@ -82,9 +82,9 @@ class DocumentAddRequest:
     """Request for adding documents to RAG system"""
 
     documents: list[str]
-    metadatas: list[dict[str, Any]] | None = None
-    document_ids: list[str] | None = None
-    project_id: str | None = None
+    metadatas: Optional[list[dict[str, Any]]] = None
+    document_ids: Optional[list[str]] = None
+    project_id: Optional[str] = None
     document_type: str = "general"
 
     def __post_init__(self) -> None:
@@ -97,14 +97,14 @@ class RAGSearchRequest:
     """Unified RAG search and context building request"""
 
     query: str
-    project_id: str | None = None
+    project_id: Optional[str] = None
     search_type: SearchType = SearchType.SEMANTIC
     context_type: ContextType = ContextType.MIXED
     max_results: int = 10
     max_context_tokens: int = 8000
     similarity_threshold: float = 0.7
     include_metadata: bool = True
-    document_type_filter: str | None = None
+    document_type_filter: Optional[str] = None
 
     def __post_init__(self) -> None:
         if CORE_AVAILABLE and not hasattr(self, "request_id"):
@@ -121,7 +121,7 @@ class RAGResponse:
     search_time: float
     build_time: float
     total_time: float
-    request_id: str | None = None
+    request_id: Optional[str] = None
 
     def __post_init__(self) -> None:
         if CORE_AVAILABLE and self.request_id is None:
@@ -155,7 +155,7 @@ class RAGService:
         self,
         db_path: str = "./data/chroma",
         collection_name: str = "script_knowledge",
-        openai_api_key: str | None = None,
+        openai_api_key: Optional[str] = None,
         embedding_model: str = "text-embedding-ada-002",
         max_context_tokens: int = 8000,
     ):
@@ -437,8 +437,8 @@ class RAGService:
             raise RAGServiceError(error_msg, operation="search_and_build")
 
     def _build_project_filter(
-        self, project_id: str | None, document_type: str | None
-    ) -> dict[str, Any] | None:
+        self, project_id: Optional[str], document_type: Optional[str]
+    ) -> Optional[dict[str, Any]]:
         """Build metadata filter for project and document type"""
 
         filters = []
@@ -504,8 +504,8 @@ class RAGService:
     async def update_documents(
         self,
         document_ids: list[str],
-        documents: list[str] | None = None,
-        metadatas: list[dict[str, Any]] | None = None,
+        documents: Optional[list[str]] = None,
+        metadatas: Optional[list[dict[str, Any]]] = None,
     ) -> dict[str, Any]:
         """Update existing documents in the RAG system"""
 
@@ -687,7 +687,7 @@ class RAGService:
         title: str,
         description: str,
         script_type: str,
-        project_id: str | None = None,
+        project_id: Optional[str] = None,
     ) -> str:
         """Specialized method for Architect node context retrieval"""
 

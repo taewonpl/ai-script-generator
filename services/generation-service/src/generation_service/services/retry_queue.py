@@ -8,7 +8,7 @@ from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 import redis
 from redis.exceptions import RedisError
@@ -54,8 +54,8 @@ class RetryJob:
     attempt: int
     max_attempts: int
     status: JobStatus
-    last_error: str | None = None
-    last_attempt_at: datetime | None = None
+    last_error: Optional[str] = None
+    last_attempt_at: Optional[datetime] = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for Redis storage"""
@@ -108,7 +108,7 @@ class RetryQueue:
 
     def __init__(
         self,
-        redis_client: redis.Redis | None = None,
+        redis_client: redis.Optional[Redis] = None,
         queue_name: str = "retry_queue",
         dlq_name: str = "dead_letter_queue",
         processing_set: str = "processing_jobs",
@@ -138,8 +138,8 @@ class RetryQueue:
         job_type: JobType,
         payload: dict[str, Any],
         delay_seconds: float = 0,
-        max_attempts: int | None = None,
-        job_id: str | None = None,
+        max_attempts: Optional[int] = None,
+        job_id: Optional[str] = None,
     ) -> str:
         """Enqueue a job for background processing"""
         job_id = job_id or str(uuid.uuid4())
@@ -292,7 +292,7 @@ class RetryQueue:
         except RedisError as e:
             logger.error(f"Failed to move job to DLQ: {e}")
 
-    async def get_job_status(self, job_id: str) -> RetryJob | None:
+    async def get_job_status(self, job_id: str) -> Optional[RetryJob]:
         """Get current job status"""
         try:
             job_data = await self._redis_hgetall(f"job:{job_id}")
@@ -393,7 +393,7 @@ class RetryQueueWorker:
     def __init__(
         self,
         retry_queue: RetryQueue,
-        worker_id: str | None = None,
+        worker_id: Optional[str] = None,
         poll_interval: float = 1.0,
         batch_size: int = 10,
     ):
@@ -438,11 +438,11 @@ class RetryQueueWorker:
 
 
 # Singleton instances
-_global_retry_queue: RetryQueue | None = None
-_global_worker: RetryQueueWorker | None = None
+_global_retry_queue: Optional[RetryQueue] = None
+_global_worker: Optional[RetryQueueWorker] = None
 
 
-def get_retry_queue(redis_client: redis.Redis | None = None) -> RetryQueue:
+def get_retry_queue(redis_client: redis.Optional[Redis] = None) -> RetryQueue:
     """Get global retry queue instance"""
     global _global_retry_queue
     if _global_retry_queue is None:

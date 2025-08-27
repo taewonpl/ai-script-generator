@@ -4,30 +4,31 @@ FROM node:18-alpine AS builder
 # Set working directory
 WORKDIR /app
 
+# Enable corepack for pnpm
+RUN corepack enable
+
 # Copy package files
-COPY package*.json ./
+COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies
-RUN npm ci --only=production --silent
+RUN pnpm install --force --prod=false
 
 # Copy source code
 COPY . .
 
 # Build arguments
-ARG REACT_APP_CORE_SERVICE_URL
-ARG REACT_APP_PROJECT_SERVICE_URL
-ARG REACT_APP_GENERATION_SERVICE_URL
-ARG REACT_APP_ENV=production
+ARG VITE_PROJECT_SERVICE_URL
+ARG VITE_GENERATION_SERVICE_URL
+ARG VITE_ENV=production
 
 # Set environment variables
-ENV REACT_APP_CORE_SERVICE_URL=$REACT_APP_CORE_SERVICE_URL
-ENV REACT_APP_PROJECT_SERVICE_URL=$REACT_APP_PROJECT_SERVICE_URL
-ENV REACT_APP_GENERATION_SERVICE_URL=$REACT_APP_GENERATION_SERVICE_URL
-ENV REACT_APP_ENV=$REACT_APP_ENV
+ENV VITE_PROJECT_SERVICE_URL=$VITE_PROJECT_SERVICE_URL
+ENV VITE_GENERATION_SERVICE_URL=$VITE_GENERATION_SERVICE_URL
+ENV VITE_ENV=$VITE_ENV
 ENV NODE_ENV=production
 
 # Build the application
-RUN npm run build
+RUN pnpm run build
 
 # Production stage with Nginx
 FROM nginx:alpine AS production

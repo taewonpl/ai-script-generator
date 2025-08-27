@@ -38,12 +38,12 @@ class IntegrityJobConfig:
 class EpisodeIntegrityJob:
     """Background job for checking episode numbering integrity"""
 
-    def __init__(self, db: Session, config: IntegrityJobConfig | None = None):
+    def __init__(self, db: Session, config: Optional[IntegrityJobConfig] = None):
         self.db = db
         self.config = config or IntegrityJobConfig()
         self.is_running = False
-        self.last_check: datetime | None = None
-        self.last_deep_check: datetime | None = None
+        self.last_check: Optional[datetime] = None
+        self.last_deep_check: Optional[datetime] = None
         self.stats: dict[str, Any] = {
             "total_runs": 0,
             "total_projects_checked": 0,
@@ -346,11 +346,11 @@ class IntegrityAutoFixer:
 
 
 # Global instances
-_global_integrity_job: EpisodeIntegrityJob | None = None
+_global_integrity_job: Optional[EpisodeIntegrityJob] = None
 
 
 def get_integrity_job(
-    db: Session, config: IntegrityJobConfig | None = None
+    db: Session, config: Optional[IntegrityJobConfig] = None
 ) -> EpisodeIntegrityJob:
     """Get global integrity job instance"""
     global _global_integrity_job
@@ -360,8 +360,8 @@ def get_integrity_job(
 
 
 async def start_integrity_monitoring(
-    db: Session, config: IntegrityJobConfig | None = None
-) -> asyncio.Task[None] | None:
+    db: Session, config: Optional[IntegrityJobConfig] = None
+) -> Optional[asyncio.Task[None]]:
     """Start integrity monitoring background job"""
     job = get_integrity_job(db, config)
     if not job.is_running:

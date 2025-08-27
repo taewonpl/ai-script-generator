@@ -7,7 +7,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 # Import Core Module components
 try:
@@ -84,12 +84,12 @@ class SearchRequest:
     search_type: SearchType = SearchType.SEMANTIC
     max_results: int = 10
     similarity_threshold: float = 0.7
-    metadata_filters: dict[str, Any] | None = None
-    document_filters: dict[str, Any] | None = None
+    metadata_filters: Optional[dict[str, Any]] = None
+    document_filters: Optional[dict[str, Any]] = None
     include_metadata: bool = True
     include_distances: bool = True
-    project_id: str | None = None
-    document_type: str | None = None
+    project_id: Optional[str] = None
+    document_type: Optional[str] = None
 
     def __post_init__(self):
         if CORE_AVAILABLE and not hasattr(self, "request_id"):
@@ -120,7 +120,7 @@ class SearchResponse:
     search_type: SearchType
     total_results: int
     search_time: float
-    request_id: str | None = None
+    request_id: Optional[str] = None
 
     def __post_init__(self):
         if CORE_AVAILABLE and self.request_id is None:
@@ -379,7 +379,9 @@ class DocumentRetriever:
         # Convert to search results with metadata-based scoring
         return self._process_metadata_results(chroma_results, request.query)
 
-    def _build_metadata_filter(self, request: SearchRequest) -> dict[str, Any] | None:
+    def _build_metadata_filter(
+        self, request: SearchRequest
+    ) -> Optional[dict[str, Any]]:
         """Build metadata filter for ChromaDB"""
 
         filters = []
@@ -404,14 +406,16 @@ class DocumentRetriever:
         else:
             return {"$and": filters}
 
-    def _build_document_filter(self, request: SearchRequest) -> dict[str, Any] | None:
+    def _build_document_filter(
+        self, request: SearchRequest
+    ) -> Optional[dict[str, Any]]:
         """Build document content filter for ChromaDB"""
 
         return request.document_filters
 
     def _combine_document_filters(
-        self, filter1: dict[str, Any] | None, filter2: dict[str, Any] | None
-    ) -> dict[str, Any] | None:
+        self, filter1: Optional[dict[str, Any]], filter2: Optional[dict[str, Any]]
+    ) -> Optional[dict[str, Any]]:
         """Combine two document filters with AND logic"""
 
         if not filter1 and not filter2:

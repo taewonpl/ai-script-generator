@@ -19,18 +19,18 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy and install Core Module
-COPY ../../shared/core /app/shared/core
+COPY shared/core /app/shared/core
 WORKDIR /app/shared/core
 RUN pip install -e .
 WORKDIR /app
 
 # Copy requirements and install Python dependencies
-COPY requirements.txt ./
+COPY services/project-service/requirements.txt ./
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application source
-COPY src/ ./src/
+COPY services/project-service/src/ ./src/
 
 # Create data directories
 RUN mkdir -p /app/data \

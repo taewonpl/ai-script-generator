@@ -6,7 +6,8 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any
+from datetime import datetime
+from typing import Any, Optional, Union
 
 try:
     import openai
@@ -114,7 +115,7 @@ class EmbeddingRequest:
 
     texts: list[str]
     model: str = "text-embedding-ada-002"
-    request_id: str | None = None
+    request_id: Optional[str] = None
     chunk_size: int = 100
 
     def __post_init__(self) -> None:
@@ -129,7 +130,7 @@ class EmbeddingResponse:
     embeddings: list[list[float]]
     model: str
     usage: dict[str, int]
-    request_id: str | None = None
+    request_id: Optional[str] = None
     processing_time: float = 0.0
 
     def __post_init__(self) -> None:
@@ -169,7 +170,7 @@ class EmbeddingService:
 
     def __init__(
         self,
-        api_key: str | None = None,
+        api_key: Optional[str] = None,
         model: str = "text-embedding-ada-002",
         batch_size: int = 100,
         max_retries: int = 3,
@@ -252,7 +253,7 @@ class EmbeddingService:
         return [texts[i : i + chunk_size] for i in range(0, len(texts), chunk_size)]
 
     async def generate_embeddings(
-        self, texts: str | list[str], use_cache: bool = True
+        self, texts: Union[str, list[str]], use_cache: bool = True
     ) -> EmbeddingResponse:
         """Generate embeddings for texts"""
 

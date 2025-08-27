@@ -4,7 +4,7 @@ Agent Coordinator - Manages and coordinates specialized AI agents
 
 import asyncio
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 # Import Core Module components
 try:
@@ -81,8 +81,8 @@ class AgentExecutionPlan:
     def add_agent(
         self,
         agent: BaseSpecialAgent,
-        config: dict[str, Any] | None = None,
-        dependencies: list[str] | None = None,
+        config: Optional[dict[str, Any]] = None,
+        dependencies: Optional[list[str]] = None,
     ) -> None:
         """Add an agent to the execution plan"""
         self.agents.append((agent, config or {}))
@@ -158,7 +158,9 @@ class AgentCoordinator:
     """
 
     def __init__(
-        self, provider_factory: Any | None = None, config: dict[str, Any] | None = None
+        self,
+        provider_factory: Optional[Any] = None,
+        config: Optional[dict[str, Any]] = None,
     ) -> None:
         self.provider_factory = provider_factory
         self.config = config or {}
@@ -260,7 +262,7 @@ class AgentCoordinator:
         return analysis_result
 
     async def create_execution_plan(
-        self, state: GenerationState, preferences: dict[str, Any] | None = None
+        self, state: GenerationState, preferences: Optional[dict[str, Any]] = None
     ) -> AgentExecutionPlan:
         """
         Create optimized execution plan for agents
@@ -442,7 +444,7 @@ class AgentCoordinator:
             return error_state
 
     async def execute_adaptive_workflow(
-        self, state: GenerationState, preferences: dict[str, Any] | None = None
+        self, state: GenerationState, preferences: Optional[dict[str, Any]] = None
     ) -> GenerationState:
         """
         Execute complete adaptive workflow: analyze, plan, and execute
@@ -460,7 +462,7 @@ class AgentCoordinator:
 
     def get_agent_recommendations(
         self, state: GenerationState
-    ) -> dict[str, Any] | None:
+    ) -> Optional[dict[str, Any]]:
         """
         Get agent recommendations without executing them
         """

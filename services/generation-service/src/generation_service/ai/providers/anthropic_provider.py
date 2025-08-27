@@ -5,7 +5,7 @@ Anthropic provider for Claude 3.5 Sonnet model with Core Module integration
 import logging
 import time
 from collections.abc import AsyncGenerator
-from typing import Any
+from typing import Any, Optional
 
 import anthropic
 from anthropic import AsyncAnthropic
@@ -336,7 +336,7 @@ class AnthropicProvider(BaseProvider):
             # Fallback: rough estimation (1 token ≈ 4 characters)
             return len(text) // 4
 
-    async def get_usage_stats(self) -> dict[str, Any] | None:
+    async def get_usage_stats(self) -> Optional[dict[str, Any]]:
         """Get usage statistics"""
         return {
             "provider": self.name,

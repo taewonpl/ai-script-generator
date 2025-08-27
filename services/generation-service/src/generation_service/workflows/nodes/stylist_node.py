@@ -53,7 +53,7 @@ except (ImportError, RuntimeError):
         pass
 
 
-from typing import Any
+from typing import Any, Optional
 
 from generation_service.ai.prompts import PromptContext, ScriptType, StylistPrompts
 from generation_service.ai.providers.base_provider import ProviderGenerationRequest
@@ -266,7 +266,7 @@ class StylistNode(PromptNode):
                 "Styled script is identical to architect structure - no styling applied"
             )
 
-    def _calculate_quality_score(self, state: GenerationState) -> float | None:
+    def _calculate_quality_score(self, state: GenerationState) -> Optional[float]:
         """Calculate quality score for stylist output"""
 
         styled_script = state.get("styled_script", "")

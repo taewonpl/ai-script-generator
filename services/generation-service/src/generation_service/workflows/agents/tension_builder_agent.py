@@ -2,7 +2,7 @@
 Tension Builder Agent - Builds dramatic tension and optimizes pacing
 """
 
-from typing import Any
+from typing import Any, Optional
 
 # Import Core Module components
 try:
@@ -127,7 +127,9 @@ class TensionBuilderAgent(BaseSpecialAgent):
     }
 
     def __init__(
-        self, provider_factory: Any | None = None, config: dict[str, Any] | None = None
+        self,
+        provider_factory: Optional[Any] = None,
+        config: Optional[dict[str, Any]] = None,
     ) -> None:
         default_config = {
             "tension_intensity": 0.8,  # How intense tension should be (0.1-1.0)

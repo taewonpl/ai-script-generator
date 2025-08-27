@@ -2,7 +2,7 @@
 Flaw Generator Agent - Adds realistic character flaws and weaknesses for depth
 """
 
-from typing import Any
+from typing import Any, Optional
 
 # Import Core Module components
 try:
@@ -117,7 +117,9 @@ class FlawGeneratorAgent(BaseSpecialAgent):
     }
 
     def __init__(
-        self, provider_factory: Any | None = None, config: dict[str, Any] | None = None
+        self,
+        provider_factory: Optional[Any] = None,
+        config: Optional[dict[str, Any]] = None,
     ) -> None:
         default_config = {
             "max_flaws_per_character": 2,  # Maximum flaws to add per character

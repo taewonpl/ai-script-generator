@@ -6,7 +6,7 @@ import re
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 # Import Core Module components
 try:
@@ -112,7 +112,7 @@ class QualityAssessor:
     - Configurable quality standards
     """
 
-    def __init__(self, config: dict[str, Any] | None = None) -> None:
+    def __init__(self, config: Optional[dict[str, Any]] = None) -> None:
         self.config = config or {}
 
         # Quality dimension weights (customizable)

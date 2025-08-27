@@ -5,7 +5,7 @@ Feedback Loop System - Learns from user preferences and improves quality
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 # Import Core Module components
 try:
@@ -85,15 +85,15 @@ class UserFeedback:
     """Individual piece of user feedback"""
 
     feedback_id: str
-    user_id: str | None
+    user_id: Optional[str]
     generation_id: str
     feedback_type: FeedbackType
     sentiment: FeedbackSentiment
     content: dict[str, Any]  # Feedback content specific to type
-    quality_scores: dict[str, float] | None  # User-provided quality scores
+    quality_scores: Optional[dict[str, float]]  # User-provided quality scores
     timestamp: datetime
-    session_id: str | None = None
-    context: dict[str, Any] | None = None
+    session_id: Optional[str] = None
+    context: Optional[dict[str, Any]] = None
 
 
 @dataclass
@@ -122,7 +122,7 @@ class FeedbackLearningEngine:
     - Continuous improvement loops
     """
 
-    def __init__(self, config: dict[str, Any] | None = None) -> None:
+    def __init__(self, config: Optional[dict[str, Any]] = None) -> None:
         self.config = config or {}
 
         # Storage for feedback and preferences
@@ -177,9 +177,9 @@ class FeedbackLearningEngine:
         self,
         generation_id: str,
         user_rating: float,
-        quality_feedback: dict[str, float] | None = None,
-        user_id: str | None = None,
-        comments: str | None = None,
+        quality_feedback: Optional[dict[str, float]] = None,
+        user_id: Optional[str] = None,
+        comments: Optional[str] = None,
     ) -> None:
         """Process feedback for a completed generation"""
 
@@ -204,8 +204,8 @@ class FeedbackLearningEngine:
         self,
         generation_id: str,
         user_actions: dict[str, Any],
-        user_id: str | None = None,
-        session_duration: float | None = None,
+        user_id: Optional[str] = None,
+        session_duration: Optional[float] = None,
     ) -> None:
         """Process implicit feedback from user behavior"""
 
@@ -231,7 +231,9 @@ class FeedbackLearningEngine:
 
         await self.record_feedback(feedback)
 
-    async def get_user_preferences(self, user_id: str) -> UserPreferenceProfile | None:
+    async def get_user_preferences(
+        self, user_id: str
+    ) -> Optional[UserPreferenceProfile]:
         """Get learned preferences for a user"""
 
         if user_id not in self.user_profiles:
@@ -250,7 +252,7 @@ class FeedbackLearningEngine:
         return self.user_profiles.get(user_id)
 
     async def personalize_generation_config(
-        self, base_config: dict[str, Any], user_id: str | None = None
+        self, base_config: dict[str, Any], user_id: Optional[str] = None
     ) -> dict[str, Any]:
         """Personalize generation configuration based on user preferences"""
 
@@ -331,7 +333,7 @@ class FeedbackLearningEngine:
         return calibrated_scores
 
     async def get_improvement_suggestions(
-        self, user_id: str | None = None
+        self, user_id: Optional[str] = None
     ) -> list[str]:
         """Get improvement suggestions based on feedback patterns"""
 
@@ -475,7 +477,7 @@ class FeedbackLearningEngine:
             return FeedbackSentiment.NEGATIVE
 
     def _calculate_satisfaction_from_actions(
-        self, user_actions: dict[str, Any], session_duration: float | None = None
+        self, user_actions: dict[str, Any], session_duration: Optional[float] = None
     ) -> float:
         """Calculate satisfaction score from user actions"""
 

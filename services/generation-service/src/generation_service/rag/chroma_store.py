@@ -5,7 +5,7 @@ ChromaDB vector store implementation with Core Module integration
 import logging
 import os
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional, Union
 
 try:
     import chromadb
@@ -106,7 +106,7 @@ class ChromaStore:
         self,
         db_path: str = "./data/chroma",
         collection_name: str = "script_knowledge",
-        embedding_function: Any | None = None,
+        embedding_function: Optional[Any] = None,
     ):
         if not CHROMADB_AVAILABLE:
             raise ChromaStoreError(
@@ -185,8 +185,8 @@ class ChromaStore:
     def add_documents(
         self,
         documents: list[str],
-        metadatas: list[dict[str, Any]] | None = None,
-        ids: list[str] | None = None,
+        metadatas: Optional[list[dict[str, Any]]] = None,
+        ids: Optional[list[str]] = None,
     ) -> list[str]:
         """Add documents to the vector store"""
 
@@ -254,11 +254,11 @@ class ChromaStore:
 
     def search(
         self,
-        query_texts: str | list[str],
+        query_texts: Union[str, list[str]],
         n_results: int = 10,
-        where: dict[str, Any] | None = None,
-        where_document: dict[str, Any] | None = None,
-        include: list[str] | None = None,
+        where: Optional[dict[str, Any]] = None,
+        where_document: Optional[dict[str, Any]] = None,
+        include: Optional[list[str]] = None,
     ) -> dict[str, Any]:
         """Search for similar documents"""
 
@@ -313,11 +313,11 @@ class ChromaStore:
 
     def get_documents(
         self,
-        ids: list[str] | None = None,
-        where: dict[str, Any] | None = None,
-        limit: int | None = None,
-        offset: int | None = None,
-        include: list[str] | None = None,
+        ids: Optional[list[str]] = None,
+        where: Optional[dict[str, Any]] = None,
+        limit: Optional[int] = None,
+        offset: Optional[int] = None,
+        include: Optional[list[str]] = None,
     ) -> dict[str, Any]:
         """Get documents by IDs or filter criteria"""
 
@@ -349,8 +349,8 @@ class ChromaStore:
     def update_documents(
         self,
         ids: list[str],
-        documents: list[str] | None = None,
-        metadatas: list[dict[str, Any]] | None = None,
+        documents: Optional[list[str]] = None,
+        metadatas: Optional[list[dict[str, Any]]] = None,
     ) -> None:
         """Update existing documents"""
 

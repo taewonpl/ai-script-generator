@@ -7,7 +7,7 @@ name = "ai-script-generation-service"
 version = "3.0.0"
 description = "AI Script Generator v3.0 - Generation Service"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.9"
 authors = [
     {name = "AI Script Generator Team"}
 ]
@@ -16,6 +16,7 @@ classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -59,14 +60,8 @@ testing = [
 Homepage = "https://github.com/ai-script-generator/generation-service"
 Repository = "https://github.com/ai-script-generator/generation-service"
 
-[project.scripts]
-typecheck = "mypy src --strict"
-"typecheck:watch" = "watchdog-run --patterns='*.py' --recursive --command='mypy src --strict' src"
-build = "mypy src --strict && python -m build"
-lint = "ruff check src"
-"lint:fix" = "ruff check --fix src && ruff format src"
-format = "ruff format src"
-"format:check" = "ruff format --check src"
+# Development scripts moved to Makefile or just run directly
+# [project.scripts] section removed as these are shell commands, not Python entry points
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -76,7 +71,7 @@ where = ["src"]
 
 # Ruff configuration - unified with other services
 [tool.ruff]
-target-version = "py310"
+target-version = "py39"
 line-length = 88
 select = [
     "E",   # pycodestyle errors
@@ -107,7 +102,7 @@ line-ending = "auto"
 known-first-party = ["generation_service", "ai_script_core"]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.9"
 # Strictness - Maximum type safety
 strict = true
 warn_return_any = true

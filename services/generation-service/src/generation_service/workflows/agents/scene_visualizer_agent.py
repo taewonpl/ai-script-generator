@@ -2,7 +2,7 @@
 Scene Visualizer Agent - Enhances visual storytelling and scene descriptions
 """
 
-from typing import Any
+from typing import Any, Optional
 
 # Import Core Module components
 try:
@@ -73,7 +73,9 @@ class SceneVisualizerAgent(BaseSpecialAgent):
     """
 
     def __init__(
-        self, provider_factory: Any | None = None, config: dict[str, Any] | None = None
+        self,
+        provider_factory: Optional[Any] = None,
+        config: Optional[dict[str, Any]] = None,
     ) -> None:
         default_config = {
             "detail_level": 0.7,  # How much visual detail to add

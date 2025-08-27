@@ -1,0 +1,38 @@
+{
+  "test_execution": {
+    "timestamp": "2025-08-27T00:40:52.749721+00:00",
+    "test_type": "backup_recovery_rehearsal",
+    "rto_target_seconds": 300,
+    "rpo_target_seconds": 3600
+  },
+  "performance_metrics": {
+    "backup_times": [
+      0.00024080276489257812,
+      0.0228879451751709,
+      0.00024890899658203125
+    ],
+    "recovery_times": [
+      0.00021386146545410156,
+      0.004292011260986328,
+      0.00020599365234375,
+      0.005307674407958984
+    ],
+    "rto_results": {
+      "rto_met": true,
+      "rpo_met": true,
+      "avg_recovery_time": 0.002504885196685791,
+      "max_recovery_time": 0.005307674407958984,
+      "avg_data_loss": 1800.0,
+      "max_data_loss": 1800
+    },
+    "integrity_success_rate": 66.66666666666666
+  },
+  "day0_readiness": {
+    "rto_met": true,
+    "rpo_met": true,
+    "backup_systems_ready": true,
+    "recovery_systems_ready": true,
+    "data_integrity_ready": false,
+    "overall_ready": false
+  }
+}

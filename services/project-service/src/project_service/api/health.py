@@ -2,6 +2,8 @@
 Health Check API Router
 """
 
+from typing import Any
+
 from fastapi import APIRouter, Depends
 
 # Temporary classes until shared core is properly imported
@@ -16,9 +18,6 @@ class HealthCheckDTO(BaseModel):
     status: str
     version: str
     details: dict[str, Any]
-
-
-from typing import Any
 
 
 class APIResponseDTO(BaseModel):

@@ -8,7 +8,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 # Import Core Module components
 try:
@@ -108,7 +108,7 @@ class HealthResult:
     timestamp: datetime
     message: str = ""
     details: dict[str, Any] = field(default_factory=dict)
-    error: str | None = None
+    error: Optional[str] = None
 
 
 @dataclass
@@ -138,7 +138,7 @@ class HealthMonitor:
     - Historical health data
     """
 
-    def __init__(self, config: dict[str, Any] | None = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         self.config = config or {}
 
         # Health checks registry
@@ -221,7 +221,7 @@ class HealthMonitor:
         timeout: float = 30.0,
         interval: float = 60.0,
         critical: bool = False,
-        metadata: dict[str, Any] | None = None,
+        metadata: Optional[dict[str, Any]] = None,
     ) -> None:
         """Register a new health check"""
 
@@ -497,7 +497,7 @@ class HealthMonitor:
         else:
             return HealthStatus.UNKNOWN
 
-    def get_component_health(self, component_name: str) -> ComponentHealth | None:
+    def get_component_health(self, component_name: str) -> Optional[ComponentHealth]:
         """Get health status of specific component"""
         return self._component_health.get(component_name)
 
@@ -557,7 +557,9 @@ class HealthMonitor:
         """Add callback for health status changes"""
         self._status_change_callbacks.append(callback)
 
-    async def perform_immediate_check(self, component_name: str) -> HealthResult | None:
+    async def perform_immediate_check(
+        self, component_name: str
+    ) -> Optional[HealthResult]:
         """Perform immediate health check for specific component"""
 
         if component_name not in self._health_checks:
@@ -719,16 +721,16 @@ class HealthMonitor:
 
 
 # Global health monitor instance
-_health_monitor: HealthMonitor | None = None
+_health_monitor: Optional[HealthMonitor] = None
 
 
-def get_health_monitor() -> HealthMonitor | None:
+def get_health_monitor() -> Optional[HealthMonitor]:
     """Get global health monitor instance"""
     global _health_monitor
     return _health_monitor
 
 
-def initialize_health_monitor(config: dict[str, Any] | None = None) -> HealthMonitor:
+def initialize_health_monitor(config: Optional[dict[str, Any]] = None) -> HealthMonitor:
     """Initialize global health monitor"""
     global _health_monitor
 

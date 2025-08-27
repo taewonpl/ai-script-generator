@@ -4,7 +4,7 @@ Generation request and response models using Core Module schemas
 
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import ConfigDict, Field, field_validator, model_validator
 
@@ -44,10 +44,10 @@ if CORE_AVAILABLE:
         """Enhanced generation request using Core DTO"""
 
         # Add service-specific fields
-        script_type: ScriptType | None = Field(
+        script_type: Optional[ScriptType] = Field(
             None, description="Legacy script type field"
         )
-        length_target: int | None = Field(
+        length_target: Optional[int] = Field(
             None, ge=100, le=50000, description="Target script length in words"
         )
 
@@ -76,19 +76,19 @@ if CORE_AVAILABLE:
         model_config = ConfigDict(protected_namespaces=())
 
         # Add legacy compatibility fields
-        script_type: ScriptType | None = Field(
+        script_type: Optional[ScriptType] = Field(
             None, description="Legacy script type field"
         )
-        generated_script: str | None = Field(
+        generated_script: Optional[str] = Field(
             None, description="Legacy field for content"
         )
-        word_count: int | None = Field(
+        word_count: Optional[int] = Field(
             None, description="Word count of generated content"
         )
-        generation_time_seconds: float | None = Field(
+        generation_time_seconds: Optional[float] = Field(
             None, description="Legacy timing field"
         )
-        model_used: str | None = Field(None, description="Legacy model field")
+        model_used: Optional[str] = Field(None, description="Legacy model field")
 
         @model_validator(mode="before")
         @classmethod
@@ -112,13 +112,13 @@ if CORE_AVAILABLE:
 
         # Add legacy compatibility fields
         generation_id: str = Field(..., description="Generation ID")
-        user_id: str | None = None
-        ip_address: str | None = None
-        user_agent: str | None = None
-        tokens_used: int | None = None
-        cost_estimate: float | None = None
-        quality_score: float | None = Field(None, ge=0.0, le=1.0)
-        user_rating: int | None = Field(None, ge=1, le=5)
+        user_id: Optional[str] = None
+        ip_address: Optional[str] = None
+        user_agent: Optional[str] = None
+        tokens_used: Optional[int] = None
+        cost_estimate: Optional[float] = None
+        quality_score: Optional[float] = Field(None, ge=0.0, le=1.0)
+        user_rating: Optional[int] = Field(None, ge=1, le=5)
 
 else:
     # Fallback implementations when Core module is not available
@@ -135,7 +135,7 @@ else:
         """Request model for script generation"""
 
         project_id: str = Field(..., description="Project ID from project service")
-        episode_id: str | None = Field(
+        episode_id: Optional[str] = Field(
             None, description="Episode ID if generating for specific episode"
         )
 
@@ -151,23 +151,25 @@ else:
         )
 
         # Generation parameters
-        length_target: int | None = Field(
+        length_target: Optional[int] = Field(
             None, ge=100, le=50000, description="Target script length in words"
         )
-        tone: str | None = Field(None, max_length=100, description="Desired tone")
-        audience: str | None = Field(
+        tone: Optional[str] = Field(None, max_length=100, description="Desired tone")
+        audience: Optional[str] = Field(
             None, max_length=100, description="Target audience"
         )
 
         # AI model preferences
-        model: str | None = Field(None, description="Preferred AI model")
-        temperature: float | None = Field(
+        model: Optional[str] = Field(None, description="Preferred AI model")
+        temperature: Optional[float] = Field(
             0.7, ge=0.0, le=2.0, description="Creativity level"
         )
 
         # Additional context
-        context: dict[str, Any] | None = Field(None, description="Additional context")
-        references: list[str] | None = Field(None, description="Reference materials")
+        context: Optional[dict[str, Any]] = Field(
+            None, description="Additional context"
+        )
+        references: Optional[list[str]] = Field(None, description="Reference materials")
 
         @field_validator("description")
         @classmethod
@@ -183,7 +185,7 @@ else:
 
         generation_id: str = Field(..., description="Unique generation ID")
         project_id: str = Field(..., description="Associated project ID")
-        episode_id: str | None = Field(None, description="Associated episode ID")
+        episode_id: Optional[str] = Field(None, description="Associated episode ID")
 
         status: GenerationStatus = Field(..., description="Current generation status")
 
@@ -193,26 +195,30 @@ else:
         description: str = Field(..., description="Script description")
 
         # Generation results
-        generated_script: str | None = Field(
+        generated_script: Optional[str] = Field(
             None, description="Generated script content"
         )
-        word_count: int | None = Field(
+        word_count: Optional[int] = Field(
             None, description="Word count of generated script"
         )
 
         # Metadata
         created_at: datetime = Field(..., description="Creation timestamp")
         updated_at: datetime = Field(..., description="Last update timestamp")
-        completed_at: datetime | None = Field(None, description="Completion timestamp")
+        completed_at: Optional[datetime] = Field(
+            None, description="Completion timestamp"
+        )
 
         # Generation details
-        model_used: str | None = Field(None, description="AI model used for generation")
-        generation_time_seconds: float | None = Field(
+        model_used: Optional[str] = Field(
+            None, description="AI model used for generation"
+        )
+        generation_time_seconds: Optional[float] = Field(
             None, description="Time taken to generate"
         )
 
         # Error information
-        error_message: str | None = Field(
+        error_message: Optional[str] = Field(
             None, description="Error message if generation failed"
         )
 
@@ -220,17 +226,17 @@ else:
         """Metadata for generation tracking"""
 
         generation_id: str
-        user_id: str | None = None
-        ip_address: str | None = None
-        user_agent: str | None = None
+        user_id: Optional[str] = None
+        ip_address: Optional[str] = None
+        user_agent: Optional[str] = None
 
         # Performance metrics
-        tokens_used: int | None = None
-        cost_estimate: float | None = None
+        tokens_used: Optional[int] = None
+        cost_estimate: Optional[float] = None
 
         # Quality metrics
-        quality_score: float | None = Field(None, ge=0.0, le=1.0)
-        user_rating: int | None = Field(None, ge=1, le=5)
+        quality_score: Optional[float] = Field(None, ge=0.0, le=1.0)
+        user_rating: Optional[int] = Field(None, ge=1, le=5)
 
         created_at: datetime = Field(default_factory=datetime.now)
 
@@ -241,12 +247,12 @@ class GenerationUpdate(BaseSchema):
 
     model_config = ConfigDict(protected_namespaces=())
 
-    status: str | None = None  # Use string to support both enum types
-    generated_script: str | None = None
-    content: str | None = None  # Core module field
-    error_message: str | None = None
-    model_used: str | None = None
-    generation_time_seconds: float | None = None
+    status: Optional[str] = None  # Use string to support both enum types
+    generated_script: Optional[str] = None
+    content: Optional[str] = None  # Core module field
+    error_message: Optional[str] = None
+    model_used: Optional[str] = None
+    generation_time_seconds: Optional[float] = None
 
 
 # ========================================================================================
@@ -277,25 +283,27 @@ class WorkflowStatus(str, Enum):
 class ContextData(BaseSchema):
     """Context data for script generation"""
 
-    characters: list[dict[str, Any]] | None = Field(
+    characters: Optional[list[dict[str, Any]]] = Field(
         None, description="Character information"
     )
-    setting: dict[str, Any] | None = Field(None, description="Setting and environment")
-    mood: str | None = Field(None, description="Overall mood and atmosphere")
-    themes: list[str] | None = Field(None, description="Themes to explore")
-    constraints: list[str] | None = Field(None, description="Creative constraints")
+    setting: Optional[dict[str, Any]] = Field(
+        None, description="Setting and environment"
+    )
+    mood: Optional[str] = Field(None, description="Overall mood and atmosphere")
+    themes: Optional[list[str]] = Field(None, description="Themes to explore")
+    constraints: Optional[list[str]] = Field(None, description="Creative constraints")
 
 
 class QualityPreferences(BaseSchema):
     """Quality preferences and thresholds"""
 
-    minimum_quality_score: float | None = Field(
+    minimum_quality_score: Optional[float] = Field(
         0.7, ge=0.0, le=1.0, description="Minimum acceptable quality"
     )
-    focus_areas: list[str] | None = Field(
+    focus_areas: Optional[list[str]] = Field(
         None, description="Areas to focus quality improvements"
     )
-    strict_requirements: bool | None = Field(
+    strict_requirements: Optional[bool] = Field(
         False, description="Enforce strict quality requirements"
     )
 
@@ -303,17 +311,19 @@ class QualityPreferences(BaseSchema):
 class WorkflowOptions(BaseSchema):
     """Workflow execution options"""
 
-    enabled_nodes: list[WorkflowNodeType] | None = Field(
+    enabled_nodes: Optional[list[WorkflowNodeType]] = Field(
         None, description="Nodes to execute"
     )
-    skip_nodes: list[WorkflowNodeType] | None = Field(None, description="Nodes to skip")
-    use_fallback_on_error: bool | None = Field(
+    skip_nodes: Optional[list[WorkflowNodeType]] = Field(
+        None, description="Nodes to skip"
+    )
+    use_fallback_on_error: Optional[bool] = Field(
         True, description="Use fallback execution on node errors"
     )
-    parallel_execution: bool | None = Field(
+    parallel_execution: Optional[bool] = Field(
         False, description="Enable parallel node execution where possible"
     )
-    save_intermediate_results: bool | None = Field(
+    save_intermediate_results: Optional[bool] = Field(
         True, description="Save results from each node"
     )
 
@@ -325,7 +335,7 @@ class ScriptGenerationRequest(BaseSchema):
 
     # Core request fields
     project_id: str = Field(..., description="Project ID from project service")
-    episode_id: str | None = Field(
+    episode_id: Optional[str] = Field(
         None, description="Episode ID if generating for specific episode"
     )
     generation_type: str = Field(
@@ -340,36 +350,40 @@ class ScriptGenerationRequest(BaseSchema):
     )
 
     # Enhanced context
-    context: ContextData | None = Field(None, description="Rich context for generation")
+    context: Optional[ContextData] = Field(
+        None, description="Rich context for generation"
+    )
 
     # Generation requirements
-    requirements: dict[str, Any] | None = Field(
+    requirements: Optional[dict[str, Any]] = Field(
         None, description="Specific generation requirements"
     )
-    length_target: int | None = Field(
+    length_target: Optional[int] = Field(
         None, ge=100, le=50000, description="Target script length in words"
     )
-    style_preferences: list[str] | None = Field(None, description="Style preferences")
+    style_preferences: Optional[list[str]] = Field(
+        None, description="Style preferences"
+    )
 
     # Workflow configuration
-    workflow_options: WorkflowOptions | None = Field(
+    workflow_options: Optional[WorkflowOptions] = Field(
         None, description="Workflow execution options"
     )
-    quality_preferences: QualityPreferences | None = Field(
+    quality_preferences: Optional[QualityPreferences] = Field(
         None, description="Quality preferences"
     )
 
     # AI model preferences
-    model_preferences: dict[str, str] | None = Field(
+    model_preferences: Optional[dict[str, str]] = Field(
         None, description="Model preferences per node"
     )
-    temperature: float | None = Field(
+    temperature: Optional[float] = Field(
         0.7, ge=0.0, le=2.0, description="Creativity level"
     )
 
     # Additional options
-    priority: int | None = Field(0, ge=0, le=10, description="Execution priority")
-    timeout_seconds: int | None = Field(
+    priority: Optional[int] = Field(0, ge=0, le=10, description="Execution priority")
+    timeout_seconds: Optional[int] = Field(
         300, ge=30, le=3600, description="Maximum execution time"
     )
 
@@ -383,15 +397,17 @@ class NodeExecutionResult(BaseSchema):
         ..., description="Node that produced this result"
     )
     status: str = Field(..., description="Execution status")
-    content: str | None = Field(None, description="Generated content")
-    quality_score: float | None = Field(
+    content: Optional[str] = Field(None, description="Generated content")
+    quality_score: Optional[float] = Field(
         None, ge=0.0, le=1.0, description="Quality score"
     )
-    execution_time: float | None = Field(None, description="Execution time in seconds")
-    tokens_used: int | None = Field(None, description="Tokens consumed")
-    model_used: str | None = Field(None, description="AI model used")
-    metadata: dict[str, Any] | None = Field(None, description="Additional metadata")
-    error_message: str | None = Field(None, description="Error message if failed")
+    execution_time: Optional[float] = Field(
+        None, description="Execution time in seconds"
+    )
+    tokens_used: Optional[int] = Field(None, description="Tokens consumed")
+    model_used: Optional[str] = Field(None, description="AI model used")
+    metadata: Optional[dict[str, Any]] = Field(None, description="Additional metadata")
+    error_message: Optional[str] = Field(None, description="Error message if failed")
 
 
 class WorkflowProgress(BaseSchema):
@@ -399,13 +415,13 @@ class WorkflowProgress(BaseSchema):
 
     total_nodes: int = Field(..., description="Total number of nodes")
     completed_nodes: int = Field(..., description="Number of completed nodes")
-    current_node: WorkflowNodeType | None = Field(
+    current_node: Optional[WorkflowNodeType] = Field(
         None, description="Currently executing node"
     )
     progress_percentage: float = Field(
         ..., ge=0.0, le=100.0, description="Overall progress percentage"
     )
-    estimated_completion: datetime | None = Field(
+    estimated_completion: Optional[datetime] = Field(
         None, description="Estimated completion time"
     )
 
@@ -417,14 +433,14 @@ class HybridWorkflowResponse(BaseSchema):
     workflow_id: str = Field(..., description="Unique workflow execution ID")
     generation_id: str = Field(..., description="Generation ID for tracking")
     project_id: str = Field(..., description="Associated project ID")
-    episode_id: str | None = Field(None, description="Associated episode ID")
+    episode_id: Optional[str] = Field(None, description="Associated episode ID")
 
     # Workflow status
     status: WorkflowStatus = Field(..., description="Current workflow status")
     progress: WorkflowProgress = Field(..., description="Execution progress")
 
     # Results
-    final_script: str | None = Field(None, description="Final generated script")
+    final_script: Optional[str] = Field(None, description="Final generated script")
     partial_results: list[NodeExecutionResult] = Field(
         default_factory=list, description="Results from each node"
     )
@@ -433,7 +449,7 @@ class HybridWorkflowResponse(BaseSchema):
     quality_scores: dict[str, float] = Field(
         default_factory=dict, description="Quality scores by metric"
     )
-    overall_quality_score: float | None = Field(
+    overall_quality_score: Optional[float] = Field(
         None, ge=0.0, le=1.0, description="Overall quality score"
     )
 
@@ -441,16 +457,18 @@ class HybridWorkflowResponse(BaseSchema):
     execution_metadata: dict[str, Any] = Field(
         default_factory=dict, description="Execution metadata"
     )
-    total_tokens_used: int | None = Field(None, description="Total tokens consumed")
-    total_execution_time: float | None = Field(None, description="Total execution time")
+    total_tokens_used: Optional[int] = Field(None, description="Total tokens consumed")
+    total_execution_time: Optional[float] = Field(
+        None, description="Total execution time"
+    )
 
     # Timing
     started_at: datetime = Field(..., description="Workflow start time")
     updated_at: datetime = Field(..., description="Last update time")
-    completed_at: datetime | None = Field(None, description="Completion time")
+    completed_at: Optional[datetime] = Field(None, description="Completion time")
 
     # Error handling
-    error_message: str | None = Field(
+    error_message: Optional[str] = Field(
         None, description="Error message if workflow failed"
     )
     warnings: list[str] = Field(default_factory=list, description="Warning messages")
@@ -478,13 +496,13 @@ class CustomWorkflowRequest(BaseSchema):
     )
 
     # Advanced options
-    conditional_routing: dict[str, Any] | None = Field(
+    conditional_routing: Optional[dict[str, Any]] = Field(
         None, description="Custom routing conditions"
     )
-    retry_policies: dict[str, dict[str, Any]] | None = Field(
+    retry_policies: Optional[dict[str, dict[str, Any]]] = Field(
         None, description="Retry policies per node"
     )
-    fallback_strategies: dict[str, str] | None = Field(
+    fallback_strategies: Optional[dict[str, str]] = Field(
         None, description="Fallback strategies per node"
     )
 
@@ -497,7 +515,7 @@ class WorkflowStatusResponse(BaseSchema):
     progress: WorkflowProgress = Field(..., description="Progress information")
 
     # Current execution details
-    current_node_details: dict[str, Any] | None = Field(
+    current_node_details: Optional[dict[str, Any]] = Field(
         None, description="Details about current node"
     )
     last_update: datetime = Field(..., description="Last status update time")
@@ -506,7 +524,7 @@ class WorkflowStatusResponse(BaseSchema):
     available_results: list[WorkflowNodeType] = Field(
         default_factory=list, description="Nodes with available results"
     )
-    latest_content: str | None = Field(None, description="Latest generated content")
+    latest_content: Optional[str] = Field(None, description="Latest generated content")
 
     # Performance metrics
     execution_metrics: dict[str, Any] = Field(

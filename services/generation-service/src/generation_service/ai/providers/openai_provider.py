@@ -5,7 +5,7 @@ OpenAI provider for GPT-4o model with Core Module integration
 import logging
 import time
 from collections.abc import AsyncGenerator
-from typing import Any
+from typing import Any, Optional
 
 import openai
 from openai import AsyncOpenAI
@@ -370,7 +370,7 @@ class OpenAIProvider(BaseProvider):
             logger.error(f"Failed to list OpenAI models: {e}")
             return []
 
-    async def get_usage_stats(self) -> dict[str, Any] | None:
+    async def get_usage_stats(self) -> Optional[dict[str, Any]]:
         """Get usage statistics (if available)"""
         # OpenAI doesn't provide direct usage stats via API
         # This could be implemented with external tracking

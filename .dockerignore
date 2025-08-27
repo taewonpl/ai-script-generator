@@ -1,0 +1,108 @@
+# Node modules and build artifacts
+node_modules/
+dist/
+build/
+coverage/
+.next/
+out/
+
+# Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing and coverage
+.coverage
+.pytest_cache/
+.tox/
+htmlcov/
+.nyc_output
+junit.xml
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Environment and configuration
+.env*
+!.env.example
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# Git and version control
+.git/
+.gitignore
+.gitmodules
+
+# Documentation and development files
+README.md
+LICENSE
+CHANGELOG.md
+*.md
+docs/
+examples/
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Database files (if using local development databases)
+*.db
+*.sqlite
+*.sqlite3
+
+# Cache directories
+.cache/
+.npm/
+.yarn/
+.pnpm-store/
+
+# Backup files
+*.backup
+*.bak
+
+# Exclude shared/core but allow it to be copied
+# (Comment out the line below to include shared/core)
+# shared/core/
+
+# Allow shared/core to be included in Docker builds
+!shared/core

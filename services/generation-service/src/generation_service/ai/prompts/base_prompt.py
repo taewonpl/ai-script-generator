@@ -5,7 +5,7 @@ Base prompt template class for specialized node prompts
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 # Import Core Module components
 try:
@@ -83,8 +83,8 @@ class ScriptType(str, Enum):
 class PromptContext:
     """Context information for prompt generation"""
 
-    project_id: str | None = None
-    episode_id: str | None = None
+    project_id: Optional[str] = None
+    episode_id: Optional[str] = None
     title: str = ""
     description: str = ""
     script_type: ScriptType = ScriptType.DRAMA
@@ -281,7 +281,7 @@ class PromptTemplateRegistry:
                 },
             )
 
-    def get_template(self, prompt_type: PromptType) -> BasePromptTemplate | None:
+    def get_template(self, prompt_type: PromptType) -> Optional[BasePromptTemplate]:
         """Get a registered template"""
 
         return self._templates.get(prompt_type)

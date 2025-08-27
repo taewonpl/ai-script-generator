@@ -9,7 +9,7 @@ from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from pydantic import BaseModel
 
@@ -218,12 +218,12 @@ if CORE_AVAILABLE:
         max_tokens: int
         context_length: int
         supports_streaming: bool
-        cost_per_1k_tokens: float | None = None
+        cost_per_1k_tokens: Optional[float] = None
         description: str = ""
 
         # Core integration fields
         created_at: datetime = None
-        model_hash: str | None = None
+        model_hash: Optional[str] = None
 
         def __post_init__(self) -> None:
             if self.created_at is None:
@@ -235,13 +235,13 @@ if CORE_AVAILABLE:
         """AI generation request using Core patterns"""
 
         prompt: str
-        max_tokens: int | None = None
+        max_tokens: Optional[int] = None
         temperature: float = 0.7
         top_p: float = 1.0
-        stop_sequences: list[str] | None = None
+        stop_sequences: Optional[list[str]] = None
         stream: bool = False
-        system_prompt: str | None = None
-        additional_params: dict[str, Any] | None = None
+        system_prompt: Optional[str] = None
+        additional_params: Optional[dict[str, Any]] = None
 
         # Core integration
         request_id: str = None
@@ -262,8 +262,8 @@ if CORE_AVAILABLE:
         created_at: datetime = None
 
         # Core metadata integration
-        metadata: dict[str, Any] | None = None
-        request_id: str | None = None
+        metadata: Optional[dict[str, Any]] = None
+        request_id: Optional[str] = None
 
         def __post_init__(self) -> None:
             if self.created_at is None:
@@ -281,20 +281,20 @@ else:
         max_tokens: int
         context_length: int
         supports_streaming: bool
-        cost_per_1k_tokens: float | None = None
+        cost_per_1k_tokens: Optional[float] = None
         description: str = ""
 
     class ProviderGenerationRequest(BaseModel):
         """Request for AI generation"""
 
         prompt: str
-        max_tokens: int | None = None
+        max_tokens: Optional[int] = None
         temperature: float = 0.7
         top_p: float = 1.0
-        stop_sequences: list[str] | None = None
+        stop_sequences: Optional[list[str]] = None
         stream: bool = False
-        system_prompt: str | None = None
-        additional_params: dict[str, Any] | None = None
+        system_prompt: Optional[str] = None
+        additional_params: Optional[dict[str, Any]] = None
 
     class ProviderGenerationResponse(BaseModel):
         """Response from AI generation"""
@@ -325,7 +325,9 @@ if CORE_AVAILABLE:
     class ProviderConnectionError(ServiceUnavailableError):
         """Provider connection error using Core exception"""
 
-        def __init__(self, message: str, provider: str, retry_after: int | None = None):
+        def __init__(
+            self, message: str, provider: str, retry_after: Optional[int] = None
+        ):
             super().__init__(
                 service_name=provider, reason=message, retry_after=retry_after
             )
@@ -335,7 +337,9 @@ if CORE_AVAILABLE:
     class ProviderRateLimitError(ServiceUnavailableError):
         """Provider rate limit error using Core exception"""
 
-        def __init__(self, message: str, provider: str, retry_after: int | None = None):
+        def __init__(
+            self, message: str, provider: str, retry_after: Optional[int] = None
+        ):
             super().__init__(
                 service_name=provider,
                 reason=f"Rate limit exceeded: {message}",
@@ -377,7 +381,9 @@ else:
     class ProviderRateLimitError(ProviderError):
         """Provider rate limit error"""
 
-        def __init__(self, message: str, provider: str, retry_after: int | None = None):
+        def __init__(
+            self, message: str, provider: str, retry_after: Optional[int] = None
+        ):
             super().__init__(message, provider, retryable=True)
             self.retry_after = retry_after
 
@@ -595,7 +601,7 @@ class BaseProvider(ABC):
         else:
             raise ProviderError(f"All retries failed for {self.name}", self.name)
 
-    def _calculate_cost(self, tokens_used: int) -> float | None:
+    def _calculate_cost(self, tokens_used: int) -> Optional[float]:
         """Calculate cost based on tokens used"""
         model_info = self.get_model_info()
         if model_info.cost_per_1k_tokens:

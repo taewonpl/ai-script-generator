@@ -9,7 +9,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
 from functools import wraps
-from typing import Any, TypeVar
+from typing import Any, Optional, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class RetryConfig:
     backoff_multiplier: float = 2.0
     jitter: bool = True
     exceptions: tuple[type[Exception], ...] = (Exception,)
-    timeout: float | None = None
+    timeout: Optional[float] = None
 
 
 class RetryError(Exception):
@@ -333,7 +333,7 @@ class TimeoutContext:
     def __init__(self, timeout: float, operation_name: str = "operation"):
         self.timeout = timeout
         self.operation_name = operation_name
-        self.start_time: float | None = None
+        self.start_time: Optional[float] = None
 
     def __enter__(self) -> "TimeoutContext":
         self.start_time = time.time()
@@ -402,7 +402,7 @@ class CircuitBreaker:
         self.config = config
         self.state = CircuitBreakerState.CLOSED
         self.failure_count = 0
-        self.last_failure_time: float | None = None
+        self.last_failure_time: Optional[float] = None
         self.success_count = 0
 
     async def call(self, func: Callable[..., Any], *args: Any, **kwargs: Any) -> Any:

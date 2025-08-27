@@ -4,7 +4,7 @@ Application settings management with validation and type safety
 
 import json
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -73,11 +73,11 @@ class Settings(BaseSettings):
     )
 
     # Cache settings
-    redis_url: str | None = Field(default=None, description="Redis connection URL")
+    redis_url: Optional[str] = Field(default=None, description="Redis connection URL")
     redis_host: str = Field(default="localhost", description="Redis host")
     redis_port: int = Field(default=6379, ge=1, le=65535, description="Redis port")
     redis_db: int = Field(default=0, ge=0, le=15, description="Redis database number")
-    redis_password: str | None = Field(default=None, description="Redis password")
+    redis_password: Optional[str] = Field(default=None, description="Redis password")
     cache_ttl_default: int = Field(
         default=3600, ge=1, description="Default cache TTL in seconds"
     )
@@ -110,7 +110,7 @@ class Settings(BaseSettings):
 
     # Logging settings
     log_level: LogLevel = Field(default=LogLevel.INFO, description="Logging level")
-    log_file: str | None = Field(default=None, description="Log file path")
+    log_file: Optional[str] = Field(default=None, description="Log file path")
     log_max_file_size: int = Field(
         default=100 * 1024 * 1024,
         ge=1024 * 1024,
@@ -135,8 +135,17 @@ class Settings(BaseSettings):
     )
 
     # AI Provider settings
-    openai_api_key: str | None = Field(default=None, description="OpenAI API key")
-    anthropic_api_key: str | None = Field(default=None, description="Anthropic API key")
+    openai_api_key: Optional[str] = Field(default=None, description="OpenAI API key")
+    anthropic_api_key: Optional[str] = Field(
+        default=None, description="Anthropic API key"
+    )
+    claude_api_key: Optional[str] = Field(
+        default=None, description="Claude API key (alias for Anthropic)"
+    )
+    gemini_api_key: Optional[str] = Field(default=None, description="Gemini API key")
+    google_api_key: Optional[str] = Field(
+        default=None, description="Google API key (alias for Gemini)"
+    )
     ai_provider_timeout: float = Field(
         default=30.0, ge=1.0, le=300.0, description="AI provider timeout"
     )
@@ -148,13 +157,15 @@ class Settings(BaseSettings):
     cors_origins: list[str] = Field(
         default_factory=list, description="CORS allowed origins"
     )
-    api_key: str | None = Field(default=None, description="API key for authentication")
+    api_key: Optional[str] = Field(
+        default=None, description="API key for authentication"
+    )
     rate_limit_requests: int = Field(
         default=1000, ge=10, description="Rate limit requests per hour"
     )
 
     # Database settings (if needed)
-    database_url: str | None = Field(
+    database_url: Optional[str] = Field(
         default=None, description="Database connection URL"
     )
     database_pool_size: int = Field(
@@ -322,15 +333,30 @@ class Settings(BaseSettings):
                 "max_connections": 5,
             }
 
-        if self.anthropic_api_key:
+        # Anthropic provider with fallback API key support
+        anthropic_key = self.anthropic_api_key or self.claude_api_key
+        if anthropic_key:
             providers["anthropic"] = {
                 "type": "anthropic",
                 "model": "claude-3-5-sonnet-20241022",
-                "api_key": self.anthropic_api_key,
+                "api_key": anthropic_key,
                 "timeout": self.ai_provider_timeout,
                 "retries": self.ai_provider_retries,
                 "rate_limit": 5,
                 "max_connections": 3,
+            }
+
+        # Gemini provider with fallback API key support
+        gemini_key = self.gemini_api_key or self.google_api_key
+        if gemini_key:
+            providers["gemini"] = {
+                "type": "gemini",
+                "model": "gemini-pro",
+                "api_key": gemini_key,
+                "timeout": self.ai_provider_timeout,
+                "retries": self.ai_provider_retries,
+                "rate_limit": 10,
+                "max_connections": 5,
             }
 
         return providers
@@ -381,9 +407,13 @@ class Settings(BaseSettings):
 
         issues = []
 
-        # Check required AI provider keys
-        if not self.openai_api_key and not self.anthropic_api_key:
-            issues.append("At least one AI provider API key must be configured")
+        # Check required AI provider keys (with fallback support)
+        anthropic_key = self.anthropic_api_key or self.claude_api_key
+        gemini_key = self.gemini_api_key or self.google_api_key
+        if not self.openai_api_key and not anthropic_key and not gemini_key:
+            issues.append(
+                "At least one AI provider API key must be configured (OpenAI, Anthropic/Claude, or Gemini/Google)"
+            )
 
         # Check memory limits
         if self.memory_limit_mb < 256:
@@ -433,7 +463,7 @@ class Settings(BaseSettings):
 
 
 # Global settings instance
-_settings: Settings | None = None
+_settings: Optional[Settings] = None
 
 
 def get_settings() -> Settings:
@@ -452,7 +482,7 @@ def get_settings() -> Settings:
     return _settings
 
 
-def initialize_settings(env_file: str | None = None, **overrides: Any) -> Settings:
+def initialize_settings(env_file: Optional[str] = None, **overrides: Any) -> Settings:
     """Initialize settings with optional overrides"""
     global _settings
 

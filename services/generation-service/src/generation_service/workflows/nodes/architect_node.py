@@ -53,7 +53,7 @@ except (ImportError, RuntimeError):
         pass
 
 
-from typing import Any
+from typing import Any, Optional
 
 from generation_service.ai.prompts import ArchitectPrompts, PromptContext, ScriptType
 from generation_service.ai.providers.base_provider import ProviderGenerationRequest
@@ -72,7 +72,9 @@ class ArchitectNode(PromptNode):
     - 논리적 완성도에만 집중 (스타일 적용 금지)
     """
 
-    def __init__(self, provider_factory: Any, rag_service: Any | None = None) -> None:
+    def __init__(
+        self, provider_factory: Any, rag_service: Optional[Any] = None
+    ) -> None:
         super().__init__(
             node_name="architect",
             provider_name="anthropic",  # Use Claude for architectural work
@@ -290,7 +292,7 @@ class ArchitectNode(PromptNode):
                 "Generated structure is too short (minimum 100 characters)"
             )
 
-    def _calculate_quality_score(self, state: GenerationState) -> float | None:
+    def _calculate_quality_score(self, state: GenerationState) -> Optional[float]:
         """Calculate quality score for architect output"""
 
         structure = state.get("draft_script", "")

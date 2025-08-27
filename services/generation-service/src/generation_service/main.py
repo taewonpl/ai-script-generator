@@ -8,8 +8,9 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from generation_service.api import generate, health, rag, sse_generation
+from generation_service.api import generate, health, metrics, rag, sse_generation
 from generation_service.config_loader import settings
+from generation_service.middleware import setup_security_middleware
 
 # Import Core Module utilities
 try:
@@ -54,12 +55,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Setup security middleware
+setup_security_middleware(
+    app,
+    enable_rate_limiting=True,
+    rate_limit_calls=getattr(settings, "rate_limit_calls", 100),
+    rate_limit_period=getattr(settings, "rate_limit_period", 60),
+)
+
 # Log middleware setup
 logger.info(
     f"CORS middleware configured with origins: {getattr(settings, 'cors_origins', [])}"
 )
 
 app.include_router(health.router, prefix="/api/v1", tags=["health"])
+app.include_router(metrics.router, prefix="/api/v1", tags=["observability"])
 app.include_router(generate.router, prefix="/api/v1", tags=["generation"])
 app.include_router(rag.router, prefix="/api/v1/rag", tags=["rag"])
 app.include_router(sse_generation.router, prefix="/api/v1", tags=["sse-generation"])

@@ -1,0 +1,297 @@
+---
+# Day-0 Prometheus AlertingRules for AI Script Generator v3.0
+# Enhanced alerting for production launch with stricter SLO monitoring
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: ai-script-generator-day0-alerts
+  namespace: ai-script-generator
+  labels:
+    app: ai-script-generator
+    prometheus: kube-prometheus
+    role: alert-rules
+    version: "3.0.0"
+spec:
+  groups:
+  - name: ai-script-generator.day0.slo.rules
+    interval: 15s  # More frequent evaluation for Day-0
+    rules:
+    
+    # Day-0 Rule 1: SSE TTFE (Time To First Event) > 0.5s
+    # Stricter than production 2s requirement for external internet access
+    - alert: SSEExternalLatencyHigh
+      expr: |
+        histogram_quantile(0.95,
+          rate(generation_service_sse_first_event_duration_seconds_bucket[2m])
+        ) > 0.5
+      for: 30s
+      labels:
+        severity: critical
+        component: generation-service
+        slo: external_sse_latency
+        day0_gate: "sse_performance"
+      annotations:
+        summary: "SSE external internet latency exceeds Day-0 criteria (P95 > 0.5s)"
+        description: |
+          SSE P95 first event latency is {{ $value | humanizeDuration }} which exceeds
+          the Day-0 external internet requirement of 0.5s.
+          
+          This indicates potential network connectivity issues or service performance
+          degradation that could impact user experience during launch.
+          
+          Current P95: {{ $value | humanizeDuration }}
+          Day-0 Target: ≤500ms
+          Production Target: ≤2s
+        runbook_url: "https://docs.ai-script-generator.com/runbook/sse-external-latency"
+        dashboard_url: "https://grafana.company.com/d/sse-performance"
+        
+    # Day-0 Rule 2: 5xx Error Rate > 1% 
+    # Zero tolerance for server errors during Day-0 launch
+    - alert: HighServerErrorRate
+      expr: |
+        (
+          rate(generation_service_requests_total{status=~"5.."}[5m]) /
+          rate(generation_service_requests_total[5m])
+        ) * 100 > 1
+      for: 1m
+      labels:
+        severity: critical
+        component: generation-service
+        slo: error_rate
+        day0_gate: "reliability"
+      annotations:
+        summary: "High server error rate detected during Day-0 (>1%)"
+        description: |
+          Server error rate is {{ $value | humanizePercentage }} over the last 5 minutes.
+          
+          During Day-0 launch, any sustained server error rate above 1% indicates
+          critical issues that could impact user onboarding and service reputation.
+          
+          Current Error Rate: {{ $value | humanizePercentage }}
+          Day-0 Target: <1%
+          
+          Top error endpoints:
+          - Check /api/v1/generations endpoint
+          - Verify AI provider connectivity
+          - Review database connection pool
+        runbook_url: "https://docs.ai-script-generator.com/runbook/high-error-rate"
+        
+    - alert: ProjectServiceErrorRate
+      expr: |
+        (
+          rate(project_service_requests_total{status=~"5.."}[5m]) /
+          rate(project_service_requests_total[5m])
+        ) * 100 > 1
+      for: 1m
+      labels:
+        severity: critical
+        component: project-service
+        slo: error_rate
+        day0_gate: "reliability"
+      annotations:
+        summary: "Project service error rate exceeds Day-0 threshold (>1%)"
+        description: |
+          Project service error rate is {{ $value | humanizePercentage }}.
+          
+          This impacts core user functionality including project creation,
+          episode management, and metadata operations.
+          
+          Current Error Rate: {{ $value | humanizePercentage }}
+          Day-0 Target: <1%
+        runbook_url: "https://docs.ai-script-generator.com/runbook/project-service-errors"
+        
+    # Day-0 Rule 3: Readiness Probe Flapping
+    # Detect unstable readiness probes that could cause traffic routing issues
+    - alert: ReadinessProbeFlapping
+      expr: |
+        changes(project_service_readiness_probe_success[10m]) > 4
+      for: 2m
+      labels:
+        severity: warning
+        component: project-service
+        slo: readiness_stability
+        day0_gate: "infrastructure"
+      annotations:
+        summary: "Readiness probe flapping detected in project service"
+        description: |
+          Readiness probe for project service has changed state {{ $value }} times
+          in the last 10 minutes, indicating service instability.
+          
+          Flapping readiness probes can cause:
+          - Intermittent traffic routing issues
+          - Load balancer confusion
+          - Poor user experience
+          
+          Investigate:
+          - Database connection stability
+          - Resource constraints (CPU/Memory)
+          - Health check endpoint performance
+        runbook_url: "https://docs.ai-script-generator.com/runbook/readiness-flapping"
+        
+    - alert: GenerationServiceReadinessFlapping  
+      expr: |
+        changes(generation_service_readiness_probe_success[10m]) > 4
+      for: 2m
+      labels:
+        severity: warning
+        component: generation-service
+        slo: readiness_stability
+        day0_gate: "infrastructure"
+      annotations:
+        summary: "Readiness probe flapping in generation service"
+        description: |
+          Generation service readiness probe instability detected.
+          {{ $value }} state changes in 10 minutes.
+          
+          This can impact SSE connection stability and generation job processing.
+        runbook_url: "https://docs.ai-script-generator.com/runbook/generation-readiness-flapping"
+
+    # Additional Day-0 Critical Alerts
+    - alert: Day0ServiceDown
+      expr: up{job=~"ai-script-generator-.*"} == 0
+      for: 30s  # Faster detection for Day-0
+      labels:
+        severity: critical
+        component: "{{ $labels.job }}"
+        day0_gate: "availability"
+      annotations:
+        summary: "CRITICAL: Service {{ $labels.job }} is down during Day-0 launch"
+        description: |
+          Service {{ $labels.job }} is completely unavailable during Day-0 launch.
+          
+          Immediate action required:
+          1. Check pod status: kubectl get pods -n ai-script-generator
+          2. Review logs: kubectl logs -n ai-script-generator <pod-name>
+          3. Verify resource availability
+          4. Consider rollback if issue persists
+        runbook_url: "https://docs.ai-script-generator.com/runbook/day0-service-down"
+        
+    - alert: Day0HighMemoryUsage
+      expr: |
+        (
+          container_memory_working_set_bytes{container!="",pod=~".*-service-.*"} / 
+          container_spec_memory_limit_bytes{container!="",pod=~".*-service-.*"}
+        ) * 100 > 90
+      for: 2m
+      labels:
+        severity: critical
+        component: "{{ $labels.pod }}"
+        day0_gate: "performance"
+      annotations:
+        summary: "Critical memory usage during Day-0 launch"
+        description: |
+          Container {{ $labels.pod }} is using {{ $value | humanizePercentage }} of allocated memory.
+          
+          High memory usage during Day-0 can cause:
+          - Service instability
+          - OOMKilled containers
+          - Poor user experience
+          
+          Action: Consider scaling up or optimizing memory usage
+        runbook_url: "https://docs.ai-script-generator.com/runbook/high-memory-usage"
+        
+    - alert: Day0SSEConnectionsHigh
+      expr: generation_service_sse_connections_active > 50
+      for: 3m
+      labels:
+        severity: warning
+        component: generation-service
+        day0_gate: "capacity"
+      annotations:
+        summary: "High number of SSE connections during Day-0"
+        description: |
+          {{ $value }} active SSE connections detected.
+          
+          During Day-0 launch, monitor for:
+          - Connection pool exhaustion
+          - Memory usage increase
+          - Response time degradation
+          
+          Consider scaling if connections continue to increase.
+        runbook_url: "https://docs.ai-script-generator.com/runbook/sse-connections-high"
+
+  - name: ai-script-generator.day0.business.rules
+    interval: 30s
+    rules:
+    
+    # Business Logic Day-0 Monitoring
+    - alert: Day0ProjectCreationFailures
+      expr: |
+        rate(project_service_project_creation_failures_total[5m]) > 0.1
+      for: 2m
+      labels:
+        severity: warning
+        component: project-service
+        day0_gate: "user_experience"
+      annotations:
+        summary: "Project creation failures during Day-0 launch"
+        description: |
+          {{ $value }} project creation failures per second.
+          
+          This impacts new user onboarding and first impressions.
+          Investigate database connectivity and validation logic.
+        runbook_url: "https://docs.ai-script-generator.com/runbook/project-creation-failures"
+        
+    - alert: Day0GenerationJobQueue
+      expr: generation_service_jobs_queued > 20
+      for: 5m
+      labels:
+        severity: warning
+        component: generation-service
+        day0_gate: "performance"
+      annotations:
+        summary: "Generation job queue building up during Day-0"
+        description: |
+          {{ $value }} jobs queued for processing.
+          
+          Queue buildup during launch indicates:
+          - Higher than expected demand (positive)
+          - Processing bottlenecks (negative)
+          
+          Monitor job processing rate and consider scaling.
+        runbook_url: "https://docs.ai-script-generator.com/runbook/job-queue-buildup"
+
+  - name: ai-script-generator.day0.external.rules
+    interval: 30s
+    rules:
+    
+    # External Dependencies Day-0 Monitoring
+    - alert: Day0AIProviderErrors
+      expr: |
+        rate(generation_service_ai_provider_errors_total[3m]) > 0.05
+      for: 1m
+      labels:
+        severity: critical
+        component: external-ai
+        day0_gate: "dependencies"
+      annotations:
+        summary: "AI provider errors during Day-0 launch"
+        description: |
+          {{ $value }} AI provider errors per second.
+          Provider: {{ $labels.provider }}
+          
+          During Day-0, AI provider reliability is critical for user experience.
+          Verify API keys and implement fallback providers if needed.
+        runbook_url: "https://docs.ai-script-generator.com/runbook/ai-provider-errors"
+        
+    - alert: Day0DatabaseConnections
+      expr: |
+        project_service_database_connections_active > 
+        project_service_database_connections_max * 0.8
+      for: 2m
+      labels:
+        severity: warning
+        component: database
+        day0_gate: "infrastructure"
+      annotations:
+        summary: "Database connection pool near capacity during Day-0"
+        description: |
+          Database connections: {{ $value }} ({{ $labels.max_connections }} max)
+          
+          High connection usage during launch may indicate:
+          - Insufficient connection pool size
+          - Connection leaks
+          - Higher than expected load
+          
+          Monitor and scale database resources if needed.
+        runbook_url: "https://docs.ai-script-generator.com/runbook/database-connections"

@@ -9,7 +9,7 @@ import traceback
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 # Import Core Module components
 try:
@@ -89,7 +89,7 @@ class DebugTools:
     - Debug logging with enhanced details
     """
 
-    def __init__(self, config: dict[str, Any] | None = None) -> None:
+    def __init__(self, config: Optional[dict[str, Any]] = None) -> None:
         self.config = config or {}
 
         # Debug configuration
@@ -98,7 +98,7 @@ class DebugTools:
         self.trace_calls = self.config.get("trace_calls", False)
 
         # Debug session
-        self.current_session: DebugSession | None = None
+        self.current_session: Optional[DebugSession] = None
 
         # Performance profiling
         self._function_timings: dict[str, list[float]] = {}
@@ -115,7 +115,7 @@ class DebugTools:
         self._original_trace_func = None
         self._trace_depth = 0
 
-    def start_debug_session(self, session_id: str | None = None) -> DebugSession:
+    def start_debug_session(self, session_id: Optional[str] = None) -> DebugSession:
         """Start new debug session"""
 
         if not session_id:
@@ -133,7 +133,7 @@ class DebugTools:
         logger.info(f"Debug session started: {session_id}")
         return self.current_session
 
-    def stop_debug_session(self) -> DebugSession | None:
+    def stop_debug_session(self) -> Optional[DebugSession]:
         """Stop current debug session"""
 
         if not self.current_session:
@@ -198,7 +198,7 @@ class DebugTools:
             logger.debug(f"Breakpoint added: {identifier}")
 
     def hit_breakpoint(
-        self, identifier: str, locals_dict: dict[str, Any] | None = None
+        self, identifier: str, locals_dict: Optional[dict[str, Any]] = None
     ) -> None:
         """Handle breakpoint hit"""
 
@@ -355,7 +355,7 @@ class DebugTools:
 
         return async_wrapper
 
-    def capture_memory_snapshot(self, label: str = "") -> dict[str, Any] | None:
+    def capture_memory_snapshot(self, label: str = "") -> Optional[dict[str, Any]]:
         """Capture current memory usage snapshot"""
 
         try:
@@ -602,7 +602,10 @@ class DebugSection:
         return self
 
     def __exit__(
-        self, exc_type: type | None, exc_val: Exception | None, exc_tb: Any | None
+        self,
+        exc_type: Optional[type],
+        exc_val: Optional[Exception],
+        exc_tb: Optional[Any],
     ) -> None:
         duration = time.time() - self.start_time
         self.debug_tools.capture_memory_snapshot(f"end_{self.section_name}")
@@ -621,16 +624,16 @@ class DebugSection:
 
 
 # Global debug tools instance
-_debug_tools: DebugTools | None = None
+_debug_tools: Optional[DebugTools] = None
 
 
-def get_debug_tools() -> DebugTools | None:
+def get_debug_tools() -> Optional[DebugTools]:
     """Get global debug tools instance"""
     global _debug_tools
     return _debug_tools
 
 
-def initialize_debug_tools(config: dict[str, Any] | None = None) -> DebugTools:
+def initialize_debug_tools(config: Optional[dict[str, Any]] = None) -> DebugTools:
     """Initialize global debug tools"""
     global _debug_tools
 

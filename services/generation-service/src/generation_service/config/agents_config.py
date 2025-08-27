@@ -6,7 +6,7 @@ import json
 import os
 from dataclasses import asdict, dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 from ..workflows.agents import AgentPriority
 from ..workflows.quality import QualityDimension
@@ -182,7 +182,7 @@ class ConfigurationManager:
 
     def __init__(
         self,
-        config_file: str | None = None,
+        config_file: Optional[str] = None,
         profile: ConfigurationProfile = ConfigurationProfile.BALANCED,
     ):
         self.config_file = config_file or os.getenv(
@@ -339,7 +339,7 @@ class ConfigurationManager:
 
         self.config.quality.dimension_weights.update(dimension_weights)
 
-    def save_config(self, file_path: str | None = None) -> None:
+    def save_config(self, file_path: Optional[str] = None) -> None:
         """Save current configuration to file"""
 
         save_path = file_path or self.config_file
@@ -481,7 +481,7 @@ class ConfigurationManager:
 
 
 # Global configuration manager instance
-_config_manager: ConfigurationManager | None = None
+_config_manager: Optional[ConfigurationManager] = None
 
 
 def get_config_manager() -> ConfigurationManager:
@@ -500,7 +500,7 @@ def get_config_manager() -> ConfigurationManager:
 
 
 def initialize_config_manager(
-    config_file: str | None = None,
+    config_file: Optional[str] = None,
     profile: ConfigurationProfile = ConfigurationProfile.BALANCED,
 ) -> ConfigurationManager:
     """Initialize global configuration manager with specific settings"""

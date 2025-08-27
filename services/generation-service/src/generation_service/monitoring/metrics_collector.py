@@ -10,7 +10,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 # Import Core Module components
 try:
@@ -151,7 +151,7 @@ class MetricsCollector:
     - Time-series data storage
     """
 
-    def __init__(self, config: dict[str, Any] | None = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         self.config = config or {}
 
         # Metric storage
@@ -232,25 +232,25 @@ class MetricsCollector:
         logger.debug(f"Registered metric: {name} ({metric_type.value})")
 
     def record_counter(
-        self, name: str, value: float = 1.0, labels: dict[str, str] | None = None
+        self, name: str, value: float = 1.0, labels: Optional[dict[str, str]] = None
     ) -> None:
         """Record a counter metric (cumulative value)"""
         self._record_metric(name, MetricType.COUNTER, value, labels)
 
     def record_gauge(
-        self, name: str, value: float, labels: dict[str, str] | None = None
+        self, name: str, value: float, labels: Optional[dict[str, str]] = None
     ) -> None:
         """Record a gauge metric (current value)"""
         self._record_metric(name, MetricType.GAUGE, value, labels)
 
     def record_histogram(
-        self, name: str, value: float, labels: dict[str, str] | None = None
+        self, name: str, value: float, labels: Optional[dict[str, str]] = None
     ) -> None:
         """Record a histogram metric (distribution of values)"""
         self._record_metric(name, MetricType.HISTOGRAM, value, labels)
 
     def record_timer(
-        self, name: str, duration: float, labels: dict[str, str] | None = None
+        self, name: str, duration: float, labels: Optional[dict[str, str]] = None
     ) -> None:
         """Record a timer metric (duration measurement)"""
         self._record_metric(name, MetricType.TIMER, duration, labels)
@@ -260,7 +260,7 @@ class MetricsCollector:
         name: str,
         expected_type: MetricType,
         value: float,
-        labels: dict[str, str] | None = None,
+        labels: Optional[dict[str, str]] = None,
     ) -> None:
         """Internal method to record metric value"""
 
@@ -466,7 +466,7 @@ class MetricsCollector:
         return self._current_metrics
 
     def get_metric_history(
-        self, metric_name: str, since: datetime | None = None
+        self, metric_name: str, since: Optional[datetime] = None
     ) -> list[MetricValue]:
         """Get historical metric values"""
 
@@ -619,7 +619,7 @@ class MetricTimer:
         self,
         collector: MetricsCollector,
         metric_name: str,
-        labels: dict[str, str] | None = None,
+        labels: Optional[dict[str, str]] = None,
     ):
         self.collector = collector
         self.metric_name = metric_name
@@ -632,9 +632,9 @@ class MetricTimer:
 
     def __exit__(
         self,
-        exc_type: type | None,
-        exc_val: BaseException | None,
-        exc_tb: object | None,
+        exc_type: Optional[type],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[object],
     ) -> None:
         if self.start_time:
             duration = time.time() - self.start_time
@@ -642,17 +642,17 @@ class MetricTimer:
 
 
 # Global metrics collector instance
-_metrics_collector: MetricsCollector | None = None
+_metrics_collector: Optional[MetricsCollector] = None
 
 
-def get_metrics_collector() -> MetricsCollector | None:
+def get_metrics_collector() -> Optional[MetricsCollector]:
     """Get global metrics collector instance"""
     global _metrics_collector
     return _metrics_collector
 
 
 def initialize_metrics_collector(
-    config: dict[str, Any] | None = None,
+    config: Optional[dict[str, Any]] = None,
 ) -> MetricsCollector:
     """Initialize global metrics collector"""
     global _metrics_collector

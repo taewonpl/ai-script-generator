@@ -8,7 +8,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 try:
     import psutil
@@ -128,7 +128,7 @@ class ResourceMetrics:
 class ResourceLimits:
     """Resource usage limits and thresholds"""
 
-    memory_limit_mb: float | None = 2048  # 2GB
+    memory_limit_mb: Optional[float] = 2048  # 2GB
     memory_warning_percent: float = 80.0
     memory_critical_percent: float = 90.0
     cpu_warning_percent: float = 80.0
@@ -163,7 +163,7 @@ class MemoryMonitor:
     - Process memory limits
     """
 
-    def __init__(self, config: dict[str, Any] | None = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         self.config = config or {}
 
         self.limits = ResourceLimits(
@@ -407,7 +407,7 @@ class ResourceManager:
     - Performance alerts and notifications
     """
 
-    def __init__(self, config: dict[str, Any] | None = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         self.config = config or {}
 
         # Resource limits
@@ -421,7 +421,7 @@ class ResourceManager:
         self.monitoring_interval = self.config.get(
             "monitoring_interval", 30.0
         )  # seconds
-        self.monitoring_task: asyncio.Task | None = None
+        self.monitoring_task: asyncio.Optional[Task] = None
 
         # Metrics history
         self.metrics_history: list[ResourceMetrics] = []
@@ -434,7 +434,7 @@ class ResourceManager:
         # Cleanup configuration
         self.auto_cleanup_enabled = self.config.get("auto_cleanup_enabled", True)
         self.cleanup_interval = self.config.get("cleanup_interval", 300.0)  # 5 minutes
-        self.cleanup_task: asyncio.Task | None = None
+        self.cleanup_task: asyncio.Optional[Task] = None
 
     async def start_monitoring(self) -> None:
         """Start resource monitoring"""
@@ -786,17 +786,17 @@ class ResourceManager:
 
 
 # Global resource manager instance
-_resource_manager: ResourceManager | None = None
+_resource_manager: Optional[ResourceManager] = None
 
 
-def get_resource_manager() -> ResourceManager | None:
+def get_resource_manager() -> Optional[ResourceManager]:
     """Get global resource manager instance"""
     global _resource_manager
     return _resource_manager
 
 
 def initialize_resource_manager(
-    config: dict[str, Any] | None = None,
+    config: Optional[dict[str, Any]] = None,
 ) -> ResourceManager:
     """Initialize global resource manager"""
     global _resource_manager

@@ -9,7 +9,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 try:
     import aiohttp
@@ -88,8 +88,8 @@ class ConnectionMetrics:
     failed_requests: int = 0
     total_response_time: float = 0.0
     average_response_time: float = 0.0
-    last_used: datetime | None = None
-    created_at: datetime | None = None
+    last_used: Optional[datetime] = None
+    created_at: Optional[datetime] = None
 
 
 @dataclass
@@ -241,7 +241,7 @@ class ConnectionPool:
 
         # Pool state
         self._initialized = False
-        self._health_check_task: asyncio.Task | None = None
+        self._health_check_task: asyncio.Optional[Task] = None
         self._shutdown_event = asyncio.Event()
 
         # Metrics
@@ -299,7 +299,7 @@ class ConnectionPool:
 
         logger.info(f"ConnectionPool '{self.name}' shutdown")
 
-    async def acquire_connection(self, timeout: float | None = None) -> Connection:
+    async def acquire_connection(self, timeout: Optional[float] = None) -> Connection:
         """Acquire a connection from the pool"""
 
         if not self._initialized:
@@ -362,7 +362,7 @@ class ConnectionPool:
         self,
         request_func: Callable[..., Awaitable[Any]],
         *args,
-        timeout: float | None = None,
+        timeout: Optional[float] = None,
         **kwargs,
     ) -> Any:
         """Execute request using a pooled connection"""
@@ -400,7 +400,7 @@ class ConnectionPool:
             logger.error(f"Failed to create connection: {e}")
             raise
 
-    async def _get_idle_connection(self) -> Connection | None:
+    async def _get_idle_connection(self) -> Optional[Connection]:
         """Get an idle connection if available"""
 
         try:
@@ -603,7 +603,7 @@ class AIProviderPool:
         provider_name: str,
         request_func: Callable[..., Awaitable[Any]],
         *args,
-        timeout: float | None = None,
+        timeout: Optional[float] = None,
         **kwargs,
     ) -> Any:
         """Execute AI request with connection pooling and rate limiting"""
@@ -701,10 +701,10 @@ class AIProviderPool:
 
 
 # Global instances
-_ai_provider_pool: AIProviderPool | None = None
+_ai_provider_pool: Optional[AIProviderPool] = None
 
 
-def get_ai_provider_pool() -> AIProviderPool | None:
+def get_ai_provider_pool() -> Optional[AIProviderPool]:
     """Get global AI provider pool"""
     global _ai_provider_pool
     return _ai_provider_pool

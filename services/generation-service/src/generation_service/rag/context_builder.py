@@ -6,7 +6,7 @@ import logging
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 try:
     import tiktoken
@@ -95,7 +95,7 @@ class ContextBuildRequest:
     prioritize_recent: bool = True
     remove_duplicates: bool = True
     template_format: str = "default"
-    project_id: str | None = None
+    project_id: Optional[str] = None
 
     def __post_init__(self):
         if CORE_AVAILABLE and not hasattr(self, "request_id"):
@@ -127,7 +127,7 @@ class ContextBuildResponse:
     total_tokens: int
     context_type: ContextType
     build_time: float
-    request_id: str | None = None
+    request_id: Optional[str] = None
 
     def __post_init__(self):
         if CORE_AVAILABLE and self.request_id is None:

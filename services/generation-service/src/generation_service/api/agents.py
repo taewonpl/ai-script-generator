@@ -2,7 +2,7 @@
 Advanced API endpoints for specialized agents and quality assessment
 """
 
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -25,8 +25,8 @@ class AgentAnalysisRequest(BaseModel):
     """Request for agent analysis"""
 
     content: str = Field(..., min_length=10, description="Script content to analyze")
-    user_id: str | None = Field(None, description="User ID for personalization")
-    agent_filter: list[str] | None = Field(
+    user_id: Optional[str] = Field(None, description="User ID for personalization")
+    agent_filter: Optional[list[str]] = Field(
         None, description="Specific agents to analyze"
     )
 
@@ -44,10 +44,10 @@ class AdaptiveWorkflowRequest(BaseModel):
     """Request for adaptive workflow execution"""
 
     generation_request: GenerationRequest
-    user_id: str | None = None
-    preferences: dict[str, Any] | None = None
-    max_agents: int | None = Field(3, ge=1, le=5)
-    min_confidence: float | None = Field(0.4, ge=0.0, le=1.0)
+    user_id: Optional[str] = None
+    preferences: Optional[dict[str, Any]] = None
+    max_agents: Optional[int] = Field(3, ge=1, le=5)
+    min_confidence: Optional[float] = Field(0.4, ge=0.0, le=1.0)
 
 
 class AdaptiveWorkflowResponse(BaseModel):
@@ -65,8 +65,8 @@ class QualityAssessmentRequest(BaseModel):
     """Request for quality assessment"""
 
     content: str = Field(..., min_length=10)
-    user_id: str | None = None
-    comparison_content: str | None = None
+    user_id: Optional[str] = None
+    comparison_content: Optional[str] = None
 
 
 class QualityAssessmentResponse(BaseModel):
@@ -85,9 +85,9 @@ class FeedbackSubmissionRequest(BaseModel):
 
     generation_id: str
     user_rating: float = Field(..., ge=0.0, le=1.0)
-    quality_feedback: dict[str, float] | None = None
-    comments: str | None = None
-    user_id: str | None = None
+    quality_feedback: Optional[dict[str, float]] = None
+    comments: Optional[str] = None
+    user_id: Optional[str] = None
 
 
 class UserPreferencesResponse(BaseModel):
@@ -318,7 +318,7 @@ async def assess_content_quality(
 async def compare_content_quality(
     original_content: str,
     enhanced_content: str,
-    user_id: str | None = None,
+    user_id: Optional[str] = None,
     assessor: QualityAssessor = Depends(get_quality_assessor),
 ) -> dict[str, Any]:
     """

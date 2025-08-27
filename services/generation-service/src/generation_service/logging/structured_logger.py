@@ -12,7 +12,7 @@ from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 # Import Core Module components
 try:
@@ -79,13 +79,13 @@ class LogLevel(str, Enum):
 class LogContext:
     """Logging context with request/session tracking"""
 
-    request_id: str | None = None
-    session_id: str | None = None
-    user_id: str | None = None
-    workflow_id: str | None = None
-    node_id: str | None = None
-    trace_id: str | None = None
-    span_id: str | None = None
+    request_id: Optional[str] = None
+    session_id: Optional[str] = None
+    user_id: Optional[str] = None
+    workflow_id: Optional[str] = None
+    node_id: Optional[str] = None
+    trace_id: Optional[str] = None
+    span_id: Optional[str] = None
 
     def to_dict(self) -> dict[str, str]:
         """Convert to dictionary for logging"""
@@ -102,8 +102,8 @@ class LogEntry:
     component: str
     context: LogContext
     extra_data: dict[str, Any] = field(default_factory=dict)
-    exception: str | None = None
-    performance_data: dict[str, Any] | None = None
+    exception: Optional[str] = None
+    performance_data: Optional[dict[str, Any]] = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary for serialization"""
@@ -140,7 +140,7 @@ class StructuredLogger:
     - Debug mode with enhanced details
     """
 
-    def __init__(self, config: dict[str, Any] | None = None) -> None:
+    def __init__(self, config: Optional[dict[str, Any]] = None) -> None:
         self.config = config or {}
 
         # Logger configuration
@@ -422,7 +422,7 @@ class StructuredLogger:
         return duration
 
     def log_workflow_start(
-        self, workflow_id: str, workflow_type: str | None = None
+        self, workflow_id: str, workflow_type: Optional[str] = None
     ) -> None:
         """Log workflow start"""
 
@@ -435,7 +435,7 @@ class StructuredLogger:
         )
 
     def log_workflow_end(
-        self, workflow_id: str, success: bool = True, error: str | None = None
+        self, workflow_id: str, success: bool = True, error: Optional[str] = None
     ) -> None:
         """Log workflow completion"""
 
@@ -458,8 +458,8 @@ class StructuredLogger:
         node_id: str,
         node_type: str,
         success: bool = True,
-        duration: float | None = None,
-        error: str | None = None,
+        duration: Optional[float] = None,
+        error: Optional[str] = None,
     ) -> None:
         """Log workflow node execution"""
 
@@ -486,10 +486,10 @@ class StructuredLogger:
         self,
         provider: str,
         model: str,
-        tokens_used: int | None = None,
+        tokens_used: Optional[int] = None,
         success: bool = True,
-        duration: float | None = None,
-        error: str | None = None,
+        duration: Optional[float] = None,
+        error: Optional[str] = None,
     ) -> None:
         """Log AI API call"""
 
@@ -518,8 +518,8 @@ class StructuredLogger:
         self,
         operation: str,
         cache_key: str,
-        hit: bool | None = None,
-        duration: float | None = None,
+        hit: Optional[bool] = None,
+        duration: Optional[float] = None,
     ) -> None:
         """Log cache operation"""
 
@@ -542,7 +542,7 @@ class StructuredLogger:
         self._log_handlers.append(handler)
 
     def get_recent_logs(
-        self, count: int = 100, level: LogLevel | None = None
+        self, count: int = 100, level: Optional[LogLevel] = None
     ) -> list[LogEntry]:
         """Get recent log entries"""
 
@@ -678,7 +678,10 @@ class LogContextManager:
         return self
 
     def __exit__(
-        self, exc_type: type | None, exc_val: Exception | None, exc_tb: Any | None
+        self,
+        exc_type: Optional[type],
+        exc_val: Optional[Exception],
+        exc_tb: Optional[Any],
     ) -> None:
         self.logger.set_context(self.previous_context)
 
@@ -697,24 +700,27 @@ class PerformanceTimer:
         return self
 
     def __exit__(
-        self, exc_type: type | None, exc_val: Exception | None, exc_tb: Any | None
+        self,
+        exc_type: Optional[type],
+        exc_val: Optional[Exception],
+        exc_tb: Optional[Any],
     ) -> None:
         if self.timer_id:
             self.logger.end_timer(self.timer_id, self.operation_name)
 
 
 # Global structured logger instance
-_structured_logger: StructuredLogger | None = None
+_structured_logger: Optional[StructuredLogger] = None
 
 
-def get_structured_logger() -> StructuredLogger | None:
+def get_structured_logger() -> Optional[StructuredLogger]:
     """Get global structured logger instance"""
     global _structured_logger
     return _structured_logger
 
 
 def initialize_structured_logger(
-    config: dict[str, Any] | None = None,
+    config: Optional[dict[str, Any]] = None,
 ) -> StructuredLogger:
     """Initialize global structured logger"""
     global _structured_logger

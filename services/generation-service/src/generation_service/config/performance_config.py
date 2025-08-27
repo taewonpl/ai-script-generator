@@ -8,7 +8,7 @@ from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, Union
 
 import yaml
 
@@ -38,11 +38,11 @@ class CacheConfig:
     """Cache configuration settings"""
 
     enabled: bool = True
-    redis_url: str | None = None
+    redis_url: Optional[str] = None
     redis_host: str = "localhost"
     redis_port: int = 6379
     redis_db: int = 0
-    redis_password: str | None = None
+    redis_password: Optional[str] = None
     memory_fallback: bool = True
     memory_cache_size: int = 1000
     default_ttl: int = 3600
@@ -147,7 +147,7 @@ class LoggingConfig:
     debug_mode: bool = False
 
     # File logging
-    log_file: str | None = None
+    log_file: Optional[str] = None
     max_file_size: int = 100 * 1024 * 1024  # 100MB
     backup_count: int = 5
 
@@ -205,7 +205,7 @@ class EnvironmentConfig:
 
     # External services
     ai_providers: dict[str, dict[str, Any]] = field(default_factory=dict)
-    database_url: str | None = None
+    database_url: Optional[str] = None
 
     # Security
     cors_origins: list[str] = field(default_factory=list)
@@ -381,15 +381,15 @@ class ConfigManager:
     - Configuration templates
     """
 
-    def __init__(self, config_dir: str | None = None):
+    def __init__(self, config_dir: Optional[str] = None):
         self.config_dir = Path(config_dir) if config_dir else Path("config")
-        self.current_config: PerformanceConfig | None = None
+        self.current_config: Optional[PerformanceConfig] = None
         self._config_watchers: list[Callable[[Any], None]] = []
 
     def load_config(
         self,
-        environment: str | Environment = Environment.DEVELOPMENT,
-        config_file: str | None = None,
+        environment: Union[str, Environment] = Environment.DEVELOPMENT,
+        config_file: Optional[str] = None,
     ) -> PerformanceConfig:
         """Load configuration for specified environment"""
 
@@ -519,7 +519,7 @@ class ConfigManager:
             if env_value is not None:
                 # Convert value to appropriate type
                 try:
-                    converted_value: bool | int | float | str
+                    converted_value: bool | int | Union[float, str]
                     if value_type == bool:
                         converted_value = env_value.lower() in (
                             "true",
@@ -635,7 +635,7 @@ class ConfigManager:
         """Add callback for configuration changes"""
         self._config_watchers.append(callback)
 
-    def reload_config(self) -> PerformanceConfig | None:
+    def reload_config(self) -> Optional[PerformanceConfig]:
         """Reload current configuration"""
 
         if self.current_config:
@@ -653,22 +653,22 @@ class ConfigManager:
 
         return None
 
-    def get_current_config(self) -> PerformanceConfig | None:
+    def get_current_config(self) -> Optional[PerformanceConfig]:
         """Get current configuration"""
         return self.current_config
 
 
 # Global configuration manager
-_config_manager: ConfigManager | None = None
+_config_manager: Optional[ConfigManager] = None
 
 
-def get_config_manager() -> ConfigManager | None:
+def get_config_manager() -> Optional[ConfigManager]:
     """Get global configuration manager"""
     global _config_manager
     return _config_manager
 
 
-def initialize_config_manager(config_dir: str | None = None) -> ConfigManager:
+def initialize_config_manager(config_dir: Optional[str] = None) -> ConfigManager:
     """Initialize global configuration manager"""
     global _config_manager
 
@@ -676,7 +676,7 @@ def initialize_config_manager(config_dir: str | None = None) -> ConfigManager:
     return _config_manager
 
 
-def get_current_config() -> PerformanceConfig | None:
+def get_current_config() -> Optional[PerformanceConfig]:
     """Get current performance configuration"""
     manager = get_config_manager()
     return manager.get_current_config() if manager else None

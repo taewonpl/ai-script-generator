@@ -1,0 +1,240 @@
+---
+# Prometheus AlertingRule for AI Script Generator v3.0 Production SLO Monitoring
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: ai-script-generator-slo-alerts
+  namespace: ai-script-generator
+  labels:
+    app: ai-script-generator
+    prometheus: kube-prometheus
+    role: alert-rules
+spec:
+  groups:
+  - name: ai-script-generator.slo.rules
+    interval: 30s
+    rules:
+    
+    # Service Availability Alerts
+    - alert: ServiceDown
+      expr: up{job=~"ai-script-generator-.*"} == 0
+      for: 1m
+      labels:
+        severity: critical
+        component: "{{ $labels.job }}"
+        slo: availability
+      annotations:
+        summary: "AI Script Generator service {{ $labels.job }} is down"
+        description: "Service {{ $labels.job }} has been down for more than 1 minute"
+        runbook_url: "https://docs.ai-script-generator.com/runbook/service-down"
+        
+    # Error Rate SLO Alert (>1% error rate)
+    - alert: HighErrorRate
+      expr: |
+        (
+          rate(generation_service_jobs_failed_total[5m]) /
+          rate(generation_service_jobs_completed_total[5m] + generation_service_jobs_failed_total[5m])
+        ) * 100 > 1
+      for: 2m
+      labels:
+        severity: warning
+        component: generation-service
+        slo: error_rate
+      annotations:
+        summary: "Generation service error rate exceeds SLO (>1%)"
+        description: "Error rate is {{ $value | humanizePercentage }} over the last 5 minutes"
+        runbook_url: "https://docs.ai-script-generator.com/runbook/high-error-rate"
+        
+    # SSE First Event Latency SLO Alert (P95 >2s)
+    - alert: SSEHighLatency
+      expr: |
+        histogram_quantile(0.95,
+          rate(generation_service_sse_first_event_duration_seconds_bucket[5m])
+        ) > 2
+      for: 2m
+      labels:
+        severity: warning
+        component: generation-service
+        slo: sse_latency
+      annotations:
+        summary: "SSE first event P95 latency exceeds SLO (>2s)"
+        description: "P95 latency is {{ $value }}s for SSE first events over the last 5 minutes"
+        runbook_url: "https://docs.ai-script-generator.com/runbook/sse-high-latency"
+        
+    # Readiness Probe Stability Alert (<99% success rate)
+    - alert: ReadinessProbeUnstable
+      expr: |
+        (
+          rate(project_service_readiness_checks_passed_total[10m]) /
+          rate(project_service_readiness_checks_total[10m])
+        ) * 100 < 99
+      for: 5m
+      labels:
+        severity: warning
+        component: project-service
+        slo: readiness_stability
+      annotations:
+        summary: "Readiness probe success rate below SLO (<99%)"
+        description: "Readiness probe success rate is {{ $value | humanizePercentage }} over the last 10 minutes"
+        runbook_url: "https://docs.ai-script-generator.com/runbook/readiness-unstable"
+        
+    # Critical Infrastructure Alerts
+    - alert: SSEConnectionsHigh
+      expr: generation_service_sse_connections_active > 100
+      for: 5m
+      labels:
+        severity: info
+        component: generation-service
+      annotations:
+        summary: "High number of active SSE connections"
+        description: "{{ $value }} active SSE connections, monitor for capacity issues"
+        
+    - alert: DatabaseConnections
+      expr: project_service_database_connections_active > 80
+      for: 2m
+      labels:
+        severity: warning
+        component: project-service
+      annotations:
+        summary: "High database connection usage"
+        description: "{{ $value }} active database connections"
+        
+    # Performance Degradation Alerts
+    - alert: HighResponseTime
+      expr: |
+        histogram_quantile(0.95,
+          rate(project_service_requests_duration_seconds_bucket[5m])
+        ) > 1
+      for: 3m
+      labels:
+        severity: warning
+        component: project-service
+      annotations:
+        summary: "Project service P95 response time high"
+        description: "P95 response time is {{ $value }}s over the last 5 minutes"
+        
+    - alert: MemoryUsageHigh
+      expr: |
+        (
+          container_memory_working_set_bytes{container!="",pod=~".*-service-.*"} / 
+          container_spec_memory_limit_bytes{container!="",pod=~".*-service-.*"}
+        ) * 100 > 85
+      for: 5m
+      labels:
+        severity: warning
+        component: "{{ $labels.pod }}"
+      annotations:
+        summary: "Container memory usage high"
+        description: "Memory usage is {{ $value | humanizePercentage }} for {{ $labels.pod }}"
+        
+    - alert: CPUUsageHigh
+      expr: |
+        rate(container_cpu_usage_seconds_total{container!="",pod=~".*-service-.*"}[5m]) * 100 > 80
+      for: 5m
+      labels:
+        severity: warning
+        component: "{{ $labels.pod }}"
+      annotations:
+        summary: "Container CPU usage high"
+        description: "CPU usage is {{ $value | humanizePercentage }} for {{ $labels.pod }}"
+        
+  - name: ai-script-generator.business.rules
+    interval: 60s
+    rules:
+    
+    # Business Logic Alerts
+    - alert: ProjectCreationRateHigh
+      expr: rate(project_service_projects_total[5m]) * 3600 > 1000
+      for: 2m
+      labels:
+        severity: info
+        component: project-service
+      annotations:
+        summary: "Unusual high project creation rate"
+        description: "{{ $value }} projects created per hour"
+        
+    - alert: GenerationJobQueueBuildup
+      expr: generation_service_jobs_active > 50
+      for: 5m
+      labels:
+        severity: warning
+        component: generation-service
+      annotations:
+        summary: "Generation job queue building up"
+        description: "{{ $value }} active generation jobs in queue"
+        
+    - alert: ChromaDBStorageHigh
+      expr: |
+        (
+          filesystem_avail_bytes{mountpoint="/data/chroma"} /
+          filesystem_size_bytes{mountpoint="/data/chroma"}
+        ) * 100 < 20
+      for: 1m
+      labels:
+        severity: critical
+        component: generation-service
+      annotations:
+        summary: "ChromaDB storage space critically low"
+        description: "Only {{ $value | humanizePercentage }} storage space available"
+        
+  - name: ai-script-generator.security.rules
+    interval: 30s
+    rules:
+    
+    # Security Monitoring Alerts
+    - alert: RateLimitViolations
+      expr: rate(project_service_rate_limit_violations_total[5m]) > 10
+      for: 1m
+      labels:
+        severity: warning
+        component: security
+      annotations:
+        summary: "High rate limit violations detected"
+        description: "{{ $value }} rate limit violations per second"
+        
+    - alert: AuthenticationFailures
+      expr: rate(generation_service_auth_failures_total[5m]) > 5
+      for: 2m
+      labels:
+        severity: warning
+        component: security
+      annotations:
+        summary: "High authentication failure rate"
+        description: "{{ $value }} authentication failures per second"
+        
+    - alert: SuspiciousActivity
+      expr: rate(security_events_total{event_type="suspicious"}[5m]) > 1
+      for: 1m
+      labels:
+        severity: critical
+        component: security
+      annotations:
+        summary: "Suspicious security events detected"
+        description: "{{ $value }} suspicious events per second"
+        
+  - name: ai-script-generator.dependency.rules
+    interval: 60s
+    rules:
+    
+    # External Dependency Alerts
+    - alert: OpenAIAPIErrors
+      expr: rate(generation_service_openai_api_errors_total[5m]) > 0.1
+      for: 2m
+      labels:
+        severity: warning
+        component: external-api
+        provider: openai
+      annotations:
+        summary: "High OpenAI API error rate"
+        description: "{{ $value }} OpenAI API errors per second"
+        
+    - alert: AnthropicAPIErrors
+      expr: rate(generation_service_anthropic_api_errors_total[5m]) > 0.1
+      for: 2m
+      labels:
+        severity: warning
+        component: external-api
+        provider: anthropic
+      annotations:
+        summary: "High Anthropic API error rate" 
+        description: "{{ $value }} Anthropic API errors per second"

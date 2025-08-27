@@ -6,7 +6,7 @@ import asyncio
 import json
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, Optional
 
 # Import Core Module components
 try:
@@ -69,9 +69,9 @@ class DashboardMetric:
     format_type: str = "number"  # number, percentage, duration, bytes
     chart_type: str = "line"  # line, bar, gauge, counter
     color: str = "#007bff"
-    target: float | None = None
-    warning_threshold: float | None = None
-    critical_threshold: float | None = None
+    target: Optional[float] = None
+    warning_threshold: Optional[float] = None
+    critical_threshold: Optional[float] = None
 
 
 @dataclass
@@ -96,7 +96,7 @@ class MonitoringDashboard:
     - Custom dashboard layouts
     """
 
-    def __init__(self, config: dict[str, Any] | None = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         self.config = config or {}
 
         # Dashboard configuration
@@ -833,17 +833,17 @@ class MonitoringDashboard:
 
 
 # Global dashboard instance
-_monitoring_dashboard: MonitoringDashboard | None = None
+_monitoring_dashboard: Optional[MonitoringDashboard] = None
 
 
-def get_monitoring_dashboard() -> MonitoringDashboard | None:
+def get_monitoring_dashboard() -> Optional[MonitoringDashboard]:
     """Get global monitoring dashboard instance"""
     global _monitoring_dashboard
     return _monitoring_dashboard
 
 
 def initialize_monitoring_dashboard(
-    config: dict[str, Any] | None = None,
+    config: Optional[dict[str, Any]] = None,
 ) -> MonitoringDashboard:
     """Initialize global monitoring dashboard"""
     global _monitoring_dashboard

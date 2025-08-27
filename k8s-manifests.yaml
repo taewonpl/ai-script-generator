@@ -1,0 +1,489 @@
+---
+# Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ai-script-generator
+  labels:
+    name: ai-script-generator
+---
+# ConfigMap for shared configuration
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: ai-script-generator
+data:
+  PROJECT_SERVICE_HOST: "0.0.0.0"
+  PROJECT_SERVICE_PORT: "8001"
+  GENERATION_SERVICE_HOST: "0.0.0.0"
+  GENERATION_SERVICE_PORT: "8002"
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "info"
+---
+# Secret for API keys (to be populated during deployment)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: api-keys
+  namespace: ai-script-generator
+type: Opaque
+data:
+  # Base64 encoded values - populate during deployment
+  openai-api-key: ""
+  anthropic-api-key: ""
+  secret-key: ""
+---
+# Project Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: project-service
+  namespace: ai-script-generator
+  labels:
+    app: project-service
+    version: "1.0.0"
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: project-service
+  template:
+    metadata:
+      labels:
+        app: project-service
+        version: "1.0.0"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+      containers:
+      - name: project-service
+        image: ai-script-generator/project-service:latest
+        ports:
+        - containerPort: 8001
+          name: http
+        env:
+        - name: PROJECT_SERVICE_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: PROJECT_SERVICE_HOST
+        - name: PROJECT_SERVICE_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: PROJECT_SERVICE_PORT
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-keys
+              key: secret-key
+        - name: DATABASE_URL
+          value: "sqlite:///data/projects.db"
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/v1/livez
+            port: 8001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/v1/readyz
+            port: 8001
+          initialDelaySeconds: 15
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: data-volume
+          mountPath: /data
+        - name: tmp-volume
+          mountPath: /tmp
+      volumes:
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: project-service-data
+      - name: tmp-volume
+        emptyDir: {}
+---
+# Generation Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: generation-service
+  namespace: ai-script-generator
+  labels:
+    app: generation-service
+    version: "3.0.0"
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: generation-service
+  template:
+    metadata:
+      labels:
+        app: generation-service
+        version: "3.0.0"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        fsGroup: 1001
+      containers:
+      - name: generation-service
+        image: ai-script-generator/generation-service:latest
+        ports:
+        - containerPort: 8002
+          name: http
+        env:
+        - name: GENERATION_SERVICE_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: GENERATION_SERVICE_HOST
+        - name: GENERATION_SERVICE_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: GENERATION_SERVICE_PORT
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-keys
+              key: openai-api-key
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-keys
+              key: anthropic-api-key
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-keys
+              key: secret-key
+        - name: PROJECT_SERVICE_URL
+          value: "http://project-service:8001"
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /api/v1/livez
+            port: 8002
+          initialDelaySeconds: 45
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/v1/readyz
+            port: 8002
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: chroma-data
+          mountPath: /data/chroma
+        - name: tmp-volume
+          mountPath: /tmp
+      volumes:
+      - name: chroma-data
+        persistentVolumeClaim:
+          claimName: generation-service-data
+      - name: tmp-volume
+        emptyDir: {}
+---
+# Project Service PVC
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: project-service-data
+  namespace: ai-script-generator
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: fast-ssd
+---
+# Generation Service PVC
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: generation-service-data
+  namespace: ai-script-generator
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: fast-ssd
+---
+# Project Service - Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: project-service
+  namespace: ai-script-generator
+  labels:
+    app: project-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8001
+    targetPort: 8001
+    protocol: TCP
+    name: http
+  selector:
+    app: project-service
+---
+# Generation Service - Service  
+apiVersion: v1
+kind: Service
+metadata:
+  name: generation-service
+  namespace: ai-script-generator
+  labels:
+    app: generation-service
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8002
+    targetPort: 8002
+    protocol: TCP
+    name: http
+  selector:
+    app: generation-service
+---
+# Horizontal Pod Autoscaler for Project Service
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: project-service-hpa
+  namespace: ai-script-generator
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: project-service
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+---
+# Horizontal Pod Autoscaler for Generation Service
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: generation-service-hpa
+  namespace: ai-script-generator
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: generation-service
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 75
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 85
+---
+# Pod Disruption Budget for Project Service
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: project-service-pdb
+  namespace: ai-script-generator
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: project-service
+---
+# Pod Disruption Budget for Generation Service
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: generation-service-pdb
+  namespace: ai-script-generator
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: generation-service
+---
+# NGINX Ingress for HTTP traffic
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ai-script-generator-ingress
+  namespace: ai-script-generator
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600" 
+    nginx.ingress.kubernetes.io/upstream-keep-alive-timeout: "75"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - api.ai-script-generator.com
+    secretName: ai-script-generator-tls
+  rules:
+  - host: api.ai-script-generator.com
+    http:
+      paths:
+      - path: /api/v1/projects
+        pathType: Prefix
+        backend:
+          service:
+            name: project-service
+            port:
+              number: 8001
+      - path: /api/v1/health
+        pathType: Prefix  
+        backend:
+          service:
+            name: project-service
+            port:
+              number: 8001
+      - path: /api/v1/metrics
+        pathType: Prefix
+        backend:
+          service:
+            name: project-service
+            port:
+              number: 8001
+      - path: /api/v1/readyz
+        pathType: Prefix
+        backend:
+          service:
+            name: project-service
+            port:
+              number: 8001
+      - path: /api/v1/livez
+        pathType: Prefix
+        backend:
+          service:
+            name: project-service
+            port:
+              number: 8001
+      - path: /api/v1/generations
+        pathType: Prefix
+        backend:
+          service:
+            name: generation-service
+            port:
+              number: 8002
+      - path: /api/v1/rag
+        pathType: Prefix
+        backend:
+          service:
+            name: generation-service
+            port:
+              number: 8002
+---
+# ServiceMonitor for Prometheus scraping
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: ai-script-generator-metrics
+  namespace: ai-script-generator
+  labels:
+    app: ai-script-generator
+spec:
+  selector:
+    matchLabels:
+      app: project-service
+  endpoints:
+  - port: http
+    path: /api/v1/metrics
+    interval: 30s
+    scrapeTimeout: 10s
+---
+# ServiceMonitor for Generation Service
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: generation-service-metrics
+  namespace: ai-script-generator
+  labels:
+    app: ai-script-generator
+spec:
+  selector:
+    matchLabels:
+      app: generation-service
+  endpoints:
+  - port: http
+    path: /api/v1/metrics
+    interval: 30s
+    scrapeTimeout: 10s

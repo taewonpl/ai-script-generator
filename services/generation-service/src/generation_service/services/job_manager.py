@@ -8,6 +8,7 @@ import logging
 import threading
 from collections.abc import AsyncGenerator
 from datetime import datetime, timedelta, timezone
+from typing import Optional
 from uuid import uuid4
 
 import redis
@@ -16,9 +17,7 @@ from ..models.sse_models import (
     GenerationJob,
     GenerationJobRequest,
     GenerationJobStatus,
-    HeartbeatEventData,
     SSEEvent,
-    SSEEventType,
 )
 
 logger = logging.getLogger(__name__)
@@ -27,22 +26,22 @@ logger = logging.getLogger(__name__)
 class JobManager:
     """Manages generation jobs and SSE events with Redis persistence"""
 
-    def __init__(self, redis_url: str | None = None) -> None:
+    def __init__(self, redis_url: Optional[str] = None) -> None:
         self.jobs: dict[str, GenerationJob] = {}
         self.active_connections: dict[str, int] = {}  # jobId -> connection count
         self.event_history: dict[str, list[str]] = {}  # jobId -> [event_id, ...]
         self.lock = threading.Lock()
-        self.heartbeat_interval = 30  # seconds
+        self.connection_timeout = 60  # seconds
         self.cleanup_interval = 300  # 5 minutes
 
         # Redis setup for distributed environment
-        self.redis_client: redis.Redis | None = None
+        self.redis_client: redis.Optional[Redis] = None
         self._setup_redis(redis_url)
 
         # Start background tasks
-        self._start_background_tasks()
+        self._start_cleanup_task()
 
-    def _setup_redis(self, redis_url: str | None) -> None:
+    def _setup_redis(self, redis_url: Optional[str]) -> None:
         """Setup Redis connection for distributed job storage"""
         try:
             if redis_url:
@@ -76,7 +75,7 @@ class JobManager:
             except Exception as e:
                 logger.warning(f"Failed to persist job {job.jobId}: {e}")
 
-    def _load_job_from_redis(self, job_id: str) -> GenerationJob | None:
+    def _load_job_from_redis(self, job_id: str) -> Optional[GenerationJob]:
         """Load job from Redis if available"""
         if self.redis_client:
             try:
@@ -119,33 +118,9 @@ class JobManager:
             # Keep last 100 events
             self.event_history[job_id] = self.event_history[job_id][-100:]
 
-    def _start_background_tasks(self) -> None:
-        """Start background tasks for heartbeat and cleanup"""
-        asyncio.create_task(self._heartbeat_task())
+    def _start_cleanup_task(self) -> None:
+        """Start background task for cleanup"""
         asyncio.create_task(self._cleanup_task())
-
-    async def _heartbeat_task(self) -> None:
-        """Send periodic heartbeat events to all active connections"""
-        while True:
-            try:
-                await asyncio.sleep(self.heartbeat_interval)
-
-                # Send heartbeat to jobs with active connections
-                with self.lock:
-                    active_jobs = [
-                        job_id
-                        for job_id, count in self.active_connections.items()
-                        if count > 0
-                    ]
-
-                for job_id in active_jobs:
-                    job = self.get_job(job_id)
-                    if job and job.is_active():
-                        # Heartbeat is sent automatically by the SSE generator
-                        logger.debug(f"Heartbeat for job {job_id}")
-
-            except Exception as e:
-                logger.error(f"Error in heartbeat task: {e}")
 
     async def _cleanup_task(self) -> None:
         """Clean up finished jobs periodically"""
@@ -203,7 +178,7 @@ class JobManager:
         logger.info(f"Created generation job: {job_id}")
         return job
 
-    def get_job(self, job_id: str) -> GenerationJob | None:
+    def get_job(self, job_id: str) -> Optional[GenerationJob]:
         """Get job by ID, checking Redis if not in memory"""
         # Check in-memory first
         job = self.jobs.get(job_id)
@@ -328,19 +303,17 @@ class JobManager:
         return stats
 
     async def generate_sse_events(
-        self, job_id: str, last_event_id: str | None = None
+        self, job_id: str, last_event_id: Optional[str] = None
     ) -> AsyncGenerator[str, None]:
         """Generate SSE events for a job"""
         job = self.get_job(job_id)
         if not job:
             # Send error event for non-existent job
-            error_event = SSEEvent(
-                event=SSEEventType.FAILED,
-                data={
-                    "type": "failed",
-                    "jobId": job_id,
-                    "error": {"code": "JOB_NOT_FOUND", "message": "Job not found"},
-                },
+            error_event = SSEEvent.create_error(
+                job_id=job_id,
+                error_code="JOB_NOT_FOUND",
+                error_message="Job not found",
+                retryable=False,
             )
             yield error_event.format_sse()
             return
@@ -376,30 +349,10 @@ class JobManager:
             self._store_event_id(job_id, job.lastEventId)
             yield job.to_progress_event().format_sse(job.lastEventId)
 
-            last_heartbeat = datetime.now(timezone.utc)
             last_progress = job.progress
             last_content = job.currentContent
 
             while not job.is_finished():
-                # Check for updates
-                current_time = datetime.now(timezone.utc)
-
-                # Send heartbeat every 30 seconds
-                if (
-                    current_time - last_heartbeat
-                ).total_seconds() >= self.heartbeat_interval:
-                    job.eventSequence += 1
-                    heartbeat_event_id = f"{job.jobId}_{job.eventSequence}"
-                    job.lastEventId = heartbeat_event_id
-                    self._store_event_id(job_id, heartbeat_event_id)
-
-                    heartbeat_event = SSEEvent(
-                        event=SSEEventType.HEARTBEAT,
-                        data=HeartbeatEventData.create_now(job_id),
-                    )
-                    yield heartbeat_event.format_sse(heartbeat_event_id)
-                    last_heartbeat = current_time
-
                 # Send progress update if changed
                 if job.progress != last_progress:
                     job.eventSequence += 1
@@ -434,33 +387,21 @@ class JobManager:
             elif job.status == GenerationJobStatus.FAILED:
                 yield job.to_failed_event().format_sse(final_event_id)
             elif job.status == GenerationJobStatus.CANCELED:
-                cancel_event = SSEEvent(
-                    event=SSEEventType.FAILED,
-                    data={
-                        "type": "failed",
-                        "jobId": job_id,
-                        "error": {
-                            "code": "JOB_CANCELED",
-                            "message": "Job was canceled",
-                            "retryable": False,
-                        },
-                    },
+                cancel_event = SSEEvent.create_error(
+                    job_id=job_id,
+                    error_code="JOB_CANCELED",
+                    error_message="Job was canceled",
+                    retryable=False,
                 )
-                yield cancel_event.format_sse()
+                yield cancel_event.format_sse(final_event_id)
 
         except Exception as e:
             logger.error(f"Error generating SSE events for job {job_id}: {e}")
-            error_event = SSEEvent(
-                event=SSEEventType.FAILED,
-                data={
-                    "type": "failed",
-                    "jobId": job_id,
-                    "error": {
-                        "code": "SSE_ERROR",
-                        "message": f"SSE stream error: {e!s}",
-                        "retryable": True,
-                    },
-                },
+            error_event = SSEEvent.create_error(
+                job_id=job_id,
+                error_code="SSE_ERROR",
+                error_message=f"SSE stream error: {e!s}",
+                retryable=True,
             )
             yield error_event.format_sse()
         finally:
@@ -480,7 +421,7 @@ class JobManager:
 
 
 # Global job manager instance
-_job_manager: JobManager | None = None
+_job_manager: Optional[JobManager] = None
 
 
 def get_job_manager() -> JobManager:

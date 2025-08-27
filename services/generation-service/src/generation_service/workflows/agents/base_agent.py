@@ -5,7 +5,7 @@ Base class for specialized AI agents
 from abc import ABC, abstractmethod
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 # Import Core Module components
 try:
@@ -66,7 +66,7 @@ class AgentExecutionError(Exception):
     """Error during agent execution"""
 
     def __init__(
-        self, agent_name: str, message: str, original_error: Exception | None = None
+        self, agent_name: str, message: str, original_error: Optional[Exception] = None
     ):
         self.agent_name = agent_name
         self.message = message
@@ -111,8 +111,8 @@ class BaseSpecialAgent(ABC):
         agent_name: str,
         capabilities: list[AgentCapability],
         priority: AgentPriority = AgentPriority.MEDIUM,
-        provider_factory: Any | None = None,
-        config: dict[str, Any] | None = None,
+        provider_factory: Optional[Any] = None,
+        config: Optional[dict[str, Any]] = None,
     ) -> None:
         self.agent_name = agent_name
         self.capabilities = capabilities

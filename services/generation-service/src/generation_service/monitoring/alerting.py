@@ -7,7 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
+from typing import Any, Optional, Union
 
 # Import Core Module components
 try:
@@ -98,7 +98,7 @@ class AlertRule:
     description: str
     metric_name: str
     condition: AlertCondition
-    threshold: float | str
+    threshold: Union[float, str]
     severity: AlertSeverity
     enabled: bool = True
 
@@ -125,10 +125,10 @@ class Alert:
     message: str
     triggered_at: datetime
     metric_name: str
-    current_value: float | str
-    threshold: float | str
+    current_value: Union[float, str]
+    threshold: Union[float, str]
     details: dict[str, Any] = field(default_factory=dict)
-    resolved_at: datetime | None = None
+    resolved_at: Optional[datetime] = None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert alert to dictionary"""
@@ -170,7 +170,7 @@ class AlertManager:
     - Custom alert handlers
     """
 
-    def __init__(self, config: dict[str, Any] | None = None):
+    def __init__(self, config: Optional[dict[str, Any]] = None):
         self.config = config or {}
 
         # Alert rules and state
@@ -416,9 +416,9 @@ class AlertManager:
 
     def _evaluate_condition(
         self,
-        value: float | str,
+        value: Union[float, str],
         condition: AlertCondition,
-        threshold: float | str,
+        threshold: Union[float, str],
     ) -> bool:
         """Evaluate alert condition"""
 
@@ -444,7 +444,7 @@ class AlertManager:
 
     async def _get_current_metric_value(
         self, metric_name: str, window_seconds: int
-    ) -> float | str | None:
+    ) -> Optional[str]:
         """Get current metric value from metrics collector"""
 
         try:
@@ -482,7 +482,9 @@ class AlertManager:
             logger.error(f"Failed to get metric value for {metric_name}: {e}")
             return None
 
-    async def _trigger_alert(self, rule: AlertRule, current_value: float | str) -> None:
+    async def _trigger_alert(
+        self, rule: AlertRule, current_value: Union[float, str]
+    ) -> None:
         """Trigger an alert"""
 
         # Check cooldown
@@ -528,7 +530,7 @@ class AlertManager:
         )
 
     async def _check_alert_resolution(
-        self, rule_name: str, current_value: float | str
+        self, rule_name: str, current_value: Union[float, str]
     ) -> None:
         """Check if active alert should be resolved"""
 
@@ -752,16 +754,16 @@ class AlertManager:
 
 
 # Global alert manager instance
-_alert_manager: AlertManager | None = None
+_alert_manager: Optional[AlertManager] = None
 
 
-def get_alert_manager() -> AlertManager | None:
+def get_alert_manager() -> Optional[AlertManager]:
     """Get global alert manager instance"""
     global _alert_manager
     return _alert_manager
 
 
-def initialize_alert_manager(config: dict[str, Any] | None = None) -> AlertManager:
+def initialize_alert_manager(config: Optional[dict[str, Any]] = None) -> AlertManager:
     """Initialize global alert manager"""
     global _alert_manager
 

@@ -8,7 +8,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 # Import Core Module components
 try:
@@ -79,7 +79,7 @@ class TraceContext:
     """Distributed tracing context"""
 
     trace_id: str
-    parent_span_id: str | None = None
+    parent_span_id: Optional[str] = None
     baggage: dict[str, str] = field(default_factory=dict)
 
     def create_child_context(self, span_id: str) -> "TraceContext":
@@ -95,19 +95,19 @@ class Span:
 
     span_id: str
     trace_id: str
-    parent_span_id: str | None
+    parent_span_id: Optional[str]
     operation_name: str
     span_type: SpanType
     start_time: datetime
-    end_time: datetime | None = None
-    duration: float | None = None
+    end_time: Optional[datetime] = None
+    duration: Optional[float] = None
     success: bool = True
-    error: str | None = None
+    error: Optional[str] = None
     tags: dict[str, str] = field(default_factory=dict)
     logs: list[dict[str, Any]] = field(default_factory=list)
     metadata: dict[str, Any] = field(default_factory=dict)
 
-    def finish(self, error: Exception | None = None) -> None:
+    def finish(self, error: Optional[Exception] = None) -> None:
         """Finish the span"""
         self.end_time = utc_now() if CORE_AVAILABLE else datetime.now()
         self.duration = (self.end_time - self.start_time).total_seconds()
@@ -156,9 +156,9 @@ class Trace:
     trace_id: str
     root_span_id: str
     spans: dict[str, Span] = field(default_factory=dict)
-    start_time: datetime | None = None
-    end_time: datetime | None = None
-    total_duration: float | None = None
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    total_duration: Optional[float] = None
 
     def add_span(self, span: Span) -> None:
         """Add span to trace"""
@@ -174,7 +174,7 @@ class Trace:
         if self.start_time and self.end_time:
             self.total_duration = (self.end_time - self.start_time).total_seconds()
 
-    def get_root_span(self) -> Span | None:
+    def get_root_span(self) -> Optional[Span]:
         """Get root span of trace"""
         return self.spans.get(self.root_span_id)
 
@@ -211,7 +211,7 @@ class PerformanceTracer:
     - Trace sampling and filtering
     """
 
-    def __init__(self, config: dict[str, Any] | None = None) -> None:
+    def __init__(self, config: Optional[dict[str, Any]] = None) -> None:
         self.config = config or {}
 
         # Tracing configuration
@@ -227,7 +227,7 @@ class PerformanceTracer:
         self._active_spans: dict[str, Span] = {}
 
         # Current context (thread-local alternative)
-        self._current_context: TraceContext | None = None
+        self._current_context: Optional[TraceContext] = None
         self._context_stack: list[TraceContext] = []
 
         # Performance analysis
@@ -243,7 +243,7 @@ class PerformanceTracer:
         )
 
         # Background cleanup
-        self._cleanup_task: asyncio.Task | None = None
+        self._cleanup_task: asyncio.Optional[Task] = None
         self._tracing_enabled = False
 
     async def start_tracing(self) -> None:
@@ -273,7 +273,7 @@ class PerformanceTracer:
 
     def create_trace(
         self, operation_name: str, span_type: SpanType = SpanType.WORKFLOW
-    ) -> TraceContext | None:
+    ) -> Optional[TraceContext]:
         """Create new trace"""
 
         if not self.enabled or not self._should_sample():
@@ -311,9 +311,9 @@ class PerformanceTracer:
         self,
         operation_name: str,
         span_type: SpanType = SpanType.COMPUTATION,
-        context: TraceContext | None = None,
-        tags: dict[str, str] | None = None,
-    ) -> Span | None:
+        context: Optional[TraceContext] = None,
+        tags: Optional[dict[str, str]] = None,
+    ) -> Optional[Span]:
         """Start new span"""
 
         if not self.enabled:
@@ -346,7 +346,7 @@ class PerformanceTracer:
 
         return span
 
-    def finish_span(self, span: Span, error: Exception | None = None) -> None:
+    def finish_span(self, span: Span, error: Optional[Exception] = None) -> None:
         """Finish span"""
 
         if not span:
@@ -387,7 +387,7 @@ class PerformanceTracer:
         """Set current trace context"""
         self._current_context = context
 
-    def get_current_context(self) -> TraceContext | None:
+    def get_current_context(self) -> Optional[TraceContext]:
         """Get current trace context"""
         return self._current_context
 
@@ -397,7 +397,7 @@ class PerformanceTracer:
             self._context_stack.append(self._current_context)
         self._current_context = context
 
-    def pop_context(self) -> TraceContext | None:
+    def pop_context(self) -> Optional[TraceContext]:
         """Pop context from stack"""
         previous = self._current_context
 
@@ -453,7 +453,7 @@ class PerformanceTracer:
             except Exception as e:
                 logger.error(f"Trace cleanup worker error: {e}")
 
-    def get_trace(self, trace_id: str) -> Trace | None:
+    def get_trace(self, trace_id: str) -> Optional[Trace]:
         """Get trace by ID"""
         return self._traces.get(trace_id)
 
@@ -539,7 +539,9 @@ class PerformanceTracer:
 
         return error_traces[:limit]
 
-    def export_traces(self, file_path: str, trace_ids: list[str] | None = None) -> None:
+    def export_traces(
+        self, file_path: str, trace_ids: Optional[list[str]] = None
+    ) -> None:
         """Export traces to JSON file"""
 
         import json
@@ -578,22 +580,25 @@ class SpanContext:
         tracer: PerformanceTracer,
         operation_name: str,
         span_type: SpanType = SpanType.COMPUTATION,
-        tags: dict[str, str] | None = None,
+        tags: Optional[dict[str, str]] = None,
     ):
         self.tracer = tracer
         self.operation_name = operation_name
         self.span_type = span_type
         self.tags = tags
-        self.span: Span | None = None
+        self.span: Optional[Span] = None
 
-    def __enter__(self) -> Span | None:
+    def __enter__(self) -> Optional[Span]:
         self.span = self.tracer.start_span(
             self.operation_name, self.span_type, tags=self.tags
         )
         return self.span
 
     def __exit__(
-        self, exc_type: type | None, exc_val: Exception | None, exc_tb: Any | None
+        self,
+        exc_type: Optional[type],
+        exc_val: Optional[Exception],
+        exc_tb: Optional[Any],
     ) -> None:
         if self.span:
             error = exc_val if exc_type else None
@@ -614,23 +619,26 @@ class TraceContextManager:
         return self
 
     def __exit__(
-        self, exc_type: type | None, exc_val: Exception | None, exc_tb: Any | None
+        self,
+        exc_type: Optional[type],
+        exc_val: Optional[Exception],
+        exc_tb: Optional[Any],
     ) -> None:
         self.tracer.set_current_context(self.previous_context)
 
 
 # Global performance tracer instance
-_performance_tracer: PerformanceTracer | None = None
+_performance_tracer: Optional[PerformanceTracer] = None
 
 
-def get_performance_tracer() -> PerformanceTracer | None:
+def get_performance_tracer() -> Optional[PerformanceTracer]:
     """Get global performance tracer instance"""
     global _performance_tracer
     return _performance_tracer
 
 
 def initialize_performance_tracer(
-    config: dict[str, Any] | None = None,
+    config: Optional[dict[str, Any]] = None,
 ) -> PerformanceTracer:
     """Initialize global performance tracer"""
     global _performance_tracer

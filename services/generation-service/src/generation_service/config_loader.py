@@ -4,7 +4,7 @@ Maps legacy uppercase attributes to new Settings class
 """
 
 import warnings
-from typing import Any
+from typing import Any, Optional
 
 # Import the actual settings
 from .config.settings import Settings as _ActualSettings
@@ -156,7 +156,7 @@ class _SettingsProxy:
             return self._settings.get_performance_targets()
         return {}
 
-    def get_default_model(self) -> str | None:
+    def get_default_model(self) -> Optional[str]:
         """Get default AI model."""
         if hasattr(self._settings, "get_default_model"):
             return self._settings.get_default_model()

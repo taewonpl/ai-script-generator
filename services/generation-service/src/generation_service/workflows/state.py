@@ -3,7 +3,7 @@ LangGraph workflow state definitions for script generation
 """
 
 from datetime import datetime
-from typing import Any, TypedDict
+from typing import Any, Optional, TypedDict
 
 # Import Core Module components
 try:
@@ -65,10 +65,10 @@ class ExecutionLogEntry(TypedDict):
 
     node_name: str
     start_time: str
-    end_time: str | None
-    execution_time_seconds: float | None
+    end_time: Optional[str]
+    execution_time_seconds: Optional[float]
     success: bool
-    error_message: str | None
+    error_message: Optional[str]
     metadata: dict[str, Any]
 
 
@@ -77,7 +77,7 @@ class GenerationMetadata(TypedDict):
 
     generation_id: str
     workflow_version: str
-    total_execution_time: float | None
+    total_execution_time: Optional[float]
     nodes_executed: list[str]
     nodes_skipped: list[str]
     quality_scores: dict[str, float]
@@ -101,15 +101,15 @@ class GenerationState(TypedDict):
     generation_id: str
 
     # Script stages (논의된 하이브리드 워크플로우)
-    draft_script: str | None  # Architect 결과 (Claude)
-    styled_script: str | None  # Stylist 결과 (Llama)
-    enhanced_script: str | None  # Special Agent 결과 (GPT)
-    final_script: str | None  # 최종 결과
+    draft_script: Optional[str]  # Architect 결과 (Claude)
+    styled_script: Optional[str]  # Stylist 결과 (Llama)
+    enhanced_script: Optional[str]  # Special Agent 결과 (GPT)
+    final_script: Optional[str]  # 최종 결과
 
     # Intermediate data
-    architect_structure: str | None  # 구조적 기반
-    style_metadata: dict[str, Any] | None  # 스타일 메타데이터
-    enhancement_metadata: dict[str, Any] | None  # 향상 메타데이터
+    architect_structure: Optional[str]  # 구조적 기반
+    style_metadata: Optional[dict[str, Any]]  # 스타일 메타데이터
+    enhancement_metadata: Optional[dict[str, Any]]  # 향상 메타데이터
 
     # Workflow control
     execution_log: list[ExecutionLogEntry]
@@ -120,7 +120,7 @@ class GenerationState(TypedDict):
     needs_dialogue_improvement: bool
     needs_detail_addition: bool
     requires_special_agent: bool
-    special_agent_type: str | None
+    special_agent_type: Optional[str]
 
     # Error handling
     has_errors: bool
@@ -134,7 +134,7 @@ class GenerationState(TypedDict):
 def create_initial_state(
     request: GenerationRequest,
     rag_context: str = "",
-    generation_id: str | None = None,
+    generation_id: Optional[str] = None,
 ) -> GenerationState:
     """Create initial workflow state from generation request"""
 
@@ -210,10 +210,10 @@ def add_execution_log(
     state: GenerationState,
     node_name: str,
     success: bool,
-    start_time: datetime | None = None,
-    end_time: datetime | None = None,
-    error_message: str | None = None,
-    metadata: dict[str, Any] | None = None,
+    start_time: Optional[datetime] = None,
+    end_time: Optional[datetime] = None,
+    error_message: Optional[str] = None,
+    metadata: Optional[dict[str, Any]] = None,
 ) -> None:
     """Add execution log entry to state"""
 

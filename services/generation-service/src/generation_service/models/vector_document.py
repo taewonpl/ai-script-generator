@@ -4,7 +4,7 @@ Vector document models with Core Module integration
 
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -103,24 +103,26 @@ if CORE_AVAILABLE:
         importance: DocumentImportance = Field(
             default=DocumentImportance.MEDIUM, description="Document importance"
         )
-        project_id: str | None = Field(None, description="Associated project ID")
-        episode_id: str | None = Field(None, description="Associated episode ID")
-        character_name: str | None = Field(
+        project_id: Optional[str] = Field(None, description="Associated project ID")
+        episode_id: Optional[str] = Field(None, description="Associated episode ID")
+        character_name: Optional[str] = Field(
             None, description="Character name if character-related"
         )
-        scene_type: str | None = Field(None, description="Scene type if scene-related")
-        chapter: int | None = Field(None, description="Chapter number if applicable")
+        scene_type: Optional[str] = Field(
+            None, description="Scene type if scene-related"
+        )
+        chapter: Optional[int] = Field(None, description="Chapter number if applicable")
         tags: list[str] = Field(default_factory=list, description="Document tags")
-        author: str | None = Field(None, description="Document author")
-        source: str | None = Field(None, description="Document source")
+        author: Optional[str] = Field(None, description="Document author")
+        source: Optional[str] = Field(None, description="Document source")
         language: str = Field(default="en", description="Document language")
         version: int = Field(default=1, description="Document version")
 
         # Core integration fields
-        created_by: str | None = Field(
+        created_by: Optional[str] = Field(
             None, description="User who created the document"
         )
-        last_modified_by: str | None = Field(
+        last_modified_by: Optional[str] = Field(
             None, description="User who last modified the document"
         )
 
@@ -137,20 +139,20 @@ if CORE_AVAILABLE:
         content: str = Field(
             ..., min_length=1, max_length=50000, description="Document content"
         )
-        title: str | None = Field(None, max_length=500, description="Document title")
-        summary: str | None = Field(
+        title: Optional[str] = Field(None, max_length=500, description="Document title")
+        summary: Optional[str] = Field(
             None, max_length=1000, description="Document summary"
         )
         metadata: DocumentMetadataDTO = Field(..., description="Document metadata")
 
         # Vector-specific fields
-        embedding: list[float] | None = Field(
+        embedding: Optional[list[float]] = Field(
             None, description="Document embedding vector"
         )
-        embedding_model: str | None = Field(
+        embedding_model: Optional[str] = Field(
             None, description="Model used for embedding"
         )
-        token_count: int | None = Field(
+        token_count: Optional[int] = Field(
             None, ge=0, description="Token count of content"
         )
 
@@ -165,7 +167,7 @@ if CORE_AVAILABLE:
 
         @field_validator("title")
         @classmethod
-        def validate_title(cls, v: str | None) -> str | None:
+        def validate_title(cls, v: Optional[str]) -> Optional[str]:
             if v is not None:
                 return v.strip()
             return v
@@ -182,16 +184,18 @@ else:
         importance: DocumentImportance = Field(
             default=DocumentImportance.MEDIUM, description="Document importance"
         )
-        project_id: str | None = Field(None, description="Associated project ID")
-        episode_id: str | None = Field(None, description="Associated episode ID")
-        character_name: str | None = Field(
+        project_id: Optional[str] = Field(None, description="Associated project ID")
+        episode_id: Optional[str] = Field(None, description="Associated episode ID")
+        character_name: Optional[str] = Field(
             None, description="Character name if character-related"
         )
-        scene_type: str | None = Field(None, description="Scene type if scene-related")
-        chapter: int | None = Field(None, description="Chapter number if applicable")
+        scene_type: Optional[str] = Field(
+            None, description="Scene type if scene-related"
+        )
+        chapter: Optional[int] = Field(None, description="Chapter number if applicable")
         tags: list[str] = Field(default_factory=list, description="Document tags")
-        author: str | None = Field(None, description="Document author")
-        source: str | None = Field(None, description="Document source")
+        author: Optional[str] = Field(None, description="Document author")
+        source: Optional[str] = Field(None, description="Document source")
         language: str = Field(default="en", description="Document language")
         version: int = Field(default=1, description="Document version")
 
@@ -202,10 +206,10 @@ else:
         updated_at: datetime = Field(
             default_factory=datetime.now, description="Last update timestamp"
         )
-        created_by: str | None = Field(
+        created_by: Optional[str] = Field(
             None, description="User who created the document"
         )
-        last_modified_by: str | None = Field(
+        last_modified_by: Optional[str] = Field(
             None, description="User who last modified the document"
         )
 
@@ -222,20 +226,20 @@ else:
         content: str = Field(
             ..., min_length=1, max_length=50000, description="Document content"
         )
-        title: str | None = Field(None, max_length=500, description="Document title")
-        summary: str | None = Field(
+        title: Optional[str] = Field(None, max_length=500, description="Document title")
+        summary: Optional[str] = Field(
             None, max_length=1000, description="Document summary"
         )
         metadata: DocumentMetadataDTO = Field(..., description="Document metadata")
 
         # Vector-specific fields
-        embedding: list[float] | None = Field(
+        embedding: Optional[list[float]] = Field(
             None, description="Document embedding vector"
         )
-        embedding_model: str | None = Field(
+        embedding_model: Optional[str] = Field(
             None, description="Model used for embedding"
         )
-        token_count: int | None = Field(
+        token_count: Optional[int] = Field(
             None, ge=0, description="Token count of content"
         )
 
@@ -256,7 +260,7 @@ else:
 
         @field_validator("title")
         @classmethod
-        def validate_title(cls, v: str | None) -> str | None:
+        def validate_title(cls, v: Optional[str]) -> Optional[str]:
             if v is not None:
                 return v.strip()
             return v
@@ -268,23 +272,23 @@ else:
 class DocumentSearchFilter(BaseModel):
     """Filter for document search operations"""
 
-    document_types: list[DocumentType] | None = Field(
+    document_types: Optional[list[DocumentType]] = Field(
         None, description="Filter by document types"
     )
-    project_ids: list[str] | None = Field(None, description="Filter by project IDs")
-    episode_ids: list[str] | None = Field(None, description="Filter by episode IDs")
-    character_names: list[str] | None = Field(
+    project_ids: Optional[list[str]] = Field(None, description="Filter by project IDs")
+    episode_ids: Optional[list[str]] = Field(None, description="Filter by episode IDs")
+    character_names: Optional[list[str]] = Field(
         None, description="Filter by character names"
     )
-    tags: list[str] | None = Field(None, description="Filter by tags (OR logic)")
-    importance_levels: list[DocumentImportance] | None = Field(
+    tags: Optional[list[str]] = Field(None, description="Filter by tags (OR logic)")
+    importance_levels: Optional[list[DocumentImportance]] = Field(
         None, description="Filter by importance levels"
     )
-    language: str | None = Field(None, description="Filter by language")
-    date_from: datetime | None = Field(
+    language: Optional[str] = Field(None, description="Filter by language")
+    date_from: Optional[datetime] = Field(
         None, description="Filter documents created after this date"
     )
-    date_to: datetime | None = Field(
+    date_to: Optional[datetime] = Field(
         None, description="Filter documents created before this date"
     )
 
@@ -322,12 +326,14 @@ class DocumentUpdate(BaseModel):
     """Model for document update operations"""
 
     document_id: str = Field(..., description="Document ID to update")
-    content: str | None = Field(
+    content: Optional[str] = Field(
         None, min_length=1, max_length=50000, description="Updated content"
     )
-    title: str | None = Field(None, max_length=500, description="Updated title")
-    summary: str | None = Field(None, max_length=1000, description="Updated summary")
-    metadata: DocumentMetadataDTO | None = Field(None, description="Updated metadata")
+    title: Optional[str] = Field(None, max_length=500, description="Updated title")
+    summary: Optional[str] = Field(None, max_length=1000, description="Updated summary")
+    metadata: Optional[DocumentMetadataDTO] = Field(
+        None, description="Updated metadata"
+    )
 
     @field_validator("content")
     @classmethod
@@ -366,7 +372,7 @@ class DocumentDeleteRequest(BaseModel):
 def create_character_document(
     name: str,
     description: str,
-    project_id: str | None = None,
+    project_id: Optional[str] = None,
     importance: DocumentImportance = DocumentImportance.MEDIUM,
     **kwargs,
 ) -> VectorDocumentDTO:
@@ -388,7 +394,7 @@ def create_character_document(
 def create_story_bible_document(
     title: str,
     content: str,
-    project_id: str | None = None,
+    project_id: Optional[str] = None,
     importance: DocumentImportance = DocumentImportance.CRITICAL,
     **kwargs,
 ) -> VectorDocumentDTO:
@@ -407,7 +413,7 @@ def create_story_bible_document(
 def create_world_building_document(
     title: str,
     description: str,
-    project_id: str | None = None,
+    project_id: Optional[str] = None,
     importance: DocumentImportance = DocumentImportance.HIGH,
     **kwargs,
 ) -> VectorDocumentDTO:
@@ -426,9 +432,9 @@ def create_world_building_document(
 def create_scene_document(
     scene_description: str,
     scene_type: str,
-    project_id: str | None = None,
-    episode_id: str | None = None,
-    chapter: int | None = None,
+    project_id: Optional[str] = None,
+    episode_id: Optional[str] = None,
+    chapter: Optional[int] = None,
     **kwargs,
 ) -> VectorDocumentDTO:
     """Create a scene description document"""

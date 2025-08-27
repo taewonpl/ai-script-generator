@@ -6,7 +6,7 @@ import json
 import logging
 import time
 from collections.abc import AsyncGenerator
-from typing import Any
+from typing import Any, Optional
 
 import httpx
 
@@ -298,7 +298,7 @@ class LocalProvider(BaseProvider):
         except Exception as e:
             return {"status": "error", "error": str(e)}
 
-    async def get_usage_stats(self) -> dict[str, Any] | None:
+    async def get_usage_stats(self) -> Optional[dict[str, Any]]:
         """Get usage statistics for local model"""
         try:
             status = await self.get_model_status()
