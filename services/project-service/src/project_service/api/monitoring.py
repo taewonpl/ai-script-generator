@@ -57,7 +57,7 @@ async def get_integrity_summary(db: Session = Depends(get_db)) -> SuccessRespons
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve integrity summary",
-        )
+        ) from None
 
 
 @router.get("/integrity/project/{project_id}")
@@ -106,7 +106,7 @@ async def get_project_integrity(
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to check integrity for project {project_id}",
-        )
+        ) from None
 
 
 @router.get("/performance/stats")
@@ -150,7 +150,7 @@ async def get_performance_stats(
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve performance statistics",
-        )
+        ) from None
 
 
 @router.get("/alerts/active")
@@ -176,7 +176,7 @@ async def get_active_alerts(db: Session = Depends(get_db)) -> SuccessResponseDTO
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve active alerts",
-        )
+        ) from None
 
 
 @router.post("/alerts/check")
@@ -203,7 +203,7 @@ async def trigger_alert_checks(
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to trigger alert checks",
-        )
+        ) from None
 
 
 @router.post("/alerts/{alert_key}/resolve")
@@ -223,7 +223,7 @@ async def resolve_alert(
             raise HTTPException(
                 status_code=http_status.HTTP_404_NOT_FOUND,
                 detail=f"Alert {alert_key} not found",
-            )
+            ) from None
 
     except HTTPException:
         raise
@@ -232,7 +232,7 @@ async def resolve_alert(
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to resolve alert",
-        )
+        ) from None
 
 
 @router.get("/jobs/integrity/status")
@@ -253,7 +253,7 @@ async def get_integrity_job_status(db: Session = Depends(get_db)) -> SuccessResp
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve integrity job status",
-        )
+        ) from None
 
 
 @router.post("/jobs/integrity/run-check")
@@ -281,7 +281,7 @@ async def run_integrity_check(
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to run integrity check",
-        )
+        ) from None
 
 
 @router.post("/integrity/fix-gaps/{project_id}")
@@ -306,7 +306,7 @@ async def fix_project_gaps(
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fix gaps for project {project_id}",
-        )
+        ) from None
 
 
 @router.get("/metrics/export")
@@ -353,4 +353,4 @@ async def export_metrics(
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to export metrics",
-        )
+        ) from None

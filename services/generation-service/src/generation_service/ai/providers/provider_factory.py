@@ -384,7 +384,7 @@ class ProviderFactory:
 
                 return True
             elif provider_type == ProviderType.HUGGINGFACE:
-                from .huggingface_provider import HuggingFaceProvider
+                # from .huggingface_provider import HuggingFaceProvider
 
                 return True
             else:

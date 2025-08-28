@@ -2,6 +2,8 @@
 Structured logging system for unified log format across all services.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import sys
@@ -215,7 +217,7 @@ class StructuredLogger:
 
         self.logger.info(entry.model_dump_json())
 
-    def with_context(self, trace_context: TraceContext) -> "StructuredLogger":
+    def with_context(self, trace_context: TraceContext) -> StructuredLogger:
         """Create a new logger with updated trace context."""
         return StructuredLogger(self.service_context, trace_context)
 

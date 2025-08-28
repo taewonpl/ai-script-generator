@@ -74,7 +74,41 @@ export default tseslint.config([
             'Use import.meta.env instead of process.env in client code. process.env is only available in Node.js environments like vite.config.ts',
         },
       ],
-      // Additional environment variable security
+      // Grid Quality and Best Practice Rules
+      'no-restricted-properties': [
+        'warn',
+        {
+          object: 'Grid',
+          property: 'container',
+          message:
+            'Consider migrating to Grid2 for better performance and flexibility. Grid2 provides the same API with improved layout calculations.',
+        },
+      ],
+      // Custom Grid validation rules
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@mui/material',
+              importNames: ['Grid'],
+              message: 'Use Grid2 from @mui/material/Grid2 instead',
+            },
+            // Production Safety: Prevent direct axios usage
+            {
+              name: 'axios',
+              message: 'Do not import axios directly. Use HTTP helpers from @/shared/services/api/clients (coreHttp, projectHttp, generationHttp) to ensure automatic request_id/trace_id injection and prevent response.data regressions.',
+            },
+          ],
+          patterns: [
+            {
+              group: ['axios'],
+              message: 'Do not import axios directly. Use HTTP helpers from @/shared/services/api/clients instead.',
+            },
+          ],
+        },
+      ],
+      // Production Safety: Prevent AxiosResponse usage via restricted syntax
       'no-restricted-syntax': [
         'error',
         {
@@ -109,28 +143,11 @@ export default tseslint.config([
           message:
             'React Query data는 언래핑된 T입니다. `.data.data` 접근을 제거하세요.',
         },
-      ],
-      // Grid Quality and Best Practice Rules
-      'no-restricted-properties': [
-        'warn',
+        // Production Safety: Prevent AxiosResponse type usage
         {
-          object: 'Grid',
-          property: 'container',
+          selector: 'TSTypeReference[typeName.name="AxiosResponse"]',
           message:
-            'Consider migrating to Grid2 for better performance and flexibility. Grid2 provides the same API with improved layout calculations.',
-        },
-      ],
-      // Custom Grid validation rules
-      'no-restricted-imports': [
-        'error',
-        {
-          paths: [
-            {
-              name: '@mui/material',
-              importNames: ['Grid'],
-              message: 'Use Grid2 from @mui/material/Grid2 instead',
-            },
-          ],
+            'Do not use AxiosResponse<T> directly. Use HTTP helpers from @/shared/services/api/clients that return Promise<T> to prevent .data regressions.',
         },
       ],
       // Custom Grid Layout Quality Rules
@@ -157,6 +174,17 @@ export default tseslint.config([
     rules: {
       'no-restricted-globals': 'off',
       'no-restricted-syntax': 'off',
+    },
+  },
+  // Allow axios usage in specific API client files
+  {
+    files: [
+      'src/shared/services/api/clients.ts',
+      'src/shared/services/api/*.ts',
+    ],
+    rules: {
+      'no-restricted-imports': 'off',
+      '@typescript-eslint/ban-types': 'off',
     },
   },
 ])

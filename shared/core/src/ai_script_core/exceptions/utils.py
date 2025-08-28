@@ -4,6 +4,8 @@ Exception Handling Utilities for AI Script Generator v3.0
 예외 처리 관련 데코레이터, 포매터 및 로그 자동 기록 기능을 제공합니다.
 """
 
+from __future__ import annotations
+
 import functools
 import logging
 import sys
@@ -178,7 +180,7 @@ def exception_handler(
 
                 if suppress_exceptions:
                     return fallback_return
-                raise wrapped_exception
+                raise wrapped_exception from None
 
         return wrapper  # type: ignore[return-value]
 
@@ -254,7 +256,7 @@ def async_exception_handler(
 
                 if suppress_exceptions:
                     return fallback_return
-                raise wrapped_exception
+                raise wrapped_exception from None
 
         return wrapper
 

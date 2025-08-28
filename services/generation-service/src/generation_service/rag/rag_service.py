@@ -231,13 +231,13 @@ class RAGService:
         except Exception as e:
             error_msg = f"Failed to initialize RAG service: {e!s}"
             logger.error(error_msg)
-            raise RAGServiceError(error_msg, operation="initialization")
+            raise RAGServiceError(error_msg, operation="initialization") from e
 
     async def add_documents(self, request: DocumentAddRequest) -> dict[str, Any]:
         """Add documents to the RAG system"""
 
         if not request.documents:
-            raise RAGServiceError("No documents provided", operation="add_documents")
+            raise RAGServiceError("No documents provided", operation="add_documents") from e
 
         start_time = utc_now() if CORE_AVAILABLE else datetime.now()
 
@@ -309,11 +309,11 @@ class RAGService:
         except ChromaStoreError as e:
             error_msg = f"Failed to add documents to ChromaDB: {e!s}"
             logger.error(error_msg)
-            raise RAGServiceError(error_msg, operation="add_documents")
+            raise RAGServiceError(error_msg, operation="add_documents") from e
         except Exception as e:
             error_msg = f"Failed to add documents: {e!s}"
             logger.error(error_msg)
-            raise RAGServiceError(error_msg, operation="add_documents")
+            raise RAGServiceError(error_msg, operation="add_documents") from e
 
     async def search_and_build_context(self, request: RAGSearchRequest) -> RAGResponse:
         """Search for relevant documents and build context"""
@@ -430,11 +430,11 @@ class RAGService:
         except (RetrievalError, ContextBuildError) as e:
             error_msg = f"RAG operation failed: {e!s}"
             logger.error(error_msg)
-            raise RAGServiceError(error_msg, operation="search_and_build")
+            raise RAGServiceError(error_msg, operation="search_and_build") from e
         except Exception as e:
             error_msg = f"Unexpected error in RAG operation: {e!s}"
             logger.error(error_msg)
-            raise RAGServiceError(error_msg, operation="search_and_build")
+            raise RAGServiceError(error_msg, operation="search_and_build") from e
 
     def _build_project_filter(
         self, project_id: Optional[str], document_type: Optional[str]
@@ -499,7 +499,7 @@ class RAGService:
         except ChromaStoreError as e:
             error_msg = f"Failed to delete documents: {e!s}"
             logger.error(error_msg)
-            raise RAGServiceError(error_msg, operation="delete_documents")
+            raise RAGServiceError(error_msg, operation="delete_documents") from e
 
     async def update_documents(
         self,
@@ -543,7 +543,7 @@ class RAGService:
         except ChromaStoreError as e:
             error_msg = f"Failed to update documents: {e!s}"
             logger.error(error_msg)
-            raise RAGServiceError(error_msg, operation="update_documents")
+            raise RAGServiceError(error_msg, operation="update_documents") from e
 
     async def get_collection_stats(self) -> dict[str, Any]:
         """Get RAG system statistics"""
@@ -580,7 +580,7 @@ class RAGService:
         except Exception as e:
             error_msg = f"Failed to get collection stats: {e!s}"
             logger.error(error_msg)
-            raise RAGServiceError(error_msg, operation="get_stats")
+            raise RAGServiceError(error_msg, operation="get_stats") from e
 
     async def reset_collection(self) -> dict[str, Any]:
         """Reset the entire RAG collection"""
@@ -616,7 +616,7 @@ class RAGService:
         except ChromaStoreError as e:
             error_msg = f"Failed to reset collection: {e!s}"
             logger.error(error_msg)
-            raise RAGServiceError(error_msg, operation="reset_collection")
+            raise RAGServiceError(error_msg, operation="reset_collection") from e
 
     async def health_check(self) -> dict[str, Any]:
         """Perform comprehensive health check on RAG system"""

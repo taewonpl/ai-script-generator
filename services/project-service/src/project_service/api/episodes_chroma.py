@@ -101,12 +101,12 @@ async def create_episode(
         )
 
     except EpisodeChromaError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"에피소드 생성 중 오류가 발생했습니다: {e!s}",
-        )
+        ) from None
 
 
 @router.get("/", response_model=SuccessResponse)
@@ -125,12 +125,12 @@ async def get_episodes(project_id: str) -> SuccessResponse:
         )
 
     except EpisodeChromaError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"에피소드 목록 조회 중 오류가 발생했습니다: {e!s}",
-        )
+        ) from None
 
 
 @router.get("/{episode_id}", response_model=SuccessResponse)
@@ -144,14 +144,14 @@ async def get_episode(project_id: str, episode_id: str) -> SuccessResponse:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"에피소드 {episode_id}를 찾을 수 없습니다.",
-            )
+            ) from None
 
         # Verify episode belongs to the specified project
         if episode["projectId"] != project_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"프로젝트 {project_id}에서 에피소드 {episode_id}를 찾을 수 없습니다.",
-            )
+            ) from None
 
         return SuccessResponse(
             success=True, message="에피소드를 성공적으로 조회했습니다.", data=episode
@@ -160,12 +160,12 @@ async def get_episode(project_id: str, episode_id: str) -> SuccessResponse:
     except HTTPException:
         raise
     except EpisodeChromaError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"에피소드 조회 중 오류가 발생했습니다: {e!s}",
-        )
+        ) from None
 
 
 @router.put("/{episode_id}/script", response_model=SuccessResponse)
@@ -182,13 +182,13 @@ async def update_episode_script(
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"에피소드 {episode_id}를 찾을 수 없습니다.",
-            )
+            ) from None
 
         if episode["projectId"] != project_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"프로젝트 {project_id}에서 에피소드 {episode_id}를 찾을 수 없습니다.",
-            )
+            ) from None
 
         # Update script
         script_data = {
@@ -212,17 +212,17 @@ async def update_episode_script(
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="스크립트 업데이트에 실패했습니다.",
-            )
+            ) from None
 
     except HTTPException:
         raise
     except EpisodeChromaError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"스크립트 업데이트 중 오류가 발생했습니다: {e!s}",
-        )
+        ) from None
 
 
 @router.delete("/{episode_id}", response_model=SuccessResponse)
@@ -237,13 +237,13 @@ async def delete_episode(project_id: str, episode_id: str) -> SuccessResponse:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"에피소드 {episode_id}를 찾을 수 없습니다.",
-            )
+            ) from None
 
         if episode["projectId"] != project_id:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"프로젝트 {project_id}에서 에피소드 {episode_id}를 찾을 수 없습니다.",
-            )
+            ) from None
 
         success = service.delete_episode(episode_id)
 
@@ -257,17 +257,17 @@ async def delete_episode(project_id: str, episode_id: str) -> SuccessResponse:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="에피소드 삭제에 실패했습니다.",
-            )
+            ) from None
 
     except HTTPException:
         raise
     except EpisodeChromaError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"에피소드 삭제 중 오류가 발생했습니다: {e!s}",
-        )
+        ) from None
 
 
 @router.get("/_next-number", response_model=SuccessResponse)
@@ -284,12 +284,12 @@ async def get_next_episode_number(project_id: str) -> SuccessResponse:
         )
 
     except EpisodeChromaError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"다음 에피소드 번호 조회 중 오류가 발생했습니다: {e!s}",
-        )
+        ) from None
 
 
 @router.post("/_register-project", response_model=SuccessResponse)
@@ -309,15 +309,15 @@ async def register_project(project_id: str, project_name: str) -> SuccessRespons
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="프로젝트 등록에 실패했습니다.",
-            )
+            ) from None
 
     except EpisodeChromaError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"프로젝트 등록 중 오류가 발생했습니다: {e!s}",
-        )
+        ) from None
 
 
 # Health and Stats Endpoints

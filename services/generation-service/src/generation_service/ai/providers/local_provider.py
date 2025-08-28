@@ -136,23 +136,23 @@ class LocalProvider(BaseProvider):
                 model_info=self.get_model_info(),
             )
 
-        except httpx.TimeoutException:
+        except httpx.TimeoutException as e:
             logger.error("Local model request timed out")
-            raise ProviderConnectionError("Request timed out", self.name)
+            raise ProviderConnectionError("Request timed out", self.name) from e
 
-        except httpx.ConnectError:
+        except httpx.ConnectError as e:
             logger.error("Failed to connect to local model")
-            raise ProviderConnectionError("Connection failed", self.name)
+            raise ProviderConnectionError("Connection failed", self.name) from e
 
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 429:
-                raise ProviderRateLimitError("Local model is busy", self.name)
+                raise ProviderRateLimitError("Local model is busy", self.name) from e
             else:
-                raise ProviderError(f"HTTP error: {e.response.status_code}", self.name)
+                raise ProviderError(f"HTTP error: {e.response.status_code}", self.name) from e
 
         except Exception as e:
             logger.error(f"Unexpected error in local provider: {e}")
-            raise ProviderError(f"Unexpected error: {e}", self.name)
+            raise ProviderError(f"Unexpected error: {e}", self.name) from e
 
     async def generate_stream(
         self, request: GenerationRequest
@@ -208,17 +208,17 @@ class LocalProvider(BaseProvider):
                         except json.JSONDecodeError:
                             continue
 
-        except httpx.TimeoutException:
+        except httpx.TimeoutException as e:
             logger.error("Local model streaming timed out")
-            raise ProviderConnectionError("Streaming timed out", self.name)
+            raise ProviderConnectionError("Streaming timed out", self.name) from e
 
-        except httpx.ConnectError:
+        except httpx.ConnectError as e:
             logger.error("Failed to connect to local model for streaming")
-            raise ProviderConnectionError("Streaming connection failed", self.name)
+            raise ProviderConnectionError("Streaming connection failed", self.name) from e
 
         except Exception as e:
             logger.error(f"Unexpected error in local streaming: {e}")
-            raise ProviderError(f"Streaming error: {e}", self.name)
+            raise ProviderError(f"Streaming error: {e}", self.name) from e
 
     async def validate_connection(self) -> bool:
         """Validate connection to local model"""

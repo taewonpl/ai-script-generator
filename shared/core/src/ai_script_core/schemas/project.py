@@ -4,6 +4,8 @@ Project Schemas for AI Script Generator v3.0
 프로젝트 관련 서비스 간 통신용 DTO를 정의합니다.
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Any
 

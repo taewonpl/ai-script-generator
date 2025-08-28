@@ -215,7 +215,7 @@ class EpisodeService:
             except Exception:
                 pass  # 알림 실패는 에피소드 생성에 영향 주지 않음
 
-            raise ValidationError(message=f"Failed to create episode: {e!s}")
+            raise ValidationError(message=f"Failed to create episode: {e!s}") from e
 
     def get_episode(self, episode_id: str) -> dict[str, Any]:
         """에피소드 조회"""

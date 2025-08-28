@@ -10,6 +10,9 @@ from fastapi import status as http_status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from ..database import get_db
+from ..services.episode_service import EpisodeService, NotFoundError, ValidationError
+
 
 class EpisodeDTO(BaseModel):
     id: str
@@ -41,10 +44,6 @@ class EpisodeUpdateDTO(BaseModel):
     duration: int | None = None
     notes: str | None = None
 
-
-from ..database import get_db
-from ..services.episode_service import EpisodeService, NotFoundError, ValidationError
-
 router = APIRouter(prefix="/projects/{project_id}/episodes", tags=["Episodes"])
 
 
@@ -67,7 +66,7 @@ async def get_episodes(
     except Exception as e:
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+        ) from None
 
 
 @router.post(
@@ -94,15 +93,15 @@ async def create_episode(
     except NotFoundError as e:
         raise HTTPException(
             status_code=http_status.HTTP_404_NOT_FOUND, detail=e.message
-        )
+        ) from e
     except ValidationError as e:
         raise HTTPException(
             status_code=http_status.HTTP_400_BAD_REQUEST, detail=e.message
-        )
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+        ) from None
 
 
 @router.get("/{episode_id}", response_model=SuccessResponseDTO)
@@ -120,11 +119,11 @@ async def get_episode(
     except NotFoundError as e:
         raise HTTPException(
             status_code=http_status.HTTP_404_NOT_FOUND, detail=e.message
-        )
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+        ) from None
 
 
 @router.put("/{episode_id}", response_model=SuccessResponseDTO)
@@ -151,15 +150,15 @@ async def update_episode(
     except NotFoundError as e:
         raise HTTPException(
             status_code=http_status.HTTP_404_NOT_FOUND, detail=e.message
-        )
+        ) from e
     except ValidationError as e:
         raise HTTPException(
             status_code=http_status.HTTP_400_BAD_REQUEST, detail=e.message
-        )
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+        ) from None
 
 
 @router.delete("/{episode_id}", response_model=SuccessResponseDTO)
@@ -181,15 +180,15 @@ async def delete_episode(
             raise HTTPException(
                 status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="에피소드 삭제에 실패했습니다.",
-            )
+            ) from None
     except NotFoundError as e:
         raise HTTPException(
             status_code=http_status.HTTP_404_NOT_FOUND, detail=e.message
-        )
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+        ) from None
 
 
 @router.patch("/{episode_id}/publish", response_model=SuccessResponseDTO)
@@ -207,11 +206,11 @@ async def publish_episode(
     except NotFoundError as e:
         raise HTTPException(
             status_code=http_status.HTTP_404_NOT_FOUND, detail=e.message
-        )
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+        ) from None
 
 
 @router.patch("/{episode_id}/unpublish", response_model=SuccessResponseDTO)
@@ -231,8 +230,8 @@ async def unpublish_episode(
     except NotFoundError as e:
         raise HTTPException(
             status_code=http_status.HTTP_404_NOT_FOUND, detail=e.message
-        )
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=http_status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+        ) from None

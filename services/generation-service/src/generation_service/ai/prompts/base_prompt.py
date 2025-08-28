@@ -189,7 +189,7 @@ class BasePromptTemplate(ABC):
         except Exception as e:
             error_msg = f"Failed to generate {self.prompt_type.value} prompt: {e!s}"
             self.logger.error(error_msg)
-            raise ValueError(error_msg)
+            raise ValueError(error_msg) from e
 
     def _format_rag_context(self, rag_context: str, max_length: int = 4000) -> str:
         """Format RAG context for inclusion in prompts"""

@@ -182,7 +182,6 @@ class ExternalInternetSSETest:
                 sse_url = f"{self.base_url}/api/v1/generations/{job_id}/events"
 
                 connection_start = time.time()
-                dns_start = connection_start
 
                 try:
                     # Measure detailed connection phases

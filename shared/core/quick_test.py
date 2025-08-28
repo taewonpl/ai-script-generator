@@ -48,7 +48,7 @@ def run_test(test_name: str, test_function: Callable[[], Any]) -> tuple[bool, An
 def test_python_version() -> str:
     """Python 버전 테스트"""
     if sys.version_info < (3, 9):
-        raise ValueError(f"Python 3.9+ required, got {sys.version_info}")
+        raise ValueError(f"Python 3.9+ required, got {sys.version_info}") from e
     return f"Python {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
 
 

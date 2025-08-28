@@ -4,6 +4,8 @@ Base Schemas for AI Script Generator v3.0
 서비스 간 통신용 공통 기본 스키마를 정의합니다.
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Generic, TypeVar
 
@@ -47,14 +49,14 @@ class BaseResponseSchema(BaseSchema, Generic[T]):
     @classmethod
     def success_response(
         cls, data: T | None = None, message: str = "Success"
-    ) -> "BaseResponseSchema[T]":
+    ) -> BaseResponseSchema[T]:
         """성공 응답 생성"""
         return cls(success=True, message=message, data=data)
 
     @classmethod
     def error_response(
         cls, message: str = "Error occurred", data: T | None = None
-    ) -> "BaseResponseSchema[T]":
+    ) -> BaseResponseSchema[T]:
         """오류 응답 생성"""
         return cls(success=False, message=message, data=data)
 
@@ -70,7 +72,7 @@ class PaginationSchema(BaseSchema):
     has_prev: bool = Field(..., description="이전 페이지 존재 여부")
 
     @classmethod
-    def calculate(cls, page: int, size: int, total: int) -> "PaginationSchema":
+    def calculate(cls, page: int, size: int, total: int) -> PaginationSchema:
         """페이지네이션 정보 계산"""
         total_pages = (total + size - 1) // size if total > 0 else 0
         return cls(
@@ -92,7 +94,7 @@ class PaginatedResponse(BaseSchema, Generic[T]):
     @classmethod
     def create(
         cls, items: list[T], page: int, size: int, total: int
-    ) -> "PaginatedResponse[T]":
+    ) -> PaginatedResponse[T]:
         """페이지네이션된 응답 생성"""
         pagination = PaginationSchema.calculate(page, size, total)
         return cls(items=items, pagination=pagination)

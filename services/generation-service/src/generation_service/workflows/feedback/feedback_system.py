@@ -70,6 +70,13 @@ class FeedbackType(str, Enum):
     QUALITY_CORRECTION = "quality_correction"
     AGENT_FEEDBACK = "agent_feedback"
 
+    # Extended behavior event types
+    ACCEPT_PARTIAL = "accept_partial"
+    REJECT_PARTIAL = "reject_partial"
+    REGEN_AGAIN = "regen_again"
+    REGEN_DIFFERENT = "regen_different"
+    EDIT_MANUAL = "edit_manual"
+
 
 class FeedbackSentiment(str, Enum):
     """Sentiment of feedback"""
@@ -78,6 +85,18 @@ class FeedbackSentiment(str, Enum):
     NEGATIVE = "negative"
     NEUTRAL = "neutral"
     MIXED = "mixed"
+
+
+@dataclass
+class BehaviorContext:
+    """Behavior context for user actions"""
+
+    selection_length: Optional[int] = None  # Length of selected text
+    attempt_count: Optional[int] = None  # Number of attempts/retries
+    time_spent: Optional[float] = None  # Time spent in seconds
+    previous_action: Optional[str] = None  # Previous user action
+    ui_element: Optional[str] = None  # UI element that triggered the event
+    viewport_position: Optional[dict[str, Any]] = None  # Scroll position, visible area
 
 
 @dataclass
@@ -94,6 +113,7 @@ class UserFeedback:
     timestamp: datetime
     session_id: Optional[str] = None
     context: Optional[dict[str, Any]] = None
+    behavior_context: Optional[BehaviorContext] = None  # Extended behavior data
 
 
 @dataclass
@@ -230,6 +250,53 @@ class FeedbackLearningEngine:
         )
 
         await self.record_feedback(feedback)
+
+    async def process_behavior_event(
+        self,
+        generation_id: str,
+        event_type: FeedbackType,
+        user_id: Optional[str] = None,
+        behavior_context: Optional[BehaviorContext] = None,
+        content_data: Optional[dict[str, Any]] = None,
+    ) -> None:
+        """Process specific behavior events from UI interactions"""
+
+        # Determine sentiment based on event type
+        sentiment_map = {
+            FeedbackType.ACCEPT_PARTIAL: FeedbackSentiment.POSITIVE,
+            FeedbackType.REJECT_PARTIAL: FeedbackSentiment.NEGATIVE,
+            FeedbackType.REGEN_AGAIN: FeedbackSentiment.NEGATIVE,
+            FeedbackType.REGEN_DIFFERENT: FeedbackSentiment.NEUTRAL,
+            FeedbackType.EDIT_MANUAL: FeedbackSentiment.NEUTRAL,
+        }
+
+        sentiment = sentiment_map.get(event_type, FeedbackSentiment.NEUTRAL)
+
+        feedback = UserFeedback(
+            feedback_id=f"behavior_{event_type.value}_{generation_id}_{(utc_now() if CORE_AVAILABLE else datetime.now()).timestamp()}",
+            user_id=user_id,
+            generation_id=generation_id,
+            feedback_type=event_type,
+            sentiment=sentiment,
+            content=content_data or {},
+            quality_scores=None,
+            timestamp=utc_now() if CORE_AVAILABLE else datetime.now(),
+            behavior_context=behavior_context,
+        )
+
+        await self.record_feedback(feedback)
+
+        if CORE_AVAILABLE:
+            logger.info(
+                "Behavior event recorded",
+                extra={
+                    "feedback_id": feedback.feedback_id,
+                    "event_type": event_type.value,
+                    "user_id": user_id,
+                    "generation_id": generation_id,
+                    "behavior_context": behavior_context.__dict__ if behavior_context else None,
+                },
+            )
 
     async def get_user_preferences(
         self, user_id: str

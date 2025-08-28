@@ -32,7 +32,9 @@ import {
 import { useSSE } from '@/shared/api/streaming/useSSE'
 import { useJobControl } from '@/shared/api/hooks'
 import { useToastHelpers } from '@/shared/ui/components/toast'
-import { env } from '@/shared/config/env'
+import { buildSSEUrl } from '@/shared/services/generation/sse'
+import { isProgressEvent, isPreviewEvent, isPatchPreviewEvent, isPatchApplyEvent, isCompletedEvent, isFailedEvent, isHeartbeatEvent } from '@/shared/api/streaming/types'
+import { assertNever } from '@/shared/lib/assertNever'
 import type { GenerationJob, GenerationConfig } from '../types'
 import type { GenerationResult } from '@/shared/api/streaming/types'
 
@@ -280,7 +282,7 @@ export function RealtimeProgress({
   const { cancelJob, isCanceling } = useJobControl()
 
   // SSE connection for real-time updates
-  const sseUrl = `${env.VITE_GENERATION_SERVICE_URL}/api/v1/jobs/${job.id}/stream`
+  const sseUrl = buildSSEUrl(job.id)
 
   const {
     connectionState,
@@ -302,29 +304,51 @@ export function RealtimeProgress({
     return () => disconnect()
   }, [job.id, job.status, connect, disconnect])
 
-  // Handle SSE events
+  // Handle SSE events with type-safe discriminated union
   useEffect(() => {
     if (!latestEvent || latestEvent.jobId !== job.id) return
 
-    switch (latestEvent.type) {
-      case 'progress':
-        // Progress updates are handled by the parent component
-        break
-
-      case 'completed':
-        showSuccess('스크립트 생성이 완료되었습니다!')
-        // @ts-expect-error - Temporary workaround for GenerationResult type mismatch
-        onComplete(latestEvent.result)
-        disconnect()
-        break
-
-      case 'failed':
-        showError('스크립트 생성 중 오류가 발생했습니다.')
-        onError(latestEvent.error.message)
-        disconnect()
-        break
-
-      // Note: 'canceled' event type removed as it's not in Python backend
+    if (isProgressEvent(latestEvent)) {
+      // Progress updates are handled by the parent component
+      // TypeScript now knows latestEvent has currentStep, pct, value, etc.
+      console.log(`Progress: ${latestEvent.currentStep} - ${latestEvent.pct || latestEvent.value || 0}%`)
+    } else if (isCompletedEvent(latestEvent)) {
+      showSuccess('스크립트 생성이 완료되었습니다!')
+      // TypeScript now knows latestEvent.result exists and has proper type
+      // Transform the completed event result to match GenerationResult interface
+      const generationResult: GenerationResult = {
+        jobId: latestEvent.jobId,
+        projectId: job.config.projectId, // Get from job config
+        episodeId: latestEvent.result.episodeId || '',
+        content: latestEvent.result.markdown,
+        script: latestEvent.result.markdown,
+        status: 'completed',
+        duration: latestEvent.duration,
+      }
+      onComplete(generationResult)
+      disconnect()
+    } else if (isFailedEvent(latestEvent)) {
+      showError('스크립트 생성 중 오류가 발생했습니다.')
+      // TypeScript now knows latestEvent.error exists and has proper type
+      onError(latestEvent.error.message)
+      disconnect()
+    } else if (isPreviewEvent(latestEvent)) {
+      // Preview events - could be used to show partial content
+      console.debug('Preview received:', latestEvent.markdown.substring(0, 100))
+    } else if (isPatchPreviewEvent(latestEvent)) {
+      // Patch preview events - could be used for incremental updates
+      console.debug('Patch preview:', latestEvent.range, latestEvent.text.substring(0, 50))
+    } else if (isPatchApplyEvent(latestEvent)) {
+      // Patch apply events - could be used to apply incremental changes
+      console.debug('Patch applied:', latestEvent.range)
+    } else if (isHeartbeatEvent(latestEvent)) {
+      // Heartbeat events - just keep connection alive
+      console.debug('Heartbeat received:', latestEvent.timestamp)
+    } else {
+      // Production safety: Exhaustiveness check with assertNever
+      // TypeScript will error at compile-time if we miss a case
+      // Runtime error in development if new cases are added but not handled
+      assertNever(latestEvent)
     }
   }, [
     latestEvent,

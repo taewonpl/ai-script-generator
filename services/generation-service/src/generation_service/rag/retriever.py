@@ -241,17 +241,17 @@ class DocumentRetriever:
         except ChromaStoreError as e:
             error_msg = f"ChromaDB search failed: {e!s}"
             logger.error(error_msg)
-            raise RetrievalError(error_msg)
+            raise RetrievalError(error_msg) from e
         except Exception as e:
             error_msg = f"Search failed: {e!s}"
             logger.error(error_msg)
-            raise RetrievalError(error_msg)
+            raise RetrievalError(error_msg) from e
 
     def _validate_search_request(self, request: SearchRequest) -> None:
         """Validate search request parameters"""
 
         if not request.query or not request.query.strip():
-            raise RetrievalError("Search query cannot be empty", field="query")
+            raise RetrievalError("Search query cannot be empty", field="query") from e
 
         if request.max_results <= 0:
             raise RetrievalError("max_results must be positive", field="max_results")

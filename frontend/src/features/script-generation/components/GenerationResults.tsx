@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import type { ReactNode } from 'react'
 import {
   Box,
@@ -37,6 +37,7 @@ import {
 } from '@mui/icons-material'
 
 import { useToastHelpers } from '@/shared/ui/components/toast'
+import { useBehaviorTracking } from '@/shared/hooks/useBehaviorTracking'
 import type { GenerationResult, GenerationJob } from '../types'
 import { SaveProgressIndicator, useSaveProgress } from './SaveProgressIndicator'
 import { SaveAndRetryProgress } from './RetryProgressDisplay'
@@ -49,6 +50,8 @@ interface GenerationResultsProps {
   onEdit: () => void
   editable?: boolean
   showMetrics?: boolean
+  projectId: string
+  episodeId: string
 }
 
 interface TabPanelProps {
@@ -175,18 +178,28 @@ function ScriptEditor({
   onContentChange,
   onTitleChange,
   editable,
+  onEditDetected,
 }: {
   content: string
   title: string
   onContentChange: (content: string) => void
   onTitleChange: (title: string) => void
   editable: boolean
+  onEditDetected?: (contentLength: number) => void
 }) {
   const [isFullscreen, setIsFullscreen] = useState(false)
 
   const wordCount = content.split(/\s+/).filter(word => word.length > 0).length
   const characterCount = content.length
   const lineCount = content.split('\n').length
+  
+  // Handle content change with edit detection
+  const handleContentChange = (newContent: string) => {
+    onContentChange(newContent)
+    if (onEditDetected) {
+      onEditDetected(newContent.length)
+    }
+  }
 
   return (
     <Stack spacing={2}>
@@ -242,7 +255,7 @@ function ScriptEditor({
         multiline
         rows={20}
         value={content}
-        onChange={e => onContentChange(e.target.value)}
+        onChange={e => handleContentChange(e.target.value)}
         placeholder="생성된 스크립트가 여기에 표시됩니다..."
         variant="outlined"
         disabled={!editable}
@@ -277,7 +290,7 @@ function ScriptEditor({
             fullWidth
             multiline
             value={content}
-            onChange={e => onContentChange(e.target.value)}
+            onChange={e => handleContentChange(e.target.value)}
             variant="filled"
             disabled={!editable}
             sx={{
@@ -315,6 +328,8 @@ export function GenerationResults({
   onEdit: _onEdit,
   editable = true,
   showMetrics = true,
+  projectId,
+  episodeId,
 }: GenerationResultsProps) {
   const [currentTab, setCurrentTab] = useState(0)
   const [editedContent, setEditedContent] = useState(result.content)
@@ -324,9 +339,45 @@ export function GenerationResults({
 
   const { showSuccess, showError } = useToastHelpers()
   const { saveState, handleManualSave } = useSaveProgress(job.id)
+  
+  // Behavior tracking with privacy by construction
+  const {
+    trackEditManual,
+    trackRegeneration,
+    recordAiOutputCompletion,
+  } = useBehaviorTracking({
+    projectId,
+    episodeId,
+    generationId: job.id,
+  })
 
   const hasChanges =
     editedContent !== result.content || editedTitle !== result.title
+
+  // Record AI output completion on mount
+  useEffect(() => {
+    if (result.content) {
+      recordAiOutputCompletion(result.content.length)
+    }
+  }, [result.content, recordAiOutputCompletion])
+
+  // Handle regeneration with behavior tracking
+  const handleRegenerate = useCallback(() => {
+    // Track regeneration event with context
+    trackRegeneration(
+      'default', // Default strategy for now
+      [], // Default agent modes
+      editedContent.length,
+      undefined // No selection range in this context
+    )
+    
+    onRegenerate()
+  }, [trackRegeneration, editedContent.length, onRegenerate])
+
+  // Handle edit detection
+  const handleEditDetected = useCallback((contentLength: number) => {
+    trackEditManual(contentLength, { uiElement: 'script_editor' })
+  }, [trackEditManual])
 
   // Handle save
   const handleSave = async () => {
@@ -404,7 +455,7 @@ export function GenerationResults({
               <Button
                 variant="outlined"
                 startIcon={<RegenerateIcon />}
-                onClick={onRegenerate}
+                onClick={handleRegenerate}
                 size="small"
               >
                 다시 생성
@@ -479,6 +530,7 @@ export function GenerationResults({
             onContentChange={setEditedContent}
             onTitleChange={setEditedTitle}
             editable={editable}
+            onEditDetected={handleEditDetected}
           />
         </TabPanel>
 

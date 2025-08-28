@@ -6,7 +6,7 @@ Provides essential DTOs, exception handling, configuration management, logging, 
 """
 
 import sys
-from typing import Any, Dict
+from typing import Any
 
 # Version information
 __version__ = "0.1.0"

@@ -231,6 +231,7 @@ venv_*/
 # Test reports
 test_report.md
 e2e_test_report_*.json
+*_results_*.json
 
 # Cache directories
 cache/
@@ -239,6 +240,8 @@ cache/
 # Test data directories
 test_data/
 **/test_data/
+test_backups/
+test_recovery/
 
 # Temporary files
 tmp/
@@ -313,3 +316,140 @@ aws-credentials.json
 .vscode/extensions.json
 Thumbs.db:encryptable
 .Trashes
+
+# ===============================================
+# MODERN DEV TOOLS & CI/CD
+# ===============================================
+
+# GitHub Codespaces
+.devcontainer/
+.vscode-server/
+
+# JetBrains
+.fleet/
+.idea-properties
+
+# Additional editor files
+*.sublime-project
+*.sublime-workspace
+
+# macOS additional
+.com.apple.timemachine.donotpresent
+.com.apple.timemachine.supported
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.apdisk
+
+# Windows additional
+*.lnk
+.Trash-*
+Icon?
+Network Trash Folder
+
+# Linux additional
+.nfs*
+
+# ===============================================
+# DURABLE WORKER SYSTEM SPECIFIC
+# ===============================================
+
+# RQ (Redis Queue) files
+rq_dashboard_config.py
+worker_*.log
+*.rdb
+
+# Prometheus metrics
+prometheus_multiproc_dir/
+metrics/
+
+# Grafana data
+grafana_data/
+
+# Worker process files
+worker_pids/
+*.pid
+*.lock
+
+# Monitoring output
+monitoring_output/
+
+# DLQ analysis reports
+dlq_reports/
+error_analysis/
+
+# Secrets detection
+.secrets.baseline.backup
+secrets_scan_*.json
+
+# ===============================================
+# AI/ML SPECIFIC (ENHANCED)
+# ===============================================
+
+# Model checkpoints
+checkpoints/
+*.ckpt
+*.safetensors
+*.pt
+*.pth
+
+# Tokenizer files
+tokenizer.json
+vocab.txt
+merges.txt
+
+# Embeddings cache
+embedding_cache/
+vector_cache/
+.cache/embeddings/
+
+# Training artifacts
+runs/
+tensorboard_logs/
+wandb/
+mlruns/
+
+# ===============================================
+# TESTING & QUALITY ASSURANCE
+# ===============================================
+
+# Test artifacts
+test-results/
+*.junit.xml
+coverage-reports/
+allure-results/
+allure-report/
+
+# Performance testing
+performance_results/
+load_test_reports/
+
+# Security testing
+security_scan_results/
+vulnerability_reports/
+
+# ===============================================
+# DEPLOYMENT & INFRASTRUCTURE
+# ===============================================
+
+# Kubernetes
+*.kubeconfig
+k8s-secrets/
+helm-values-*.yaml
+
+# Terraform
+*.tfstate
+*.tfstate.backup
+*.tfplan
+*.tfvars
+.terraform/
+
+# Docker additional
+.dockerignore.backup
+docker-compose.*.yml
+!docker-compose.example.yml
+
+# Cloud provider configs
+.aws/
+.gcp/
+.azure/

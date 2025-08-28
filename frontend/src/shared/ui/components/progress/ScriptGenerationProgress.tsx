@@ -1,6 +1,6 @@
 import { useMemo, useCallback, useState } from 'react'
 import { JobProgressIndicator } from './JobProgressIndicator'
-import { env } from '@/shared/config/env'
+import { buildSSEUrl } from '@/shared/services/generation/sse'
 
 import type { CompletedEventData } from '@/shared/types/generation'
 
@@ -34,8 +34,7 @@ export function ScriptGenerationProgress({
 }: ScriptGenerationProgressProps) {
   // Build SSE URL for generation service
   const sseUrl = useMemo(() => {
-    const baseUrl = env.VITE_GENERATION_SERVICE_URL
-    return `${baseUrl}/api/v1/jobs/${jobId}/stream`
+    return buildSSEUrl(jobId)
   }, [jobId])
 
   // Generate title based on context

@@ -4,6 +4,8 @@ Service-specific Exception Classes for AI Script Generator v3.0
 각 마이크로서비스별 특화된 예외 클래스들을 정의합니다.
 """
 
+from __future__ import annotations
+
 from typing import Any
 
 from .base import BaseServiceException, ErrorCategory, ErrorSeverity, NotFoundError

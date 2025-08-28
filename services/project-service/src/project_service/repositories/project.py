@@ -158,9 +158,9 @@ class ProjectRepository(BaseRepository[Project]):
         try:
             val = float(progress_percentage)
         except Exception:
-            raise ValueError("Progress percentage must be a number between 0 and 100")
+            raise ValueError("Progress percentage must be a number between 0 and 100") from e
         if not (0.0 <= val <= 100.0):
-            raise ValueError("Progress percentage must be between 0 and 100")
+            raise ValueError("Progress percentage must be between 0 and 100") from e
         progress_int = int(round(val))
 
         project = self.get_by_id(project_id)

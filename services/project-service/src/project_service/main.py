@@ -6,7 +6,9 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from .api.analytics import router as analytics_router
 from .api.episodes_chroma import router as episodes_router
+from .api.feedback import router as feedback_router
 from .api.health import router as health_router
 from .api.metrics import router as metrics_router
 from .api.projects import router as projects_router
@@ -39,6 +41,8 @@ setup_security_middleware(
 
 app.include_router(projects_router, prefix="/api/v1")
 app.include_router(episodes_router, prefix="/api/v1")
+app.include_router(feedback_router, prefix="/api/v1")
+app.include_router(analytics_router, prefix="/api/v1")
 app.include_router(health_router, prefix="/api/v1")
 app.include_router(metrics_router, prefix="/api/v1")
 

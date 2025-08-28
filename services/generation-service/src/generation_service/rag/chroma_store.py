@@ -180,7 +180,7 @@ class ChromaStore:
         except Exception as e:
             error_msg = f"Failed to initialize ChromaDB client: {e!s}"
             logger.error(error_msg)
-            raise ChromaStoreError(error_msg, operation="client_initialization")
+            raise ChromaStoreError(error_msg, operation="client_initialization") from e
 
     def add_documents(
         self,
@@ -250,7 +250,7 @@ class ChromaStore:
         except Exception as e:
             error_msg = f"Failed to add documents: {e!s}"
             logger.error(error_msg)
-            raise ChromaStoreError(error_msg, operation="add_documents")
+            raise ChromaStoreError(error_msg, operation="add_documents") from e
 
     def search(
         self,
@@ -309,7 +309,7 @@ class ChromaStore:
         except Exception as e:
             error_msg = f"Search failed: {e!s}"
             logger.error(error_msg)
-            raise ChromaStoreError(error_msg, operation="search")
+            raise ChromaStoreError(error_msg, operation="search") from e
 
     def get_documents(
         self,
@@ -344,7 +344,7 @@ class ChromaStore:
         except Exception as e:
             error_msg = f"Failed to get documents: {e!s}"
             logger.error(error_msg)
-            raise ChromaStoreError(error_msg, operation="get_documents")
+            raise ChromaStoreError(error_msg, operation="get_documents") from e
 
     def update_documents(
         self,
@@ -386,7 +386,7 @@ class ChromaStore:
         except Exception as e:
             error_msg = f"Failed to update documents: {e!s}"
             logger.error(error_msg)
-            raise ChromaStoreError(error_msg, operation="update_documents")
+            raise ChromaStoreError(error_msg, operation="update_documents") from e
 
     def delete_documents(self, ids: list[str]) -> None:
         """Delete documents by IDs"""
@@ -408,7 +408,7 @@ class ChromaStore:
         except Exception as e:
             error_msg = f"Failed to delete documents: {e!s}"
             logger.error(error_msg)
-            raise ChromaStoreError(error_msg, operation="delete_documents")
+            raise ChromaStoreError(error_msg, operation="delete_documents") from e
 
     def get_collection_stats(self) -> dict[str, Any]:
         """Get collection statistics"""
@@ -443,7 +443,7 @@ class ChromaStore:
         except Exception as e:
             error_msg = f"Failed to get collection stats: {e!s}"
             logger.error(error_msg)
-            raise ChromaStoreError(error_msg, operation="get_stats")
+            raise ChromaStoreError(error_msg, operation="get_stats") from e
 
     def reset_collection(self) -> None:
         """Reset the collection (delete all documents)"""
@@ -470,7 +470,7 @@ class ChromaStore:
         except Exception as e:
             error_msg = f"Failed to reset collection: {e!s}"
             logger.error(error_msg)
-            raise ChromaStoreError(error_msg, operation="reset_collection")
+            raise ChromaStoreError(error_msg, operation="reset_collection") from e
 
     def health_check(self) -> dict[str, Any]:
         """Perform health check on ChromaDB"""

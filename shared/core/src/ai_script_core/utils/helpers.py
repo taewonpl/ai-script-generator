@@ -4,6 +4,8 @@ Advanced Helper Utilities for AI Script Generator v3.0
 UUID 생성, 날짜 포맷팅, 텍스트 정제, 서비스 상태 확인 등 공통 헬퍼 함수를 제공합니다.
 """
 
+from __future__ import annotations
+
 import asyncio
 import hashlib
 import json

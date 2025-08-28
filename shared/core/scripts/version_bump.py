@@ -39,7 +39,7 @@ class VersionManager:
         try:
             return int(parts[0]), int(parts[1]), int(parts[2])
         except ValueError:
-            raise ValueError(f"Invalid version format: {version}")
+            raise ValueError(f"Invalid version format: {version}") from e
 
     def bump_version(self, current: str, bump_type: str) -> str:
         """Bump version based on type (major, minor, patch)"""

@@ -2,6 +2,8 @@
 Metrics collection system for monitoring API performance and errors.
 """
 
+from __future__ import annotations
+
 import time
 from collections import defaultdict, deque
 from collections.abc import Callable
@@ -489,7 +491,7 @@ class PerformanceTracker:
         self.start_time: float | None = None
         self.success = True
 
-    def __enter__(self) -> "PerformanceTracker":
+    def __enter__(self) -> PerformanceTracker:
         self.start_time = time.time()
         return self
 

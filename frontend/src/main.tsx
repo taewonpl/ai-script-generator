@@ -27,9 +27,9 @@ const root = createRoot(container)
 
 // Wrap App with error handling providers
 root.render(
-  <ErrorProvider>
-    <ToastProvider>
+  <ToastProvider>
+    <ErrorProvider>
       <App />
-    </ToastProvider>
-  </ErrorProvider>,
+    </ErrorProvider>
+  </ToastProvider>,
 )

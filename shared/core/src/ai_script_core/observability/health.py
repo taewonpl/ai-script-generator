@@ -2,6 +2,8 @@
 Health check system for service monitoring and dependency validation.
 """
 
+from __future__ import annotations
+
 import asyncio
 import time
 from collections.abc import Awaitable, Callable

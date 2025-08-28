@@ -26,6 +26,7 @@ import {
 import { useSSE } from '@/shared/api/streaming/useSSE'
 import { useJobControl } from '@/shared/api/hooks/useJobControl'
 import type { ProgressEventData } from '@/shared/api/streaming/types'
+import { assertNeverDev } from '@/shared/lib/assertNever'
 
 export interface JobProgressIndicatorProps {
   jobId: string
@@ -99,7 +100,9 @@ export function JobProgressIndicator({
     switch (latestEvent.type) {
       case 'progress': {
         const progressData = latestEvent as ProgressEventData
-        setCurrentProgress(progressData.value)
+        // Use pct, value, or percentage fields with fallback
+        const progressValue = progressData.pct ?? progressData.value ?? progressData.percentage ?? 0
+        setCurrentProgress(progressValue)
         setCurrentStage(progressData.currentStep)
         setCurrentMessage('')
         setEstimatedTimeRemaining(progressData.estimatedTime || null)
@@ -123,6 +126,19 @@ export function JobProgressIndicator({
         setJobStatus('canceled')
         onCancel?.()
         break
+        
+      case 'preview':
+      case 'patch_preview':
+      case 'patch_apply':
+      case 'heartbeat':
+        // These event types don't affect job progress, so we ignore them
+        console.debug('Ignoring event type for progress indicator:', latestEvent.type)
+        break
+        
+      default:
+        // Production safety: Exhaustiveness check for SSE events
+        // All discriminated union cases are now handled above
+        assertNeverDev(latestEvent)
     }
   }, [latestEvent, jobId, onComplete, onError, onCancel])
 

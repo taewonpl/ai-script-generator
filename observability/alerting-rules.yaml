@@ -1,0 +1,267 @@
+# Prometheus Alerting Rules
+# AI Script Generator v3 프로덕션 알림 설정
+
+groups:
+  - name: ai-script-generator-critical
+    interval: 30s
+    rules:
+      # DLQ 증가 알림
+      - alert: DLQEntriesIncreasing
+        expr: increase(dlq_entries_total[10m]) > 5
+        for: 2m
+        labels:
+          severity: warning
+          service: rag-worker
+        annotations:
+          summary: "DLQ entries increasing rapidly"
+          description: "Dead Letter Queue has {{ $value }} new entries in the last 10 minutes. Investigate worker failures."
+          runbook: "https://docs.ai-script-generator.com/runbooks/dlq-troubleshooting"
+
+      # 10분 실패율 > 3% 알림
+      - alert: HighRAGFailureRate
+        expr: |
+          (
+            rate(rag_job_failures_total[10m]) / 
+            (rate(rag_job_successes_total[10m]) + rate(rag_job_failures_total[10m]))
+          ) * 100 > 3
+        for: 5m
+        labels:
+          severity: critical
+          service: rag-worker
+        annotations:
+          summary: "High RAG job failure rate"
+          description: "RAG job failure rate is {{ $value }}% over the last 10 minutes, exceeding 3% threshold."
+          runbook: "https://docs.ai-script-generator.com/runbooks/high-failure-rate"
+
+      # 429 급증 알림
+      - alert: RateLimitingSpike
+        expr: increase(http_requests_total{status="429"}[5m]) > 20
+        for: 1m
+        labels:
+          severity: warning
+          service: api-gateway
+        annotations:
+          summary: "Rate limiting spike detected"
+          description: "{{ $value }} HTTP 429 responses in the last 5 minutes. Users are being rate limited."
+          runbook: "https://docs.ai-script-generator.com/runbooks/rate-limiting"
+
+      # Memory token 사용률 > 35% (5분)
+      - alert: HighMemoryTokenUsage
+        expr: memory_token_used_pct > 35
+        for: 5m
+        labels:
+          severity: warning
+          service: memory-system
+        annotations:
+          summary: "High memory token usage"
+          description: "Memory token usage is {{ $value }}% for 5 minutes, exceeding 35% threshold."
+          runbook: "https://docs.ai-script-generator.com/runbooks/memory-management"
+
+  - name: ai-script-generator-performance
+    interval: 60s
+    rules:
+      # RAG 작업 대기열 길이 알림
+      - alert: RAGQueueLengthHigh
+        expr: rag_queue_length > 50
+        for: 5m
+        labels:
+          severity: warning
+          service: rag-worker
+        annotations:
+          summary: "RAG queue length is high"
+          description: "RAG processing queue has {{ $value }} pending jobs for 5 minutes."
+          runbook: "https://docs.ai-script-generator.com/runbooks/queue-scaling"
+
+      # P95 작업 처리 시간 > 60초
+      - alert: SlowRAGProcessing
+        expr: histogram_quantile(0.95, rag_job_duration_ms_bucket) > 60000
+        for: 10m
+        labels:
+          severity: warning
+          service: rag-worker
+        annotations:
+          summary: "RAG processing is slow"
+          description: "95th percentile RAG job duration is {{ $value }}ms, exceeding 60s threshold."
+          runbook: "https://docs.ai-script-generator.com/runbooks/performance-tuning"
+
+      # SSE 연결 끊김 급증
+      - alert: SSEReconnectionSpike
+        expr: increase(sse_reconnect_count[10m]) > 100
+        for: 2m
+        labels:
+          severity: warning
+          service: sse-gateway
+        annotations:
+          summary: "High SSE reconnection rate"
+          description: "{{ $value }} SSE reconnections in the last 10 minutes."
+          runbook: "https://docs.ai-script-generator.com/runbooks/sse-troubleshooting"
+
+  - name: ai-script-generator-system
+    interval: 60s
+    rules:
+      # 시스템 리소스 알림
+      - alert: HighCPUUsage
+        expr: system_cpu_usage_pct > 80
+        for: 10m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High CPU usage"
+          description: "System CPU usage is {{ $value }}% for 10 minutes."
+
+      - alert: HighMemoryUsage
+        expr: system_memory_usage_pct > 85
+        for: 10m
+        labels:
+          severity: critical
+          service: system
+        annotations:
+          summary: "High memory usage"
+          description: "System memory usage is {{ $value }}% for 10 minutes."
+
+      # 임베딩 API 지연
+      - alert: EmbeddingAPILatencyHigh
+        expr: embedding_api_latency_ms > 5000
+        for: 5m
+        labels:
+          severity: warning
+          service: embedding-api
+        annotations:
+          summary: "High embedding API latency"
+          description: "Embedding API latency is {{ $value }}ms, exceeding 5s threshold."
+
+      # 워커 상태 알림
+      - alert: NoActiveWorkers
+        expr: rag_worker_active_jobs == 0 and rag_queue_length > 0
+        for: 5m
+        labels:
+          severity: critical
+          service: rag-worker
+        annotations:
+          summary: "No active RAG workers"
+          description: "No active RAG workers but queue has {{ $labels.rag_queue_length }} pending jobs."
+          runbook: "https://docs.ai-script-generator.com/runbooks/worker-recovery"
+
+  - name: ai-script-generator-business
+    interval: 300s  # 5분마다 체크
+    rules:
+      # UI 오류 급증
+      - alert: UIErrorSpike
+        expr: increase(ui_error_panel_shown[10m]) > 50
+        for: 2m
+        labels:
+          severity: warning
+          service: frontend
+        annotations:
+          summary: "UI error spike detected"
+          description: "{{ $value }} UI error panels shown in the last 10 minutes."
+
+      # 커밋 성공률 저하
+      - alert: LowCommitSuccessRate
+        expr: |
+          (
+            rate(commit_positive_total[30m]) / 
+            (rate(commit_positive_total[30m]) + rate(commit_negative_total[30m]))
+          ) * 100 < 85
+        for: 10m
+        labels:
+          severity: warning
+          service: generation
+        annotations:
+          summary: "Low commit success rate"
+          description: "Commit success rate is {{ $value }}% over the last 30 minutes, below 85% threshold."
+
+---
+# AlertManager 구성
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+data:
+  alertmanager.yml: |
+    global:
+      smtp_smarthost: 'smtp.gmail.com:587'
+      smtp_from: 'alerts@ai-script-generator.com'
+      smtp_auth_username: 'alerts@ai-script-generator.com'
+      smtp_auth_password: '${SMTP_PASSWORD}'
+
+    templates:
+      - '/etc/alertmanager/templates/*.tmpl'
+
+    route:
+      group_by: ['alertname', 'service']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 12h
+      receiver: 'default-receiver'
+      routes:
+        # 크리티컬 알림은 즉시 전송
+        - match:
+            severity: critical
+          receiver: 'critical-alerts'
+          group_wait: 10s
+          repeat_interval: 1h
+
+        # 비즈니스 알림은 슬랙으로
+        - match:
+            service: frontend
+          receiver: 'ui-team-slack'
+
+        # 인프라 알림은 운영팀으로
+        - match:
+            service: system
+          receiver: 'ops-team'
+
+    receivers:
+      - name: 'default-receiver'
+        email_configs:
+          - to: 'devops@ai-script-generator.com'
+            subject: '🚨 {{ .GroupLabels.alertname }} - {{ .GroupLabels.service }}'
+            body: |
+              {{ range .Alerts }}
+              Alert: {{ .Annotations.summary }}
+              Description: {{ .Annotations.description }}
+              Labels: {{ range .Labels.SortedPairs }}{{ .Name }}={{ .Value }} {{ end }}
+              {{ end }}
+
+      - name: 'critical-alerts'
+        email_configs:
+          - to: 'alerts@ai-script-generator.com,cto@ai-script-generator.com'
+            subject: '🔴 CRITICAL: {{ .GroupLabels.alertname }}'
+            body: |
+              CRITICAL ALERT DETECTED
+              
+              {{ range .Alerts }}
+              Service: {{ .Labels.service }}
+              Alert: {{ .Annotations.summary }}
+              Description: {{ .Annotations.description }}
+              Runbook: {{ .Annotations.runbook }}
+              Firing Time: {{ .StartsAt }}
+              {{ end }}
+        webhook_configs:
+          - url: 'https://hooks.slack.com/services/${SLACK_CRITICAL_WEBHOOK}'
+            title: '🔴 CRITICAL: {{ .GroupLabels.alertname }}'
+            text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+
+      - name: 'ui-team-slack'
+        webhook_configs:
+          - url: 'https://hooks.slack.com/services/${SLACK_UI_TEAM_WEBHOOK}'
+            channel: '#ui-alerts'
+            title: '🎨 UI Alert: {{ .GroupLabels.alertname }}'
+            text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+
+      - name: 'ops-team'
+        webhook_configs:
+          - url: 'https://hooks.slack.com/services/${SLACK_OPS_WEBHOOK}'
+            channel: '#infrastructure'
+            title: '⚙️ Infrastructure: {{ .GroupLabels.alertname }}'
+            text: '{{ range .Alerts }}{{ .Annotations.description }}{{ end }}'
+
+    inhibit_rules:
+      # NoActiveWorkers 알림은 HighRAGFailureRate 알림과 함께 발생하면 억제
+      - source_match:
+          alertname: 'NoActiveWorkers'
+        target_match:
+          alertname: 'HighRAGFailureRate'
+        equal: ['service']

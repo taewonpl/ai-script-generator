@@ -1,5 +1,6 @@
 /**
  * SSE (Server-Sent Events) Types and Interfaces
+ * Enhanced with discriminated unions for compile-time type safety
  * Updated to match Python backend sse_models.py
  */
 
@@ -13,9 +14,32 @@ export type SSEConnectionState =
 export type SSEEventType =
   | 'progress'
   | 'preview'
+  | 'patch_preview'
+  | 'patch_apply'
   | 'completed'
   | 'failed'
   | 'heartbeat'
+
+/**
+ * Base SSE event structure
+ */
+type SSEBase = {
+  jobId: string
+  ts?: string // timestamp
+}
+
+/**
+ * Discriminated Union for SSE Events
+ * Provides compile-time type safety and exhaustive pattern matching
+ */
+export type SSEEventData =
+  | ({ type: 'progress'; pct?: number; value?: number; percentage?: number; currentStep: string; estimatedTime?: number; metadata?: Record<string, unknown> } & SSEBase)
+  | ({ type: 'preview'; text?: string; markdown: string; content?: string; isPartial: boolean; wordCount?: number; estimatedTokens?: number } & SSEBase)
+  | ({ type: 'patch_preview'; range: { start: number; end: number }; text: string } & SSEBase)
+  | ({ type: 'patch_apply'; range: { start: number; end: number } } & SSEBase)
+  | ({ type: 'completed'; duration?: number; result: { markdown: string; tokens: number; wordCount?: number; modelUsed?: string; episodeId?: string; savedToEpisode?: boolean } } & SSEBase)
+  | ({ type: 'failed'; error: { code: string; message: string; retryable: boolean } } & SSEBase)
+  | ({ type: 'heartbeat'; timestamp: string } & Partial<SSEBase>)
 
 export type GenerationJobStatus =
   | 'queued'
@@ -25,93 +49,74 @@ export type GenerationJobStatus =
   | 'canceled'
 
 /**
- * Progress event data matching Python ProgressEventData
+ * Type-safe extractors for discriminated union
+ * Extract specific event types from SSEEventData
  */
-export interface ProgressEventData {
-  type: 'progress'
-  jobId: string
-  value: number // 0-100 progress percentage
-  percentage?: number // Alias for value for compatibility
-  currentStep: string // Korean step description
-  estimatedTime?: number // seconds remaining
-  metadata?: Record<string, unknown>
-}
+export type ProgressEventData = Extract<SSEEventData, { type: 'progress' }>
+export type PreviewEventData = Extract<SSEEventData, { type: 'preview' }>
+export type PatchPreviewEventData = Extract<SSEEventData, { type: 'patch_preview' }>
+export type PatchApplyEventData = Extract<SSEEventData, { type: 'patch_apply' }>
+export type CompletedEventData = Extract<SSEEventData, { type: 'completed' }>
+export type FailedEventData = Extract<SSEEventData, { type: 'failed' }>
+export type HeartbeatEventData = Extract<SSEEventData, { type: 'heartbeat' }>
 
 /**
- * Preview event data matching Python PreviewEventData
+ * Type guard functions for runtime validation
  */
-export interface PreviewEventData {
-  type: 'preview'
-  jobId: string
-  markdown: string // partial script content
-  content?: string // Alias for markdown for compatibility
-  isPartial: boolean
-  wordCount?: number
-  estimatedTokens?: number
-}
+export const isProgressEvent = (event: SSEEventData): event is ProgressEventData =>
+  event.type === 'progress'
+
+export const isPreviewEvent = (event: SSEEventData): event is PreviewEventData =>
+  event.type === 'preview'
+
+export const isPatchPreviewEvent = (event: SSEEventData): event is PatchPreviewEventData =>
+  event.type === 'patch_preview'
+
+export const isPatchApplyEvent = (event: SSEEventData): event is PatchApplyEventData =>
+  event.type === 'patch_apply'
+
+export const isCompletedEvent = (event: SSEEventData): event is CompletedEventData =>
+  event.type === 'completed'
+
+export const isFailedEvent = (event: SSEEventData): event is FailedEventData =>
+  event.type === 'failed'
+
+export const isHeartbeatEvent = (event: SSEEventData): event is HeartbeatEventData =>
+  event.type === 'heartbeat'
 
 /**
- * Completed event data matching Python CompletedEventData
+ * Runtime validation function for SSE events
  */
-export interface CompletedEventData {
-  type: 'completed'
-  jobId: string
-  duration?: number // seconds taken for generation
-  result: {
-    markdown: string
-    tokens: number
-    wordCount?: number
-    modelUsed?: string
-    episodeId?: string
-    savedToEpisode?: boolean
-  }
-}
-
-/**
- * Failed event data matching Python FailedEventData
- */
-export interface FailedEventData {
-  type: 'failed'
-  jobId: string
-  error: {
-    code: string
-    message: string
-    retryable: boolean
-  }
-}
-
-/**
- * Heartbeat event data matching Python HeartbeatEventData
- */
-export interface HeartbeatEventData {
-  type: 'heartbeat'
-  timestamp: string // ISO format
-  jobId?: string
+export const isValidSSEEvent = (data: unknown): data is SSEEventData => {
+  if (typeof data !== 'object' || data === null) return false
+  
+  const event = data as Record<string, unknown>
+  
+  if (typeof event.type !== 'string') return false
+  
+  const validTypes: SSEEventType[] = ['progress', 'preview', 'patch_preview', 'patch_apply', 'completed', 'failed', 'heartbeat']
+  if (!validTypes.includes(event.type as SSEEventType)) return false
+  
+  // Basic jobId validation (except heartbeat which has optional jobId)
+  if (event.type !== 'heartbeat' && typeof event.jobId !== 'string') return false
+  
+  return true
 }
 
 /**
  * SSE event wrapper matching Python SSEEvent structure
+ * Enhanced with discriminated union support
  */
 export interface SSEEvent {
   type?: SSEEventType // Compatible with existing usage
   event: SSEEventType
-  data:
-    | ProgressEventData
-    | PreviewEventData
-    | CompletedEventData
-    | FailedEventData
-    | HeartbeatEventData
+  data: SSEEventData
 }
 
-export type TypedSSEEventData =
-  | ProgressEventData
-  | PreviewEventData
-  | CompletedEventData
-  | FailedEventData
-  | HeartbeatEventData
-
-// 🔁 Backward-compat alias to fix TS2724 ("SSEEventData" not exported)
-export type SSEEventData = TypedSSEEventData
+/**
+ * Backward compatibility aliases
+ */
+export type TypedSSEEventData = SSEEventData
 
 export interface SSEOptions {
   url: string
@@ -123,8 +128,8 @@ export interface SSEOptions {
 
 export interface SSEHookReturn {
   connectionState: SSEConnectionState
-  events: TypedSSEEventData[]
-  latestEvent: TypedSSEEventData | null
+  events: SSEEventData[]
+  latestEvent: SSEEventData | null
   error: Error | null
   connect: () => void
   disconnect: () => void

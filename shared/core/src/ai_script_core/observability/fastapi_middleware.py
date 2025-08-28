@@ -2,6 +2,8 @@
 FastAPI middleware integration for unified observability system.
 """
 
+from __future__ import annotations
+
 import time
 from collections.abc import Callable
 from typing import Any
@@ -458,7 +460,7 @@ class OperationTracker:
         self.start_time: float | None = None
         self.success = True
 
-    def __enter__(self) -> "OperationTracker":
+    def __enter__(self) -> OperationTracker:
         self.start_time = time.time()
         return self
 

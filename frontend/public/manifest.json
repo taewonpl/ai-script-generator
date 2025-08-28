@@ -1,0 +1,16 @@
+{
+  "name": "AI Script Generator",
+  "short_name": "AI Script",
+  "description": "AI 기반 스크립트 생성 플랫폼",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1976d2",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

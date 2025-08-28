@@ -4,6 +4,8 @@ Configuration Management for AI Script Generator v3.0
 pydantic BaseSettings를 사용한 고급 설정 관리 시스템을 제공합니다.
 """
 
+from __future__ import annotations
+
 from functools import lru_cache
 from pathlib import Path
 from typing import Any

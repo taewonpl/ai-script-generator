@@ -349,7 +349,7 @@ class ConfigurationManager:
             with open(save_path, "w") as f:
                 json.dump(config_dict, f, indent=2)
         except Exception as e:
-            raise RuntimeError(f"Failed to save configuration to {save_path}: {e}")
+            raise RuntimeError(f"Failed to save configuration to {save_path}: {e}") from e
 
     def export_config(self) -> dict[str, Any]:
         """Export configuration as dictionary"""

@@ -5,6 +5,8 @@ Frontend와 일관성을 유지하기 위한 SSE 이벤트 타입 정의입니�
 TypeScript와 정확히 매치되는 구조를 제공합니다.
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Any, Literal, Union
 
@@ -54,7 +56,7 @@ class CompletedEventData(BaseSSEEvent):
     """완료 이벤트 데이터"""
 
     type: Literal["completed"] = Field(default="completed", description="이벤트 타입")
-    result: "CompletionResult" = Field(..., description="완료 결과")
+    result: CompletionResult = Field(..., description="완료 결과")
 
 
 class CompletionResult(BaseSchema):
@@ -76,7 +78,7 @@ class FailedEventData(BaseSSEEvent):
     """실패 이벤트 데이터"""
 
     type: Literal["failed"] = Field(default="failed", description="이벤트 타입")
-    error: "SSEErrorInfo" = Field(..., description="오류 정보")
+    error: SSEErrorInfo = Field(..., description="오류 정보")
 
 
 class SSEErrorInfo(BaseSchema):

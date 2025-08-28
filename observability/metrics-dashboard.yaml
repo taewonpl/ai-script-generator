@@ -1,0 +1,312 @@
+# Prometheus + Grafana 메트릭 대시보드 구성
+# AI Script Generator v3 핵심 메트릭
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-script-generator-dashboard
+  labels:
+    grafana_dashboard: "1"
+data:
+  dashboard.json: |
+    {
+      "dashboard": {
+        "id": null,
+        "title": "AI Script Generator v3 - Production Metrics",
+        "tags": ["ai-script-generator", "production"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "RAG Queue Length",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "rag_queue_length",
+                "legendFormat": "Queue Length"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "thresholds": {
+                  "steps": [
+                    {"color": "green", "value": null},
+                    {"color": "yellow", "value": 50},
+                    {"color": "red", "value": 100}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 2,
+            "title": "RAG Job Duration (P95)",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rag_job_duration_ms_bucket)",
+                "legendFormat": "P95 Duration (ms)"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "ms",
+                "thresholds": {
+                  "steps": [
+                    {"color": "green", "value": null},
+                    {"color": "yellow", "value": 30000},
+                    {"color": "red", "value": 60000}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 3,
+            "title": "SSE Connections",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sse_connections_open",
+                "legendFormat": "Open Connections"
+              },
+              {
+                "expr": "rate(sse_reconnect_count[5m])",
+                "legendFormat": "Reconnects/sec"
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Commit Success Rate",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "rate(commit_positive_total[5m]) / (rate(commit_positive_total[5m]) + rate(commit_negative_total[5m])) * 100",
+                "legendFormat": "Success Rate %"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "thresholds": {
+                  "steps": [
+                    {"color": "red", "value": null},
+                    {"color": "yellow", "value": 90},
+                    {"color": "green", "value": 95}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 5,
+            "title": "Memory Token Usage",
+            "type": "gauge",
+            "targets": [
+              {
+                "expr": "memory_token_used_pct",
+                "legendFormat": "Token Usage %"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "unit": "percent",
+                "min": 0,
+                "max": 100,
+                "thresholds": {
+                  "steps": [
+                    {"color": "green", "value": null},
+                    {"color": "yellow", "value": 35},
+                    {"color": "red", "value": 80}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 6,
+            "title": "UI Error Panels by Type",
+            "type": "table",
+            "targets": [
+              {
+                "expr": "sum by (type) (rate(ui_error_panel_shown[5m]))",
+                "format": "table",
+                "instant": true
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "custom": {
+                  "displayMode": "table"
+                }
+              }
+            }
+          },
+          {
+            "id": 7,
+            "title": "HTTP Status Codes",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum by (status) (rate(http_requests_total[5m]))",
+                "legendFormat": "HTTP {{status}}"
+              }
+            ]
+          },
+          {
+            "id": 8,
+            "title": "DLQ Status",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "dlq_entries_total",
+                "legendFormat": "DLQ Entries"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "thresholds": {
+                  "steps": [
+                    {"color": "green", "value": null},
+                    {"color": "yellow", "value": 5},
+                    {"color": "red", "value": 10}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 9,
+            "title": "Worker Health",
+            "type": "table",
+            "targets": [
+              {
+                "expr": "worker_active_jobs",
+                "format": "table",
+                "instant": true,
+                "legendFormat": "Active Jobs"
+              },
+              {
+                "expr": "worker_failed_jobs_total",
+                "format": "table", 
+                "instant": true,
+                "legendFormat": "Failed Jobs"
+              }
+            ]
+          },
+          {
+            "id": 10,
+            "title": "Embedding API Performance",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "embedding_api_latency_ms",
+                "legendFormat": "API Latency (ms)"
+              },
+              {
+                "expr": "embedding_tokens_per_minute",
+                "legendFormat": "Tokens/min"
+              }
+            ]
+          }
+        ],
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "refresh": "30s"
+      }
+    }
+
+---
+# Prometheus 메트릭 수집 설정
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-metrics-config
+data:
+  metrics.yaml: |
+    # RAG Worker 메트릭
+    - metric_name: rag_queue_length
+      help: "Number of jobs in RAG processing queue"
+      type: gauge
+      
+    - metric_name: rag_job_duration_ms
+      help: "RAG job processing duration in milliseconds"
+      type: histogram
+      buckets: [1000, 5000, 10000, 30000, 60000, 120000]
+      
+    - metric_name: rag_worker_active_jobs
+      help: "Number of currently active RAG worker jobs"
+      type: gauge
+      
+    - metric_name: rag_embedding_tokens_used
+      help: "Total embedding tokens consumed"
+      type: counter
+      
+    - metric_name: rag_dlq_entries
+      help: "Number of entries in Dead Letter Queue"
+      type: gauge
+    
+    # SSE 메트릭
+    - metric_name: sse_connections_open
+      help: "Number of open SSE connections"
+      type: gauge
+      
+    - metric_name: sse_reconnect_count
+      help: "Total SSE reconnection attempts"
+      type: counter
+      
+    - metric_name: sse_message_sent_total
+      help: "Total SSE messages sent by type"
+      type: counter
+      labels: ["message_type"]
+    
+    # Memory System 메트릭
+    - metric_name: memory_token_used_pct
+      help: "Percentage of memory tokens used"
+      type: gauge
+      
+    - metric_name: memory_turns_created
+      help: "Total memory turns created"
+      type: counter
+      
+    - metric_name: memory_context_length_chars
+      help: "Current memory context length in characters"
+      type: gauge
+    
+    # Commit 메트릭
+    - metric_name: commit_positive_total
+      help: "Total positive commits"
+      type: counter
+      
+    - metric_name: commit_negative_total
+      help: "Total negative commits"  
+      type: counter
+    
+    # UI 오류 메트릭
+    - metric_name: ui_error_panel_shown
+      help: "UI error panels shown by type"
+      type: counter
+      labels: ["type", "severity"]
+    
+    # HTTP 메트릭
+    - metric_name: http_requests_total
+      help: "Total HTTP requests by status code"
+      type: counter
+      labels: ["method", "status", "endpoint"]
+      
+    - metric_name: http_request_duration_ms
+      help: "HTTP request duration in milliseconds"
+      type: histogram
+      buckets: [10, 50, 100, 500, 1000, 5000]
+      
+    # System 메트릭
+    - metric_name: system_cpu_usage_pct
+      help: "System CPU usage percentage"
+      type: gauge
+      
+    - metric_name: system_memory_usage_pct
+      help: "System memory usage percentage" 
+      type: gauge

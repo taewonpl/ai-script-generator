@@ -4,6 +4,8 @@ Common Response Schemas for AI Script Generator v3.0
 공통 응답 스키마와 서비스 상태 관련 DTO를 정의합니다.
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 from enum import Enum
 from typing import Any
@@ -119,7 +121,7 @@ class ErrorResponseDTO(BaseSchema):
         details: dict[str, Any] | None = None,
         trace_id: str | None = None,
         request_id: str | None = None,
-    ) -> "ErrorResponseDTO":
+    ) -> ErrorResponseDTO:
         """에러 응답 생성"""
         return cls(
             error=True,
@@ -137,7 +139,7 @@ class SuccessResponseDTO(BaseResponseSchema[Any]):
     error: bool = Field(False, description="에러 여부")
 
     @classmethod
-    def create(cls, data: Any = None, message: str = "Success") -> "SuccessResponseDTO":
+    def create(cls, data: Any = None, message: str = "Success") -> SuccessResponseDTO:
         """성공 응답 생성"""
         return cls(success=True, error=False, message=message, data=data)
 

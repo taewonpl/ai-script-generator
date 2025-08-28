@@ -4,6 +4,8 @@ Generation Schemas for AI Script Generator v3.0
 AI 생성 및 RAG 관련 서비스 간 통신용 DTO를 정의합니다.
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Any
 

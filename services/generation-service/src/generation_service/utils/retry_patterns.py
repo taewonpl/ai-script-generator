@@ -374,7 +374,7 @@ async def with_timeout(
         return await asyncio.wait_for(coro, timeout=timeout)
     except asyncio.TimeoutError:
         logger.error(f"{operation_name} timed out after {timeout}s")
-        raise TimeoutError(f"{operation_name} timed out after {timeout}s")
+        raise TimeoutError(f"{operation_name} timed out after {timeout}s") from e
 
 
 # Circuit breaker pattern for failing services

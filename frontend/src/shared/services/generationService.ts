@@ -3,7 +3,7 @@
  * Handles HTTP API calls for generation management
  */
 
-import { client } from '../api/client'
+import { generationServiceClient as client } from '../api/client'
 import type {
   GenerationJobRequest,
   GenerationJobResponse,
@@ -157,10 +157,7 @@ export class GenerationService {
    * Build SSE URL for a job ID
    */
   static buildSSEUrl(jobId: string): string {
-    const baseUrl = import.meta.env.PROD
-      ? '/api/v1'
-      : 'http://localhost:8000/api/v1'
-
+    const baseUrl = import.meta.env.DEV ? '/api/generation/api/v1' : '/api/v1'
     return `${baseUrl}${GENERATION_API_BASE}/${jobId}/events`
   }
 

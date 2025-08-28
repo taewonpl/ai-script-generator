@@ -197,7 +197,7 @@ class ProviderFallbackTester:
                             return False  # Error event
 
             return False
-        except:
+        except Exception:
             return False
 
     async def _test_fallback_scenarios(self, project_id: str):
@@ -297,7 +297,7 @@ class ProviderFallbackTester:
                 if response.status == 200:
                     job_data = await response.json()
                     return job_data.get("provider_used", "unknown")
-        except:
+        except Exception:
             pass
 
         return "unknown"

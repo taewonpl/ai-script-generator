@@ -236,7 +236,7 @@ class Settings(BaseSettings):
             return [origin.strip() for origin in v.split(",") if origin.strip()]
         if isinstance(v, list):
             return v
-        raise ValueError(f"Invalid CORS origins value: {v}")
+        raise ValueError(f"Invalid CORS origins value: {v}") from e
 
     @property
     def is_development(self) -> bool:

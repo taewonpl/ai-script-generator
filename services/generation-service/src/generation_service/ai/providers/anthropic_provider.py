@@ -26,7 +26,6 @@ from .base_provider import (
 # Import Core Module components
 try:
     from ai_script_core import (
-        ExternalServiceError,
         calculate_hash,
         get_service_logger,
         safe_json_dumps,
@@ -185,27 +184,27 @@ class AnthropicProvider(BaseProvider):
 
         except anthropic.RateLimitError as e:
             logger.warning(f"Anthropic rate limit exceeded: {e}")
-            raise ProviderRateLimitError(str(e), self.name)
+            raise ProviderRateLimitError(str(e), self.name) from e
 
         except anthropic.AuthenticationError as e:
             logger.error(f"Anthropic authentication error: {e}")
-            raise ProviderError(f"Authentication failed: {e}", self.name)
+            raise ProviderError(f"Authentication failed: {e}", self.name) from e
 
         except anthropic.PermissionDeniedError as e:
             logger.error(f"Anthropic permission denied: {e}")
-            raise ProviderQuotaError(f"Permission denied: {e}", self.name)
+            raise ProviderQuotaError(f"Permission denied: {e}", self.name) from e
 
         except anthropic.APIConnectionError as e:
             logger.error(f"Anthropic connection error: {e}")
-            raise ProviderConnectionError(f"Connection failed: {e}", self.name)
+            raise ProviderConnectionError(f"Connection failed: {e}", self.name) from e
 
         except anthropic.APIError as e:
             logger.error(f"Anthropic API error: {e}")
-            raise ProviderError(f"API error: {e}", self.name)
+            raise ProviderError(f"API error: {e}", self.name) from e
 
         except Exception as e:
             logger.error(f"Unexpected error in Anthropic provider: {e}")
-            raise ProviderError(f"Unexpected error: {e}", self.name)
+            raise ProviderError(f"Unexpected error: {e}", self.name) from e
 
     async def generate_stream(
         self, request: GenerationRequest
@@ -247,19 +246,19 @@ class AnthropicProvider(BaseProvider):
 
         except anthropic.RateLimitError as e:
             logger.warning(f"Anthropic rate limit exceeded: {e}")
-            raise ProviderRateLimitError(str(e), self.name)
+            raise ProviderRateLimitError(str(e), self.name) from e
 
         except anthropic.AuthenticationError as e:
             logger.error(f"Anthropic authentication error: {e}")
-            raise ProviderError(f"Authentication failed: {e}", self.name)
+            raise ProviderError(f"Authentication failed: {e}", self.name) from e
 
         except anthropic.APIConnectionError as e:
             logger.error(f"Anthropic connection error: {e}")
-            raise ProviderConnectionError(f"Connection failed: {e}", self.name)
+            raise ProviderConnectionError(f"Connection failed: {e}", self.name) from e
 
         except Exception as e:
             logger.error(f"Unexpected error in Anthropic streaming: {e}")
-            raise ProviderError(f"Streaming error: {e}", self.name)
+            raise ProviderError(f"Streaming error: {e}", self.name) from e
 
     async def validate_connection(self) -> bool:
         """Validate connection to Anthropic"""

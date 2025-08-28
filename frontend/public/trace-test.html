@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request/Trace ID Verification Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #00ff00; }
+        button { padding: 10px; margin: 5px; background: #333; color: #00ff00; border: 1px solid #00ff00; cursor: pointer; }
+        button:hover { background: #555; }
+        pre { background: #000; padding: 10px; border: 1px solid #333; overflow-x: auto; }
+        .log-entry { margin: 5px 0; }
+        .success { color: #00ff00; }
+        .error { color: #ff0000; }
+        .info { color: #00aaff; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Request/Trace ID End-to-End Verification</h1>
+    <p>This page tests request_id and trace_id propagation through the system.</p>
+    
+    <div>
+        <button onclick="testApiCall()">Test API Call</button>
+        <button onclick="testSSEConnection()">Test SSE Connection</button>
+        <button onclick="clearLogs()">Clear Logs</button>
+    </div>
+    
+    <h3>Console Logs (check browser console for detailed logs):</h3>
+    <pre id="logOutput"></pre>
+    
+    <h3>Expected Flow:</h3>
+    <pre>
+1. Frontend generates request_id/trace_id
+2. Headers injected into HTTP request
+3. Vite proxy forwards headers to backend
+4. Backend processes with same IDs
+5. SSE connection includes request_id in URL
+6. All logs contain same ID chain
+    </pre>
+
+    <script type="module">
+        let logCount = 0;
+        const logOutput = document.getElementById('logOutput');
+        
+        function addLog(message, type = 'info') {
+            logCount++;
+            const timestamp = new Date().toISOString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `[${timestamp}] ${logCount}: ${message}`;
+            logOutput.appendChild(logEntry);
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+        
+        // Override console methods to capture logs
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        console.log = function(...args) {
+            if (args[0] && typeof args[0] === 'string' && 
+                (args[0].includes('API') || args[0].includes('SSE'))) {
+                addLog(args.join(' '), 'success');
+            }
+            originalLog.apply(console, args);
+        };
+        
+        console.error = function(...args) {
+            if (args[0] && typeof args[0] === 'string' && 
+                (args[0].includes('API') || args[0].includes('SSE'))) {
+                addLog(args.join(' '), 'error');
+            }
+            originalError.apply(console, args);
+        };
+        
+        window.testApiCall = async function() {
+            addLog('Testing API call with request_id/trace_id injection...', 'info');
+            
+            try {
+                // This will trigger the enhanced logging we implemented
+                const response = await fetch('/api/generation/health', {
+                    headers: {
+                        'X-Request-Id': `manual-test-${Date.now()}`,
+                        'X-Trace-Id': `manual-trace-${Date.now()}`
+                    }
+                });
+                
+                addLog(`API Response: ${response.status} ${response.statusText}`, 
+                       response.ok ? 'success' : 'error');
+                       
+            } catch (error) {
+                addLog(`API Error: ${error.message}`, 'error');
+            }
+        };
+        
+        window.testSSEConnection = function() {
+            addLog('Testing SSE connection with request_id tracing...', 'info');
+            
+            try {
+                // Create SSE URL with request_id
+                const testJobId = `TEST-JOB-${Date.now()}`;
+                const requestId = `sse-test-${Date.now()}`;
+                const sseUrl = `/api/generation/api/v1/generations/${testJobId}/events?rid=${requestId}`;
+                
+                addLog(`SSE URL: ${sseUrl}`, 'info');
+                
+                const eventSource = new EventSource(sseUrl);
+                
+                eventSource.addEventListener('open', () => {
+                    addLog('SSE Connection opened successfully', 'success');
+                    setTimeout(() => {
+                        eventSource.close();
+                        addLog('SSE Connection closed', 'info');
+                    }, 2000);
+                });
+                
+                eventSource.addEventListener('error', (error) => {
+                    addLog('SSE Connection error (expected for test)', 'error');
+                    eventSource.close();
+                });
+                
+            } catch (error) {
+                addLog(`SSE Error: ${error.message}`, 'error');
+            }
+        };
+        
+        window.clearLogs = function() {
+            logOutput.innerHTML = '';
+            logCount = 0;
+            addLog('Logs cleared', 'info');
+        };
+        
+        // Initial log
+        addLog('Request/Trace ID verification test page loaded', 'success');
+        addLog('Open browser console (F12) to see detailed API logs', 'info');
+    </script>
+</body>
+</html>

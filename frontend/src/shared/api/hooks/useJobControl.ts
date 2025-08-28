@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { generationApi } from '@/shared/api/client'
+import { generationHttp } from '@/shared/services/api/clients'
 import { AxiosError } from 'axios'
 
 /**
@@ -45,7 +45,8 @@ export function useJobControl() {
     mutationFn: async ({ jobId, reason }: CancelJobRequest) => {
       console.log(`🛑 Canceling job: ${jobId}`, { reason })
 
-      const response = await generationApi.delete<CancelJobResponse>(
+      // Using generationHttp helper - automatically returns .data (no more regression risk!)
+      return await generationHttp.delete<CancelJobResponse>(
         `/jobs/${jobId}`,
         {
           data: { reason },
@@ -54,8 +55,6 @@ export function useJobControl() {
           },
         },
       )
-
-      return response
     },
 
     // Optimistic update - immediately mark job as canceling

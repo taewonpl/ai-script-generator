@@ -369,7 +369,7 @@ class ProviderNode(BaseNode):
         except Exception as e:
             error_msg = f"Failed to initialize provider {self.provider_name}: {e!s}"
             self.logger.error(error_msg)
-            raise NodeExecutionError(error_msg, self.node_name, e)
+            raise NodeExecutionError(error_msg, self.node_name, e) from e
 
     def _get_execution_metadata(self, state: GenerationState) -> dict[str, Any]:
         """Add provider-specific metadata"""

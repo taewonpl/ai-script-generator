@@ -83,4 +83,4 @@ def atomic_transaction(
             if attempt == max_retries:
                 raise
 
-    raise ConcurrencyError(f"Transaction failed after {max_retries} retries")
+    raise ConcurrencyError(f"Transaction failed after {max_retries} retries") from e

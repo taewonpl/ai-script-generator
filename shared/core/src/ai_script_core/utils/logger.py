@@ -4,6 +4,8 @@ Advanced Logging System for AI Script Generator v3.0
 구조화된 JSON 로깅과 서비스별 로거 관리 시스템을 제공합니다.
 """
 
+from __future__ import annotations
+
 import json
 import logging
 import logging.handlers
@@ -121,7 +123,7 @@ class ContextualLoggerAdapter(logging.LoggerAdapter):
 
         return msg, kwargs
 
-    def add_context(self, **kwargs: Any) -> "ContextualLoggerAdapter":
+    def add_context(self, **kwargs: Any) -> ContextualLoggerAdapter:
         """컨텍스트 정보 추가"""
         new_extra = dict(self.extra) if self.extra else {}
         new_extra.update(kwargs)

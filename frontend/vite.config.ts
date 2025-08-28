@@ -47,6 +47,9 @@ export default defineConfig(({ command, mode }) => {
     server: {
       port: 3001,
       host: true,
+      headers: {
+        'X-Frame-Options': 'DENY'
+      },
       cors: {
         origin: true,
         credentials: true,
@@ -132,14 +135,16 @@ export default defineConfig(({ command, mode }) => {
           }
         },
 
-        // Generation Service proxy with WebSocket support
+        // Generation Service proxy with SSE-optimized configuration
         '/api/generation': {
           target: env.VITE_GENERATION_SERVICE_URL || 'http://localhost:8002',
           changeOrigin: true,
           secure: false,
-          timeout: 60000,
-          proxyTimeout: 60000,
-          ws: true, // WebSocket 지원
+          // SSE-friendly timeouts (no timeout for streaming)
+          timeout: 0,        // Do not time out long SSE streams
+          proxyTimeout: 0,   // Do not time out proxy connections
+          ws: true,          // WebSocket support (doesn't hurt SSE)
+          // Rewrite path once: /api/generation/api/v1 -> /api/v1
           rewrite: (path) => path.replace(/^\/api\/generation/, ''),
           configure: (proxy, options) => {
             proxy.on('error', (err, req, res) => {
@@ -162,11 +167,36 @@ export default defineConfig(({ command, mode }) => {
               }
             });
 
-            if (isDevelopment) {
-              proxy.on('proxyReq', (proxyReq, req) => {
+            // SSE-optimized request handling
+            proxy.on('proxyReq', (proxyReq, req) => {
+              // Helpful for SSE intermediaries
+              proxyReq.setHeader('Connection', 'keep-alive');
+              proxyReq.setHeader('Cache-Control', 'no-cache');
+              
+              if (isDevelopment) {
                 console.log('📤 Generation API 요청:', req.method, req.url, '→', options.target + proxyReq.path);
-              });
-            }
+              }
+            });
+
+            // Prevent proxy buffering for SSE
+            proxy.on('proxyRes', (proxyRes, req) => {
+              // Prevent buffering for streaming responses
+              proxyRes.headers['x-accel-buffering'] = 'no';
+              proxyRes.headers['cache-control'] = 'no-cache';
+              proxyRes.headers['connection'] = 'keep-alive';
+              
+              if (isDevelopment) {
+                const isSSE = proxyRes.headers['content-type']?.includes('text/event-stream');
+                console.log(`📥 Generation API 응답:`, proxyRes.statusCode, req.url, {
+                  contentType: proxyRes.headers['content-type'],
+                  isSSE,
+                  headers: {
+                    'x-accel-buffering': proxyRes.headers['x-accel-buffering'],
+                    'cache-control': proxyRes.headers['cache-control'],
+                  }
+                });
+              }
+            });
           }
         },
 

@@ -97,7 +97,7 @@ class EpisodeChromaStore:
         except Exception as e:
             error_msg = f"Failed to initialize ChromaDB client: {e!s}"
             logger.error(error_msg)
-            raise ChromaStoreError(error_msg)
+            raise ChromaStoreError(error_msg) from e
 
     def _get_next_episode_number(self, project_id: str) -> int:
         """Get next episode number for a project with concurrency handling"""
@@ -124,7 +124,7 @@ class EpisodeChromaStore:
 
             except Exception as e:
                 logger.error(f"Error getting next episode number: {e!s}")
-                raise ChromaStoreError(f"Failed to get next episode number: {e!s}")
+                raise ChromaStoreError(f"Failed to get next episode number: {e!s}") from e
 
     def create_episode(
         self,
@@ -235,7 +235,7 @@ class EpisodeChromaStore:
 
         except Exception as e:
             logger.error(f"Failed to get episodes for project {project_id}: {e!s}")
-            raise ChromaStoreError(f"Failed to get episodes: {e!s}")
+            raise ChromaStoreError(f"Failed to get episodes: {e!s}") from e
 
     def get_episode(self, episode_id: str) -> dict[str, Any] | None:
         """Get a single episode by ID"""
@@ -265,7 +265,7 @@ class EpisodeChromaStore:
 
         except Exception as e:
             logger.error(f"Failed to get episode {episode_id}: {e!s}")
-            raise ChromaStoreError(f"Failed to get episode: {e!s}")
+            raise ChromaStoreError(f"Failed to get episode: {e!s}") from e
 
     def update_episode(
         self,
@@ -311,7 +311,7 @@ class EpisodeChromaStore:
 
         except Exception as e:
             logger.error(f"Failed to update episode {episode_id}: {e!s}")
-            raise ChromaStoreError(f"Failed to update episode: {e!s}")
+            raise ChromaStoreError(f"Failed to update episode: {e!s}") from e
 
     def delete_episode(self, episode_id: str) -> bool:
         """Delete an episode"""
@@ -335,7 +335,7 @@ class EpisodeChromaStore:
 
         except Exception as e:
             logger.error(f"Failed to delete episode {episode_id}: {e!s}")
-            raise ChromaStoreError(f"Failed to delete episode: {e!s}")
+            raise ChromaStoreError(f"Failed to delete episode: {e!s}") from e
 
     def _get_project_name(self, project_id: str) -> str:
         """Get project name from Projects collection"""
@@ -440,7 +440,7 @@ class EpisodeChromaStore:
 
         except Exception as e:
             logger.error(f"Failed to register project {project_id}: {e!s}")
-            raise ChromaStoreError(f"Failed to register project: {e!s}")
+            raise ChromaStoreError(f"Failed to register project: {e!s}") from e
 
     def get_collection_stats(self) -> dict[str, Any]:
         """Get collection statistics"""

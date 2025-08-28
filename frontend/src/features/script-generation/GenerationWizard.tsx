@@ -469,6 +469,8 @@ export function GenerationWizard({
                 onSave={handleSaveResult}
                 onRegenerate={handleRestart}
                 onEdit={() => {}} // Handle edit mode if needed
+                projectId={wizardState.config.projectId || 'unknown'}
+                episodeId={wizardState.config.episodeId || 'unknown'}
               />
             )}
         </Box>

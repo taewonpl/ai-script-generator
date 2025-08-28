@@ -26,7 +26,6 @@ from .base_provider import (
 # Import Core Module components
 try:
     from ai_script_core import (
-        ExternalServiceError,
         calculate_hash,
         get_service_logger,
         safe_json_dumps,
@@ -223,27 +222,27 @@ class OpenAIProvider(BaseProvider):
 
         except openai.RateLimitError as e:
             logger.warning(f"OpenAI rate limit exceeded: {e}")
-            raise ProviderRateLimitError(str(e), self.name)
+            raise ProviderRateLimitError(str(e), self.name) from e
 
         except openai.AuthenticationError as e:
             logger.error(f"OpenAI authentication error: {e}")
-            raise ProviderError(f"Authentication failed: {e}", self.name)
+            raise ProviderError(f"Authentication failed: {e}", self.name) from e
 
         except openai.PermissionDeniedError as e:
             logger.error(f"OpenAI permission denied: {e}")
-            raise ProviderQuotaError(f"Permission denied: {e}", self.name)
+            raise ProviderQuotaError(f"Permission denied: {e}", self.name) from e
 
         except openai.APIConnectionError as e:
             logger.error(f"OpenAI connection error: {e}")
-            raise ProviderConnectionError(f"Connection failed: {e}", self.name)
+            raise ProviderConnectionError(f"Connection failed: {e}", self.name) from e
 
         except openai.APIError as e:
             logger.error(f"OpenAI API error: {e}")
-            raise ProviderError(f"API error: {e}", self.name)
+            raise ProviderError(f"API error: {e}", self.name) from e
 
         except Exception as e:
             logger.error(f"Unexpected error in OpenAI provider: {e}")
-            raise ProviderError(f"Unexpected error: {e}", self.name)
+            raise ProviderError(f"Unexpected error: {e}", self.name) from e
 
     async def generate_stream(
         self, request: GenerationRequest
@@ -285,19 +284,19 @@ class OpenAIProvider(BaseProvider):
 
         except openai.RateLimitError as e:
             logger.warning(f"OpenAI rate limit exceeded: {e}")
-            raise ProviderRateLimitError(str(e), self.name)
+            raise ProviderRateLimitError(str(e), self.name) from e
 
         except openai.AuthenticationError as e:
             logger.error(f"OpenAI authentication error: {e}")
-            raise ProviderError(f"Authentication failed: {e}", self.name)
+            raise ProviderError(f"Authentication failed: {e}", self.name) from e
 
         except openai.APIConnectionError as e:
             logger.error(f"OpenAI connection error: {e}")
-            raise ProviderConnectionError(f"Connection failed: {e}", self.name)
+            raise ProviderConnectionError(f"Connection failed: {e}", self.name) from e
 
         except Exception as e:
             logger.error(f"Unexpected error in OpenAI streaming: {e}")
-            raise ProviderError(f"Streaming error: {e}", self.name)
+            raise ProviderError(f"Streaming error: {e}", self.name) from e
 
     async def validate_connection(self) -> bool:
         """Validate connection to OpenAI"""

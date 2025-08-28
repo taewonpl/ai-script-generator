@@ -518,23 +518,24 @@ interface RequestConfig {
   data?: unknown // Added for DELETE requests with body
 }
 
+import { getClientBaseURLs } from '../config/apiPaths'
+
+// Get environment-appropriate base URLs
+const baseUrls = getClientBaseURLs()
+
 // Create configured API client instances
 export const coreServiceClient = new APIClient({
-  baseURL:
-    import.meta.env.VITE_CORE_SERVICE_URL || 'http://localhost:8000/api/v1',
+  baseURL: baseUrls.core,
   service: 'core-service',
 })
 
 export const projectServiceClient = new APIClient({
-  baseURL:
-    import.meta.env.VITE_PROJECT_SERVICE_URL || 'http://localhost:8001/api/v1',
+  baseURL: baseUrls.project,
   service: 'project-service',
 })
 
 export const generationServiceClient = new APIClient({
-  baseURL:
-    import.meta.env.VITE_GENERATION_SERVICE_URL ||
-    'http://localhost:8002/api/v1',
+  baseURL: baseUrls.generation,
   service: 'generation-service',
 })
 

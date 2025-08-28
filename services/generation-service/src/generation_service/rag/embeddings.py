@@ -334,7 +334,7 @@ class EmbeddingService:
         except Exception as e:
             error_msg = f"Embedding generation failed: {e!s}"
             logger.error(error_msg)
-            raise EmbeddingError(error_msg, operation="generate_embeddings")
+            raise EmbeddingError(error_msg, operation="generate_embeddings") from e
 
     async def _process_batch(
         self, texts: list[str], use_cache: bool
@@ -418,7 +418,7 @@ class EmbeddingService:
                     logger.warning(f"API error, retrying in {wait_time}s: {e!s}")
                     await asyncio.sleep(wait_time)
                     continue
-                raise EmbeddingError(f"API error: {e!s}", operation="api_call")
+                raise EmbeddingError(f"API error: {e!s}", operation="api_call") from e
 
             except Exception as e:
                 if attempt < self.max_retries:
@@ -426,9 +426,9 @@ class EmbeddingService:
                     logger.warning(f"Unexpected error, retrying in {wait_time}s: {e!s}")
                     await asyncio.sleep(wait_time)
                     continue
-                raise EmbeddingError(f"Unexpected error: {e!s}", operation="api_call")
+                raise EmbeddingError(f"Unexpected error: {e!s}", operation="api_call") from e
 
-        raise EmbeddingError("All retry attempts failed", operation="api_call")
+        raise EmbeddingError("All retry attempts failed", operation="api_call") from e
 
     def get_metrics(self) -> dict[str, Any]:
         """Get service metrics"""

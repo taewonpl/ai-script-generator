@@ -4,6 +4,8 @@ Base Exception Classes for AI Script Generator v3.0
 모든 서비스에서 공통으로 사용하는 기본 예외 클래스들을 정의합니다.
 """
 
+from __future__ import annotations
+
 import traceback
 from datetime import datetime
 from enum import Enum
@@ -85,17 +87,17 @@ class BaseServiceException(Exception):
 
         return result
 
-    def add_context(self, key: str, value: Any) -> "BaseServiceException":
+    def add_context(self, key: str, value: Any) -> BaseServiceException:
         """컨텍스트 정보 추가"""
         self.context[key] = value
         return self
 
-    def add_detail(self, key: str, value: Any) -> "BaseServiceException":
+    def add_detail(self, key: str, value: Any) -> BaseServiceException:
         """상세 정보 추가"""
         self.details[key] = value
         return self
 
-    def with_cause(self, cause: Exception) -> "BaseServiceException":
+    def with_cause(self, cause: Exception) -> BaseServiceException:
         """원인 예외 설정"""
         self.cause = cause
         return self
